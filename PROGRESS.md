@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P1.1 (chưa bắt đầu; P0.1 ✅)
+- **Task hiện tại:** P1.2 (chưa bắt đầu; P0.1, P1.1 ✅)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** chạy `/next-task` → P1.1 (`core/game.py`, Protocol `Game` — đụng interface nên nên dùng Plan mode)
+- **Bước tiếp theo:** chạy `/next-task` → P1.2 (`games/kinrow.py`). Phải test các điểm hợp đồng trong `gameai/core/game.md` (candidate ⊆ legal và không rỗng, `legal_moves()=[]` khi kết thúc, clone độc lập, `key()` gồm lượt đi, undo khôi phục `winner`).
 - **Cảnh báo / blocker:** —
 
 ## Bảng trạng thái
@@ -16,7 +16,7 @@
 | ID | Task | Trạng thái | Owner | Cập nhật | Ghi chú |
 |---|---|---|---|---|---|
 | P0.1 | Repo, venv, skeleton | ✅ | An | 2026-10-28 | spec-reviewer PASS |
-| P1.1 | core/game.py interface | ⬜ | An | | |
+| P1.1 | core/game.py interface | ✅ | An | 2026-10-28 | spec-reviewer PASS; quyết định ở D-5 |
 | P1.2 | games/kinrow.py | ⬜ | An | | |
 | P2.1 | Agent base + Random | ⬜ | An | | |
 | P2.2 | Heuristic eval k-in-row | ⬜ | An | | |
@@ -47,6 +47,12 @@
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 
 ## Session log (mới nhất ở trên)
+
+### 2026-10-28 — P1.1
+- Đã làm: `Protocol Game` (10 hàm, `@runtime_checkable`), `Move = Hashable`, `P1/P2/DRAW`, hàm `result_for(winner, player)`; `game.md` ghi hợp đồng từng hàm; D-5 trong DECISIONS.
+- Test: 19 passed (12 mới trong `tests/test_game_interface.py`); `ruff check .` sạch.
+- File đổi: `gameai/core/game.py`, `gameai/core/game.md`, `tests/test_game_interface.py`, `docs/DECISIONS.md`, `PROGRESS.md`.
+- Lưu ý cho P1.2: alias `X = P1`, `O = P2` đặt trong `kinrow.py`, không đặt ở core. Hợp đồng chỉ được ép bằng test của từng game, Protocol không ép được.
 
 ### 2026-10-28 — P0.1
 - Đã làm: skeleton `gameai/{core,games,heuristics,agents,gui,experiments}` + `__init__.py`, `tests/`, `results/{raw,tables,figures}`, `report/` (`.gitkeep`); `tests/test_smoke.py` (import các gói).
