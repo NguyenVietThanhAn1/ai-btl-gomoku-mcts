@@ -37,6 +37,7 @@
 | P7.1 | Plots/tables | ⬜ | An | | |
 | P7.2 | report.md | ⬜ | An | | |
 | P7.3 | report.docx | ⬜ | An | | |
+| P7.4 | Video demo (script + quay) | ⬜ | An | | |
 | P8.1 | Xiangqi rules + perft | ⬜ | An | | |
 | P8.2 | Xiangqi eval + AB | ⬜ | An | | |
 | P8.3 | Xiangqi MCTS | ⬜ | An | | |
@@ -47,6 +48,8 @@
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 
 ## Session log (mới nhất ở trên)
+
+phần lưu ý cho P2.2: thêm hàm/hằng cell_of(player) trong kinrow.py và dùng nó ở mọi nơi cần đổi player -> giá trị ô, không hard-code 1/2 ở module khác. Commit.
 
 ### 2026-10-28 — P1.2
 - Đã làm: `KInRow(n, k, radius=2)` với board `bytearray`, thắng tăng dần (4 hướng qua nước vừa đi), `candidate_moves` giữ tăng dần bằng `_near` + `_cand` cập nhật trong `play`/`undo`, undo bằng stack, `clone` độc lập, `key=(bytes(board), player)`.

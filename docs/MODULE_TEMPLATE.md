@@ -26,10 +26,11 @@ class Foo:
 - Invariants (điều luôn đúng), vd. "W tính theo góc nhìn người vừa đi vào node".
 - Độ phức tạp / điểm nóng hiệu năng.
 
-## Giải thích để vấn đáp (bắt buộc với module thuật toán)
-- Bản chất thuật toán bằng lời.
+## Giải thích cho báo cáo (bắt buộc với module thuật toán)
+- Bản chất thuật toán bằng lời (viết được chép vào mục 3 báo cáo).
+- Công thức / pseudocode khớp với code.
 - Ví dụ nhỏ trace tay (3×3 hoặc cây vài nút).
-- 3–5 câu hỏi hay bị hỏi + trả lời ngắn.
+- Lựa chọn tham số và lý do (vd. c, radius, độ sâu).
 
 ## Test
 - File: `tests/test_<module>.py` — liệt kê các hành vi được test.

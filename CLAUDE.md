@@ -33,8 +33,8 @@
 - `N_p`: số lần thăm node cha. `c`: hằng số khám phá.
 - `candidate_moves`: các ô trống trong bán kính `radius` quanh quân đã đặt.
 
-## Mục đích học tập
-Chủ nhóm cần **giải thích được** thuật toán khi vấn đáp và cho bài thi cuối kỳ (thuật toán tìm kiếm). Với module thuật toán (minimax, alphabeta, mcts, rollout, eval), mục "Giải thích để vấn đáp" trong `.md` là bắt buộc: bản chất, ví dụ nhỏ trace tay, câu hỏi hay bị hỏi.
+## Sản phẩm nộp
+Sản phẩm nộp: **báo cáo .docx + video demo** (không vấn đáp). Với module thuật toán (minimax, alphabeta, mcts, rollout, eval), mục "Giải thích cho báo cáo" trong `.md` là bắt buộc: bản chất, công thức/pseudocode, ví dụ nhỏ trace tay. Đây là nguyên liệu cho mục 3 (Phương pháp) của báo cáo, viết sao cho chép sang báo cáo được gần như nguyên văn.
 
 ## Commit
 `<TaskID>: <mô tả ngắn>` — ví dụ `P3.1: MCTS-UCT core with root stats`. Không push khi chưa được yêu cầu.

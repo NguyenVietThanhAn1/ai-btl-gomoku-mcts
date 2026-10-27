@@ -23,3 +23,7 @@
 - `@runtime_checkable` chỉ dùng trong test, không dùng `isinstance` ở đường nóng.
 - Hợp đồng bổ sung: `legal_moves()=[]` khi kết thúc; `candidate_moves()` ⊆ `legal_moves()` và không rỗng khi chưa kết thúc; `play()` chỉ assert; `clone()` độc lập; `key()` gồm cả lượt đi.
 - `result_for(winner, player) -> 1.0/0.5/0.0` đặt trong `core/game.py`; MCTS và arena dùng chung để không sai dấu `W`.
+
+### D-6 (2026-10-28) — Sản phẩm nộp: báo cáo + video demo, không vấn đáp
+- Mục "Giải thích để vấn đáp" trong module doc đổi thành "Giải thích cho báo cáo" (nguyên liệu cho mục 3 báo cáo).
+- Thêm P7.4 video demo; GUI (P6.1) cần chế độ AI vs AI có độ trễ và overlay thống kê MCTS để quay.

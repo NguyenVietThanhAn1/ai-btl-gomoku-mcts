@@ -14,6 +14,7 @@ Trò chơi k-in-a-row (Tic-Tac-Toe tổng quát, **5 quân thẳng hàng thắng
 | 2 | MCTS + UCT; kiểm chứng trên Tic-Tac-Toe 3×3 thuật toán **không bao giờ thua** | P3, E2 |
 | 3 | Thực nghiệm c ∈ {0.5, 1.0, 1.4, 2.0}; đồ thị iteration – tỷ lệ thắng (mỗi c một đường) | E3 |
 | 4 | Phân tích: vì sao chọn nước theo **N lớn nhất** thay vì W/N lớn nhất | E4 + báo cáo |
+| — | Sản phẩm nộp: báo cáo .docx + **video demo** (không vấn đáp) | P7 |
 | 5 | Thay rollout ngẫu nhiên bằng heuristic, đo cải thiện; liên hệ value network | E5 |
 | 6 | (*) Mở rộng Cờ tướng → điều kiện điểm > 9 | P8 |
 
@@ -122,13 +123,14 @@ Trước khi chạy full: chạy `--quick`, ghi **thời gian ước tính** và
 Ghi chú hiệu năng 15×15: nếu 5000 iter quá chậm, giảm số ván ở mức iteration cao hoặc dùng time budget — **ghi rõ vào báo cáo**, không âm thầm đổi thiết lập.
 
 ### P6 — GUI pygame
-- **P6.1** `gui/pygame_app.py`: chọn bàn 3×3/15×15, chọn AI (alphabeta/mcts + tham số), người vs AI, AI vs AI; hiện nước cuối, thông báo thắng/hòa; AI chạy không treo cửa sổ (thread hoặc chia nhỏ iteration).
+- **P6.1** `gui/pygame_app.py`: chọn bàn 3×3/15×15, chọn AI (alphabeta/mcts + tham số), người vs AI, AI vs AI; hiện nước cuối, thông báo thắng/hòa; AI chạy không treo cửa sổ (thread hoặc chia nhỏ iteration). Phục vụ quay video: chế độ AI vs AI có độ trễ chỉnh được giữa các nước; tùy chọn bật overlay hiện N (và W/N) của các nước ứng viên ở gốc MCTS.
   Done khi: chơi hết 1 ván mỗi chế độ không lỗi.
 
-### P7 — Báo cáo
+### P7 — Báo cáo & video demo
 - **P7.1** `experiments/plots.py` sinh toàn bộ hình/bảng từ `results/raw` (không vẽ tay).
 - **P7.2** `report/report.md` đúng khung đề; số liệu lấy từ `results/tables`.
 - **P7.3** Convert sang `report.docx`, kiểm tra hình/bảng hiển thị đúng.
+- **P7.4** Video demo (3–5 phút): `report/video_script.md` gồm kịch bản từng cảnh + lệnh chạy chính xác. Cảnh gợi ý: (1) 3×3 người vs MCTS — MCTS không thua; (2) 15×15 người vs MCTS với overlay N; (3) 15×15 MCTS vs Alpha-Beta (AI vs AI); (4) đồ thị E3/E5 và kết luận; (5) cờ tướng nếu xong P8. Quay bằng OBS hoặc Xbox Game Bar (Win+Alt+R).
 
 ### P8 — (*) Cờ tướng (sau khi P1–P7 xong)
 - **P8.1** `games/xiangqi/`: biểu diễn bàn 9×10, sinh nước 7 loại quân (tướng, sĩ, tượng, xe, pháo, mã — cản chân, tốt — qua sông), **lộ mặt tướng**, chiếu, hết nước = thua; giới hạn số nước → hòa.
