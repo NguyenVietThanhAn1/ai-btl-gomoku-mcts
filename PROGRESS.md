@@ -52,7 +52,7 @@
 - Đã làm: skeleton `gameai/{core,games,heuristics,agents,gui,experiments}` + `__init__.py`, `tests/`, `results/{raw,tables,figures}`, `report/` (`.gitkeep`); `tests/test_smoke.py` (import các gói).
 - Test: 7 passed; `ruff check .` sạch.
 - File đổi: xem commit `P0.1`.
-- Lưu ý: `ruff format --check` báo `docs/MODULE_TEMPLATE.md` (khoảng trắng trước `#` trong code block) — file tài liệu, chưa sửa. pytest cảnh báo không ghi được `.pytest_cache` (WinError 5, quyền Windows) — không ảnh hưởng kết quả. Python venv là 3.13.
+- Lưu ý: `ruff format --check` từng báo `docs/MODULE_TEMPLATE.md` (code block trong file md) → đã thêm `extend-exclude = ["*.md"]` vào `[tool.ruff]` (commit `P0.1: exclude md from ruff`), nay sạch. pytest cảnh báo không ghi được `.pytest_cache` (WinError 5, quyền Windows) — không ảnh hưởng kết quả. Python venv là 3.13.
 
 <!-- Mẫu:
 ### YYYY-MM-DD — <task ID>
