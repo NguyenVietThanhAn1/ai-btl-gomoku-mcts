@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest *)",
+      "Bash(python -m ruff *)",
+      "Bash(python -m gameai*)",
+      "Bash(python -m pip install -r requirements.txt)",
+      "Bash(python -m pip list *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "PowerShell(python -m pytest *)",
+      "PowerShell(python -m ruff *)",
+      "PowerShell(python -m gameai*)",
+      "PowerShell(python -m pip install -r requirements.txt)",
+      "PowerShell(git status *)",
+      "PowerShell(git diff *)",
+      "PowerShell(git log *)",
+      "PowerShell(git add *)",
+      "PowerShell(git commit *)"
+    ],
+    "ask": [
+      "Bash(python -m pip install *)",
+      "Bash(git push *)",
+      "PowerShell(python -m pip install *)",
+      "PowerShell(git push *)"
+    ],
+    "deny": [
+      "Edit(./results/raw/**)",
+      "Bash(rm -rf *)",
+      "Bash(git reset --hard *)",
+      "PowerShell(Remove-Item * -Recurse *)",
+      "PowerShell(git reset --hard *)"
+    ]
+  }
+}
