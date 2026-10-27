@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P2.2 (chưa bắt đầu; P0.1, P1.1, P1.2, P2.1 ✅)
+- **Task hiện tại:** P2.3 (chưa bắt đầu; P0.1, P1.1, P1.2, P2.1, P2.2 ✅)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** chạy `/next-task` → P2.2 (`heuristics/kinrow_eval.py`). Lưu ý: thêm `cell_of(player)` trong `kinrow.py`, mọi nơi đổi player → giá trị ô dùng nó, không hard-code 1/2.
+- **Bước tiếp theo:** chạy `/next-task` → P2.3 (`agents/minimax.py`, đếm nút). Lưu ý: P2.4 phải cộng dồn `delta_eval` và dùng `WIN − depth` (xem `heuristics/kinrow_eval.md`, D-8); đổi player → ô dùng `cell_of`.
 - **Cảnh báo / blocker:** —
 
 ## Bảng trạng thái
@@ -19,7 +19,7 @@
 | P1.1 | core/game.py interface | ✅ | An | 2026-10-28 | spec-reviewer PASS; quyết định ở D-5 |
 | P1.2 | games/kinrow.py | ✅ | An | 2026-10-28 | spec-reviewer PASS |
 | P2.1 | Agent base + Random | ✅ | An | 2026-10-28 | spec-reviewer PASS |
-| P2.2 | Heuristic eval k-in-row | ⬜ | An | | |
+| P2.2 | Heuristic eval k-in-row | ✅ | An | 2026-10-28 | spec-reviewer PASS; quyết định ở D-8 |
 | P2.3 | Minimax | ⬜ | An | | |
 | P2.4 | Alpha-Beta | ⬜ | An | | |
 | P2.5 | Greedy agent | ⬜ | An | | |
@@ -48,6 +48,12 @@
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 
 ## Session log (mới nhất ở trên)
+
+### 2026-10-28 — P2.2
+- Đã làm: `heuristics/kinrow_eval.py` — eval theo cửa sổ k ô (`W[c]=10^(c-1)`), `evaluate`, `delta_eval` (= evaluate sau − trước, quét cục bộ), `move_score` (bậc WIN > BLOCK > delta). Thêm `cell_of(player)` vào `kinrow.py`.
+- Test: 79 passed (23 mới trong `tests/test_kinrow_eval.py`); ruff sạch.
+- File đổi: `gameai/heuristics/kinrow_eval.{py,md}`, `gameai/games/kinrow.{py,md}`, `tests/test_kinrow_eval.py`, `docs/DECISIONS.md` (D-8), `PROGRESS.md`.
+- Lưu ý: delta thuần thích tạo open-four (+1915) hơn chặn four (+1143) nên greedy/ordering/rollout phải dùng `move_score`. AB (P2.4) cộng dồn `delta_eval` + terminal `WIN − depth`. Trọng số chưa tinh chỉnh.
 
 ### 2026-10-28 — P2.1
 - Đã làm: `Agent` ABC (`stats` dict, `name`, `reset_stats`, `select_move` abstract); `RandomAgent(seed, use_candidates=False)` với `random.Random` riêng.

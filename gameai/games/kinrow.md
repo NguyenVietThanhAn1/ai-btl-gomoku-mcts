@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P1.2  ·  **Cập nhật:** 2026-10-28
+**Trạng thái:** ✅ ổn định  ·  **Task:** P1.2 (+ `cell_of` ở P2.2)  ·  **Cập nhật:** 2026-10-28
 
 ## Mục đích
 Cài đặt `Game` (xem `core/game.md`) cho k-in-a-row trên bàn n×n: 3×3 k=3 (thí nghiệm E2) và
@@ -12,6 +12,7 @@ Cài đặt `Game` (xem `core/game.md`) cho k-in-a-row trên bàn n×n: 3×3 k=3
 ## Public API
 ```python
 X = P1; O = P2                      # alias người chơi (O có noqa E741)
+def cell_of(player: int) -> int     # giá trị ô trên board: X → 1, O → 2 (dùng thay vì hard-code)
 
 class KInRow:
     def __init__(self, n: int = 15, k: int = 5, radius: int = 2): ...  # ValueError nếu k > n
@@ -56,5 +57,5 @@ class KInRow:
 - Chạy riêng: `python -m pytest tests/test_kinrow.py -q`
 
 ## Hạn chế / TODO
-- `board` dùng 0/1/2 còn người chơi là 1/-1: code ngoài (eval) cần ánh xạ `1 if p == X else 2`.
+- `board` dùng 0/1/2 còn người chơi là 1/-1: code ngoài phải ánh xạ bằng `cell_of(player)`.
 - Chưa có hash Zobrist; `key()` tạo `bytes` mỗi lần gọi (đủ cho 3×3; xem lại ở P2.4 nếu chậm).

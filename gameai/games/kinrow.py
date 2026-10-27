@@ -13,6 +13,11 @@ O = P2  # noqa: E741
 _DIRS = ((0, 1), (1, 0), (1, 1), (1, -1))
 
 
+def cell_of(player: int) -> int:
+    """Giá trị ô trên `board` của người chơi (X → 1, O → 2)."""
+    return 1 if player == X else 2
+
+
 @cache
 def _neighbors(n: int, radius: int) -> tuple[tuple[int, ...], ...]:
     """Với mỗi ô: các ô khác trong bán kính Chebyshev `radius` (cắt ở mép bàn)."""
@@ -78,7 +83,7 @@ class KInRow:
         board = self.board
         assert not board[move] and self._winner is None
         player = self._player
-        stone = 1 if player == X else 2
+        stone = cell_of(player)
         board[move] = stone
         self._history.append((move, self._winner))
         near, cand = self._near, self._cand

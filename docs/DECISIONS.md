@@ -32,3 +32,9 @@
 - `select_move(game)` (không abstract) gọi `reset_stats()` rồi `_select_move(game)` (abstract); agent con chỉ override `_select_move`.
 - Lý do: ép `stats` không cộng dồn giữa các lượt ở một chỗ, tránh việc từng agent (P2.3+) quên gọi `reset_stats()`. Chữ ký công khai `select_move(game) -> Move` không đổi.
 - Agent con vẫn được ghi `self.stats[...]` trong `_select_move`; nếu cần cộng dồn qua nhiều lượt thì tự giữ biến riêng.
+
+### D-8 (2026-10-28) — Heuristic k-in-row theo cửa sổ (P2.2)
+- Eval = Σ điểm mọi cửa sổ k ô liên tiếp (4 hướng), `W[c] = 10^(c-1)` cho cửa sổ chỉ có `c` quân một bên; WIN = 10·10^k. Pattern (open-four, four, open-three, …) tự phân cấp, không cần bảng pattern. PLAN không có "Done khi" riêng cho P2.2 → tiêu chí là bộ test `tests/test_kinrow_eval.py`.
+- Tách hai hàm: `delta_eval` (đúng bằng `evaluate` sau − trước, để AB cộng dồn) và `move_score` (ưu tiên chiến thuật cho greedy/ordering/rollout) với bậc **WIN > BLOCK (= WIN/10) > delta**. Lý do: delta thuần cho nước tạo open-four (+1915) cao hơn nước chặn four (+1143) nên thua ngay.
+- Alpha-Beta (P2.4) cộng dồn `delta_eval` dọc nhánh (O(k²)/nút) thay vì gọi `evaluate` toàn bàn ở lá; terminal dùng `WIN − depth` để ưu tiên thắng nhanh.
+- Thêm `cell_of(player)` vào `kinrow.py` (không đổi interface `Game`).
