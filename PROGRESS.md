@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P1.2 (chưa bắt đầu; P0.1, P1.1 ✅)
+- **Task hiện tại:** P2.1 (chưa bắt đầu; P0.1, P1.1, P1.2 ✅)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** chạy `/next-task` → P1.2 (`games/kinrow.py`). Phải test các điểm hợp đồng trong `gameai/core/game.md` (candidate ⊆ legal và không rỗng, `legal_moves()=[]` khi kết thúc, clone độc lập, `key()` gồm lượt đi, undo khôi phục `winner`).
+- **Bước tiếp theo:** chạy `/next-task` → P2.1 (`agents/base.py` + `random_agent.py`, `stats` dict, seed riêng).
 - **Cảnh báo / blocker:** —
 
 ## Bảng trạng thái
@@ -17,7 +17,7 @@
 |---|---|---|---|---|---|
 | P0.1 | Repo, venv, skeleton | ✅ | An | 2026-10-28 | spec-reviewer PASS |
 | P1.1 | core/game.py interface | ✅ | An | 2026-10-28 | spec-reviewer PASS; quyết định ở D-5 |
-| P1.2 | games/kinrow.py | ⬜ | An | | |
+| P1.2 | games/kinrow.py | ✅ | An | 2026-10-28 | spec-reviewer PASS |
 | P2.1 | Agent base + Random | ⬜ | An | | |
 | P2.2 | Heuristic eval k-in-row | ⬜ | An | | |
 | P2.3 | Minimax | ⬜ | An | | |
@@ -47,6 +47,12 @@
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 
 ## Session log (mới nhất ở trên)
+
+### 2026-10-28 — P1.2
+- Đã làm: `KInRow(n, k, radius=2)` với board `bytearray`, thắng tăng dần (4 hướng qua nước vừa đi), `candidate_moves` giữ tăng dần bằng `_near` + `_cand` cập nhật trong `play`/`undo`, undo bằng stack, `clone` độc lập, `key=(bytes(board), player)`.
+- Test: 47 passed (28 mới trong `tests/test_kinrow.py`); `ruff check` và `ruff format --check` sạch.
+- File đổi: `gameai/games/kinrow.py`, `gameai/games/kinrow.md`, `tests/test_kinrow.py`, `PROGRESS.md`.
+- Lưu ý: `board` lưu 0/1/2 còn người chơi là 1/-1 → eval (P2.2) phải ánh xạ `1 if p == X else 2`. Candidate trả list đã sort (tất định). Bàn trống 3×3 trả toàn bộ ô, bàn lớn trả ô giữa.
 
 ### 2026-10-28 — P1.1
 - Đã làm: `Protocol Game` (10 hàm, `@runtime_checkable`), `Move = Hashable`, `P1/P2/DRAW`, hàm `result_for(winner, player)`; `game.md` ghi hợp đồng từng hàm; D-5 trong DECISIONS.
