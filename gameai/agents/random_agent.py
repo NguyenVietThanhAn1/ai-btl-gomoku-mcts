@@ -14,9 +14,8 @@ class RandomAgent(Agent):
         self.rng = random.Random(seed)
         self.use_candidates = use_candidates
 
-    def select_move(self, game: Game) -> Move:
+    def _select_move(self, game: Game) -> Move:
         assert not game.is_terminal(), "select_move gọi trên ván đã kết thúc"
-        self.reset_stats()
         moves = game.candidate_moves() if self.use_candidates else game.legal_moves()
         self.stats["nodes"] = 0
         self.stats["iterations"] = 0

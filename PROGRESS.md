@@ -8,7 +8,7 @@
 
 - **Task hiện tại:** P2.2 (chưa bắt đầu; P0.1, P1.1, P1.2, P2.1 ✅)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** chạy `/next-task` → P2.2 (`heuristics/kinrow_eval.py`). Nhớ ghi chú đầu Session log: thêm `cell_of(player)` trong `kinrow.py`, mọi nơi đổi player → giá trị ô dùng nó, không hard-code 1/2.
+- **Bước tiếp theo:** chạy `/next-task` → P2.2 (`heuristics/kinrow_eval.py`). Lưu ý: thêm `cell_of(player)` trong `kinrow.py`, mọi nơi đổi player → giá trị ô dùng nó, không hard-code 1/2.
 - **Cảnh báo / blocker:** —
 
 ## Bảng trạng thái
@@ -49,13 +49,11 @@
 
 ## Session log (mới nhất ở trên)
 
-phần lưu ý cho P2.2: thêm hàm/hằng cell_of(player) trong kinrow.py và dùng nó ở mọi nơi cần đổi player -> giá trị ô, không hard-code 1/2 ở module khác. Commit.
-
 ### 2026-10-28 — P2.1
 - Đã làm: `Agent` ABC (`stats` dict, `name`, `reset_stats`, `select_move` abstract); `RandomAgent(seed, use_candidates=False)` với `random.Random` riêng.
 - Test: 56 passed (9 mới trong `tests/test_random_agent.py`); ruff sạch.
 - File đổi: `gameai/agents/{base,random_agent}.py` + `.md`, `tests/test_random_agent.py`, `PROGRESS.md`.
-- Lưu ý: agent con tự gọi `self.reset_stats()` đầu `select_move` (base không ép). Khóa stats: `nodes`, `iterations`, `time`.
+- Lưu ý: `Agent.select_move` (template method) tự reset stats rồi gọi `_select_move` — agent con chỉ override `_select_move` (D-7). Khóa stats: `nodes`, `iterations`, `time`.
 
 ### 2026-10-28 — P1.2
 - Đã làm: `KInRow(n, k, radius=2)` với board `bytearray`, thắng tăng dần (4 hướng qua nước vừa đi), `candidate_moves` giữ tăng dần bằng `_near` + `_cand` cập nhật trong `play`/`undo`, undo bằng stack, `clone` độc lập, `key=(bytes(board), player)`.

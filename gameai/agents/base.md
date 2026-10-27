@@ -13,13 +13,15 @@ class Agent(ABC):
     stats: dict[str, float]            # thống kê của lần select_move gần nhất
     name: str                          # property, mặc định = tên lớp
     def reset_stats(self) -> None      # gán stats = {}
+    def select_move(self, game: Game) -> Move   # KHÔNG override: reset_stats() rồi _select_move()
     @abstractmethod
-    def select_move(self, game: Game) -> Move
+    def _select_move(self, game: Game) -> Move  # agent con override hàm này
 ```
-- `select_move`: trả nước hợp lệ cho `game.current_player()`; **không để lại thay đổi trên `game`**
+- `select_move` (template method, D-7): gọi `reset_stats()` rồi `_select_move(game)`.
+- `_select_move`: trả nước hợp lệ cho `game.current_player()`; **không để lại thay đổi trên `game`**
   (dùng `undo`/`clone`). Precondition: ván chưa kết thúc.
 - Quy ước khóa `stats` (agent nào không có thì bỏ qua hoặc ghi 0): `nodes`, `iterations`, `time` (giây).
-  `stats` được làm mới ở mỗi lượt (gọi `reset_stats()` đầu `select_move`), không cộng dồn giữa các lượt.
+  `stats` được `select_move` làm mới ở mỗi lượt, không cộng dồn giữa các lượt; agent con không cần gọi `reset_stats()`.
 
 ## Phụ thuộc
 - Dùng: `core/game.py` (`Game`, `Move`).
@@ -27,10 +29,11 @@ class Agent(ABC):
 
 ## Thiết kế & quyết định
 - ABC thay vì Protocol để có `stats`/`name` dùng chung. Agent con phải gọi `super().__init__()`.
+- Template method (D-7): reset `stats` ép ở một chỗ, agent con không thể quên.
 - Tính ngẫu nhiên: agent nhận `seed` và giữ `random.Random` riêng, không dùng `random` toàn cục.
 
 ## Test
-- `tests/test_random_agent.py` (kiểm `Agent` là abstract, `stats`/`name`).
+- `tests/test_random_agent.py` (`Agent` là abstract, `stats`/`name`, `stats` không cộng dồn giữa 2 lần `select_move`).
 - Chạy: `python -m pytest tests/test_random_agent.py -q`
 
 ## Hạn chế / TODO

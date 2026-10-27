@@ -27,3 +27,8 @@
 ### D-6 (2026-10-28) — Sản phẩm nộp: báo cáo + video demo, không vấn đáp
 - Mục "Giải thích để vấn đáp" trong module doc đổi thành "Giải thích cho báo cáo" (nguyên liệu cho mục 3 báo cáo).
 - Thêm P7.4 video demo; GUI (P6.1) cần chế độ AI vs AI có độ trễ và overlay thống kê MCTS để quay.
+
+### D-7 (2026-10-28) — `Agent.select_move` là template method
+- `select_move(game)` (không abstract) gọi `reset_stats()` rồi `_select_move(game)` (abstract); agent con chỉ override `_select_move`.
+- Lý do: ép `stats` không cộng dồn giữa các lượt ở một chỗ, tránh việc từng agent (P2.3+) quên gọi `reset_stats()`. Chữ ký công khai `select_move(game) -> Move` không đổi.
+- Agent con vẫn được ghi `self.stats[...]` trong `_select_move`; nếu cần cộng dồn qua nhiều lượt thì tự giữ biến riêng.

@@ -79,3 +79,26 @@ def test_terminal_raises():
     assert g.is_terminal()
     with pytest.raises(AssertionError):
         RandomAgent(seed=0).select_move(g)
+
+
+class _CountingAgent(Agent):
+    def _select_move(self, game):
+        self.stats["calls"] = self.stats.get("calls", 0) + 1
+        return game.legal_moves()[0]
+
+
+def test_stats_not_accumulated_across_calls():
+    g = KInRow(3, 3)
+    a = _CountingAgent()
+    a.select_move(g)
+    a.select_move(g)
+    assert a.stats == {"calls": 1}
+
+
+def test_random_agent_stats_reset_between_calls():
+    g = KInRow(3, 3)
+    a = RandomAgent(seed=0)
+    a.select_move(g)
+    a.stats["junk"] = 5
+    a.select_move(g)
+    assert a.stats == {"nodes": 0, "iterations": 0}
