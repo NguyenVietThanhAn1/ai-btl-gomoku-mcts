@@ -11,6 +11,7 @@ markers = ["slow: test chạy lâu (bỏ qua bằng -m 'not slow')"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
