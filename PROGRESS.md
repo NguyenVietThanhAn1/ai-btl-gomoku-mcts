@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P2.1 (chưa bắt đầu; P0.1, P1.1, P1.2 ✅)
+- **Task hiện tại:** P2.2 (chưa bắt đầu; P0.1, P1.1, P1.2, P2.1 ✅)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** chạy `/next-task` → P2.1 (`agents/base.py` + `random_agent.py`, `stats` dict, seed riêng).
+- **Bước tiếp theo:** chạy `/next-task` → P2.2 (`heuristics/kinrow_eval.py`). Nhớ ghi chú đầu Session log: thêm `cell_of(player)` trong `kinrow.py`, mọi nơi đổi player → giá trị ô dùng nó, không hard-code 1/2.
 - **Cảnh báo / blocker:** —
 
 ## Bảng trạng thái
@@ -18,7 +18,7 @@
 | P0.1 | Repo, venv, skeleton | ✅ | An | 2026-10-28 | spec-reviewer PASS |
 | P1.1 | core/game.py interface | ✅ | An | 2026-10-28 | spec-reviewer PASS; quyết định ở D-5 |
 | P1.2 | games/kinrow.py | ✅ | An | 2026-10-28 | spec-reviewer PASS |
-| P2.1 | Agent base + Random | ⬜ | An | | |
+| P2.1 | Agent base + Random | ✅ | An | 2026-10-28 | spec-reviewer PASS |
 | P2.2 | Heuristic eval k-in-row | ⬜ | An | | |
 | P2.3 | Minimax | ⬜ | An | | |
 | P2.4 | Alpha-Beta | ⬜ | An | | |
@@ -50,6 +50,12 @@
 ## Session log (mới nhất ở trên)
 
 phần lưu ý cho P2.2: thêm hàm/hằng cell_of(player) trong kinrow.py và dùng nó ở mọi nơi cần đổi player -> giá trị ô, không hard-code 1/2 ở module khác. Commit.
+
+### 2026-10-28 — P2.1
+- Đã làm: `Agent` ABC (`stats` dict, `name`, `reset_stats`, `select_move` abstract); `RandomAgent(seed, use_candidates=False)` với `random.Random` riêng.
+- Test: 56 passed (9 mới trong `tests/test_random_agent.py`); ruff sạch.
+- File đổi: `gameai/agents/{base,random_agent}.py` + `.md`, `tests/test_random_agent.py`, `PROGRESS.md`.
+- Lưu ý: agent con tự gọi `self.reset_stats()` đầu `select_move` (base không ép). Khóa stats: `nodes`, `iterations`, `time`.
 
 ### 2026-10-28 — P1.2
 - Đã làm: `KInRow(n, k, radius=2)` với board `bytearray`, thắng tăng dần (4 hướng qua nước vừa đi), `candidate_moves` giữ tăng dần bằng `_near` + `_cand` cập nhật trong `play`/`undo`, undo bằng stack, `clone` độc lập, `key=(bytes(board), player)`.
