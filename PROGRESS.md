@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P2.4 (chưa bắt đầu; P0.1–P2.3 ✅)
+- **Task hiện tại:** P2.5 (chưa bắt đầu; P0.1–P2.4 ✅)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** chạy `/next-task` → P2.4 (`agents/alphabeta.py`). Dùng lại `terminal_score`/`WIN_SCORE`/`EvalFn` từ `agents/minimax.py`; test so giá trị với `MinimaxAgent.value()`/`root_values()` trên 3×3. Lưu ý: P2.4 phải cộng dồn `delta_eval` và dùng `WIN − depth` (xem `heuristics/kinrow_eval.md`, D-8); đổi player → ô dùng `cell_of`.
+- **Bước tiếp theo:** chạy `/next-task` → P2.5 (`agents/greedy.py`): `argmax kinrow_eval.move_score` trên `candidate_moves`, tie-break ngẫu nhiên bằng `random.Random(seed)`. Sau đó P3.1 MCTS.
 - **Cảnh báo / blocker:** —
 
 ## Bảng trạng thái
@@ -21,7 +21,7 @@
 | P2.1 | Agent base + Random | ✅ | An | 2026-10-28 | spec-reviewer PASS |
 | P2.2 | Heuristic eval k-in-row | ✅ | An | 2026-10-28 | spec-reviewer PASS; quyết định ở D-8 |
 | P2.3 | Minimax | ✅ | An | 2026-11-04 | spec-reviewer PASS |
-| P2.4 | Alpha-Beta | ⬜ | An | | |
+| P2.4 | Alpha-Beta | ✅ | An | 2026-11-04 | spec-reviewer PASS; quyết định ở D-9 |
 | P2.5 | Greedy agent | ⬜ | An | | |
 | P3.1 | MCTS-UCT | ⬜ | An | | |
 | P3.2 | Rollout policies | ⬜ | An | | |
@@ -48,6 +48,12 @@
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-04 — P2.4
+- Đã làm: `agents/alphabeta.py` — `AlphaBetaAgent` (cùng tham số Minimax + `order_fn`, `delta_fn`, `use_tt`), fail-soft, TT có cờ EXACT/LOWER/UPPER, khóa `(key, độ sâu còn lại)`, điểm thắng lưu theo khoảng cách; `search()` trả (move, value); stats thêm `cutoffs`, `tt_hits`. D-9 trong DECISIONS (gồm cả `WIN_SCORE` chung từ P2.3).
+- Test: 112 passed (16 mới trong `tests/test_alphabeta.py`); ruff sạch. Bàn trống 3×3: AB 20 866 nút, ordering+TT 990 (Minimax 549 946) — đo thử, chưa phải số liệu E1.
+- File đổi: `gameai/agents/alphabeta.{py,md}`, `tests/test_alphabeta.py`, `docs/DECISIONS.md`, `PROGRESS.md`.
+- Lưu ý: 15×15 nên dùng `AlphaBetaAgent(depth=2|3, eval_fn=evaluate, delta_fn=delta_eval, order_fn=move_score)`. Full suite chạy vài phút; `test_kinrow_eval.py::test_delta_eval_matches_brute_force[15-5]` mất ~70 s (có từ P2.2) — cân nhắc giảm số vị trí hoặc đánh dấu slow.
 
 ### 2026-11-04 — P2.3
 - Đã làm: `agents/minimax.py` — `MinimaxAgent(depth=None, eval_fn=None, use_candidates=True, seed=None)`, max/min tường minh theo góc nhìn người đi ở gốc, đếm nút (kể cả gốc), `root_values`/`value` để so với AB; `terminal_score` = ±(`WIN_SCORE` − ply), `WIN_SCORE = 10**12`.

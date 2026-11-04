@@ -38,3 +38,9 @@
 - Tách hai hàm: `delta_eval` (đúng bằng `evaluate` sau − trước, để AB cộng dồn) và `move_score` (ưu tiên chiến thuật cho greedy/ordering/rollout) với bậc **WIN > BLOCK (= WIN/10) > delta**. Lý do: delta thuần cho nước tạo open-four (+1915) cao hơn nước chặn four (+1143) nên thua ngay.
 - Alpha-Beta (P2.4) cộng dồn `delta_eval` dọc nhánh (O(k²)/nút) thay vì gọi `evaluate` toàn bàn ở lá; terminal dùng `WIN − depth` để ưu tiên thắng nhanh.
 - Thêm `cell_of(player)` vào `kinrow.py` (không đổi interface `Game`).
+
+### D-9 (2026-11-04) — Minimax/Alpha-Beta: thang điểm và tùy chọn (P2.3, P2.4)
+- Terminal dùng chung `terminal_score` = ±(`WIN_SCORE` − ply), `WIN_SCORE = 10**12` (trong `agents/minimax.py`), thay vì `win_score(k)` như ghi chú D-8 → Minimax và Alpha-Beta cùng thang điểm cho mọi game, thắng thật luôn trội hơn mọi heuristic.
+- `AlphaBetaAgent` nhận hàm qua tham số (`eval_fn`, `delta_fn`, `order_fn`) thay vì import `kinrow_eval` → không phụ thuộc game, dùng lại được cho cờ tướng (P8).
+- TT chỉ dùng lại entry có **cùng** độ sâu còn lại (không phải `≥`) để giá trị gốc luôn bằng Minimax cùng depth (cần cho E1 "best move giống nhau?"). Điểm thắng/thua lưu theo khoảng cách từ nút.
+- Tie-break có seed: xáo thứ tự nước ở gốc rồi sort ổn định theo `order_fn`; không chọn đều tuyệt đối (AB không biết giá trị chính xác của các nước không tốt nhất).
