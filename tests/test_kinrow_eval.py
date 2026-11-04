@@ -109,7 +109,9 @@ def test_block_cell_beats_open_four_creation_by_delta_alone():
     assert delta_eval(g, rc(7, 9)) > delta_eval(g, rc(10, 9))
 
 
-@pytest.mark.parametrize(("n", "k"), [(3, 3), (5, 4), (7, 4), (15, 5)])
+@pytest.mark.parametrize(
+    ("n", "k"), [(3, 3), (5, 4), (7, 4), pytest.param(15, 5, marks=pytest.mark.slow)]
+)
 def test_delta_eval_matches_brute_force(n, k):
     checked = 0
     for g in random_positions(n, k, games=12, seed=2):
