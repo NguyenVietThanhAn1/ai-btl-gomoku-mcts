@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P2.3 (chưa bắt đầu; P0.1, P1.1, P1.2, P2.1, P2.2 ✅)
+- **Task hiện tại:** P2.4 (chưa bắt đầu; P0.1–P2.3 ✅)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** chạy `/next-task` → P2.3 (`agents/minimax.py`, đếm nút). Lưu ý: P2.4 phải cộng dồn `delta_eval` và dùng `WIN − depth` (xem `heuristics/kinrow_eval.md`, D-8); đổi player → ô dùng `cell_of`.
+- **Bước tiếp theo:** chạy `/next-task` → P2.4 (`agents/alphabeta.py`). Dùng lại `terminal_score`/`WIN_SCORE`/`EvalFn` từ `agents/minimax.py`; test so giá trị với `MinimaxAgent.value()`/`root_values()` trên 3×3. Lưu ý: P2.4 phải cộng dồn `delta_eval` và dùng `WIN − depth` (xem `heuristics/kinrow_eval.md`, D-8); đổi player → ô dùng `cell_of`.
 - **Cảnh báo / blocker:** —
 
 ## Bảng trạng thái
@@ -20,7 +20,7 @@
 | P1.2 | games/kinrow.py | ✅ | An | 2026-10-28 | spec-reviewer PASS |
 | P2.1 | Agent base + Random | ✅ | An | 2026-10-28 | spec-reviewer PASS |
 | P2.2 | Heuristic eval k-in-row | ✅ | An | 2026-10-28 | spec-reviewer PASS; quyết định ở D-8 |
-| P2.3 | Minimax | ⬜ | An | | |
+| P2.3 | Minimax | ✅ | An | 2026-11-04 | spec-reviewer PASS |
 | P2.4 | Alpha-Beta | ⬜ | An | | |
 | P2.5 | Greedy agent | ⬜ | An | | |
 | P3.1 | MCTS-UCT | ⬜ | An | | |
@@ -48,6 +48,12 @@
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-04 — P2.3
+- Đã làm: `agents/minimax.py` — `MinimaxAgent(depth=None, eval_fn=None, use_candidates=True, seed=None)`, max/min tường minh theo góc nhìn người đi ở gốc, đếm nút (kể cả gốc), `root_values`/`value` để so với AB; `terminal_score` = ±(`WIN_SCORE` − ply), `WIN_SCORE = 10**12`.
+- Test: 96 passed (17 mới trong `tests/test_minimax.py`); ruff sạch. Cây 3×3 đầy đủ = 549 946 nút, giá trị 0, ~1,3 s. File test chạy ~30 s.
+- File đổi: `gameai/agents/minimax.{py,md}`, `tests/test_minimax.py`, `PROGRESS.md`.
+- Lưu ý: seed=None → chọn nước tốt nhất đầu tiên (tất định); có seed → ngẫu nhiên trong các nước tốt nhất. Terminal dùng `WIN_SCORE` chung (không phải `win_score(k)`) để AB/minimax cùng thang điểm; AB nên import từ `minimax.py`.
 
 ### 2026-10-28 — P2.2
 - Đã làm: `heuristics/kinrow_eval.py` — eval theo cửa sổ k ô (`W[c]=10^(c-1)`), `evaluate`, `delta_eval` (= evaluate sau − trước, quét cục bộ), `move_score` (bậc WIN > BLOCK > delta). Thêm `cell_of(player)` vào `kinrow.py`.
