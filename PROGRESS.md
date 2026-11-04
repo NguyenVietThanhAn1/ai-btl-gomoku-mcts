@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P2.5 (chưa bắt đầu; P0.1–P2.4 ✅)
+- **Task hiện tại:** P3.1 (chưa bắt đầu; P0.1–P2.5 ✅, xong phase P2)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** chạy `/next-task` → P2.5 (`agents/greedy.py`): `argmax kinrow_eval.move_score` trên `candidate_moves`, tie-break ngẫu nhiên bằng `random.Random(seed)`. Sau đó P3.1 MCTS.
+- **Bước tiếp theo:** chạy `/next-task` → P3.1 (`agents/mcts.py`): Node(move, parent, children, untried, W, N, player_just_moved), UCT, `iterations` hoặc `time_limit`, `final_move ∈ {max_n, max_wn}`, `last_root_stats()`; W theo góc nhìn người vừa đi vào node, dùng `result_for` (D-5). Rollout mặc định ngẫu nhiên trên `candidate_moves`; `HeuristicRollout` để P3.2 (có thể dùng `move_score`).
 - **Cảnh báo / blocker:** —
 
 ## Bảng trạng thái
@@ -22,7 +22,7 @@
 | P2.2 | Heuristic eval k-in-row | ✅ | An | 2026-10-28 | spec-reviewer PASS; quyết định ở D-8 |
 | P2.3 | Minimax | ✅ | An | 2026-11-04 | spec-reviewer PASS |
 | P2.4 | Alpha-Beta | ✅ | An | 2026-11-04 | spec-reviewer PASS; quyết định ở D-9 |
-| P2.5 | Greedy agent | ⬜ | An | | |
+| P2.5 | Greedy agent | ✅ | An | 2026-11-04 | spec-reviewer PASS |
 | P3.1 | MCTS-UCT | ⬜ | An | | |
 | P3.2 | Rollout policies | ⬜ | An | | |
 | P4.1 | Arena | ⬜ | An | | |
@@ -49,11 +49,17 @@
 
 ## Session log (mới nhất ở trên)
 
+### 2026-11-04 — P2.5
+- Đã làm: `agents/greedy.py` — `GreedyAgent(score_fn, seed=None, use_candidates=True)`: argmax `score_fn` trên candidate (1-ply), tie-break `random.Random(seed)` chỉ khi hòa điểm; stats `nodes` (= số nước chấm), `iterations`, `time`, `value`.
+- Test: 123 passed full suite (~59 s); 11 mới trong `tests/test_greedy.py`; ruff sạch.
+- File đổi: `gameai/agents/greedy.{py,md}`, `tests/test_greedy.py`, `PROGRESS.md`.
+- Lưu ý: dùng `GreedyAgent(move_score, seed=s)`. `use_candidates` mặc định True (RandomAgent mặc định False). Sau khi X đi giữa bàn, mọi candidate của O cùng điểm 20 → khai cuộc của Greedy gần như ngẫu nhiên. Greedy thắng Random(candidate) trong 9–10 nước ở mọi seed đã thử. `MoveFn` import từ `alphabeta.py` (có thể dời sang `base.py` sau).
+
 ### 2026-11-04 — P2.4
 - Đã làm: `agents/alphabeta.py` — `AlphaBetaAgent` (cùng tham số Minimax + `order_fn`, `delta_fn`, `use_tt`), fail-soft, TT có cờ EXACT/LOWER/UPPER, khóa `(key, độ sâu còn lại)`, điểm thắng lưu theo khoảng cách; `search()` trả (move, value); stats thêm `cutoffs`, `tt_hits`. D-9 trong DECISIONS (gồm cả `WIN_SCORE` chung từ P2.3).
 - Test: 112 passed full suite (~86 s; 111 với `-m "not slow"`), 16 mới trong `tests/test_alphabeta.py`; ruff sạch. Bàn trống 3×3: AB 20 866 nút, ordering+TT 990 (Minimax 549 946) — đo thử, chưa phải số liệu E1.
 - File đổi: `gameai/agents/alphabeta.{py,md}`, `tests/test_alphabeta.py`, `docs/DECISIONS.md`, `PROGRESS.md`.
-- Lưu ý: 15×15 nên dùng `AlphaBetaAgent(depth=2|3, eval_fn=evaluate, delta_fn=delta_eval, order_fn=move_score)`. Full suite chạy vài phút; `test_kinrow_eval.py::test_delta_eval_matches_brute_force[15-5]` mất ~70 s (có từ P2.2) — đã đánh dấu `slow` (bỏ qua bằng `python -m pytest -m "not slow"`).
+- Lưu ý: 15×15 nên dùng `AlphaBetaAgent(depth=2|3, eval_fn=evaluate, delta_fn=delta_eval, order_fn=move_score)`. Full suite ~1–1,5 phút; `test_kinrow_eval.py::test_delta_eval_matches_brute_force[15-5]` mất ~70 s (có từ P2.2) — đã đánh dấu `slow` (bỏ qua bằng `python -m pytest -m "not slow"`).
 
 ### 2026-11-04 — P2.3
 - Đã làm: `agents/minimax.py` — `MinimaxAgent(depth=None, eval_fn=None, use_candidates=True, seed=None)`, max/min tường minh theo góc nhìn người đi ở gốc, đếm nút (kể cả gốc), `root_values`/`value` để so với AB; `terminal_score` = ±(`WIN_SCORE` − ply), `WIN_SCORE = 10**12`.
