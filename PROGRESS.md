@@ -6,10 +6,10 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P3.1 (chưa bắt đầu; P0.1–P2.5 ✅, xong phase P2)
+- **Task hiện tại:** P3.2 (chưa bắt đầu; P3.1 ✅)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** chạy `/next-task` → P3.1 (`agents/mcts.py`): Node(move, parent, children, untried, W, N, player_just_moved), UCT, `iterations` hoặc `time_limit`, `final_move ∈ {max_n, max_wn}`, `last_root_stats()`; W theo góc nhìn người vừa đi vào node, dùng `result_for` (D-5). Rollout mặc định ngẫu nhiên trên `candidate_moves`; `HeuristicRollout` để P3.2 (có thể dùng `move_score`).
-- **Cảnh báo / blocker:** —
+- **Bước tiếp theo:** `/next-task` → P3.2: tăng tốc `HeavyRollout` (bản P3.1 ~0,5 ms/bước trên 15×15 vì chấm mọi candidate; hướng: chỉ dò thắng/chặn quanh 2 nước cuối), đo nhanh để chọn `temperature`, `rollout_limit`, `scale` của `sigmoid_value` trước E5. Xem `gameai/agents/rollout.md`.
+- **Cảnh báo / blocker:** chờ nhóm xác nhận phần làm rõ "Done P3 — thắng ngay" ở D-11 (MCTS không chiết khấu độ sâu: test kiểm "nước thắng chắc theo Minimax" + W/N nước thắng ngay = 1, thay vì đúng nước thắng ngay).
 
 ## Bảng trạng thái
 
@@ -23,8 +23,8 @@
 | P2.3 | Minimax | ✅ | An | 2026-11-04 | spec-reviewer PASS |
 | P2.4 | Alpha-Beta | ✅ | An | 2026-11-04 | spec-reviewer PASS; quyết định ở D-9 |
 | P2.5 | Greedy agent | ✅ | An | 2026-11-04 | spec-reviewer PASS |
-| P3.1 | MCTS-UCT | ⬜ | An | | |
-| P3.2 | Rollout policies | ⬜ | An | | |
+| P3.1 | MCTS-UCT (+ RandomRollout, HeavyRollout bản đúng) | ✅ | An | 2026-11-10 | spec-reviewer PASS; phạm vi/quyết định ở D-11 |
+| P3.2 | Tăng tốc HeavyRollout + chọn tham số | ⬜ | An | | phạm vi đổi theo D-11 |
 | P4.1 | Arena | ⬜ | An | | |
 | P4.2 | Experiment runner | ⬜ | An | | |
 | P4.3 | CLI | ⬜ | An | | |
@@ -33,6 +33,7 @@
 | E3 | c sweep | ⬜ | An | | |
 | E4 | N vs W/N | ⬜ | An | | |
 | E5 | Random vs heuristic rollout | ⬜ | An | | |
+| E6 | Tác dụng check_tactics | ⬜ | An | | thêm theo D-11 |
 | P6.1 | GUI pygame | ⬜ | An | | |
 | P7.1 | Plots/tables | ⬜ | An | | |
 | P7.2 | report.md | ⬜ | An | | |
@@ -48,6 +49,12 @@
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-10 — P3.1
+- Đã làm: `agents/mcts.py` — `MCTSAgent` (UCT, `iterations` và/hoặc `time_limit`, `final_move` max_n/max_wn, `rollout_limit` + `value_fn`, `check_tactics` mặc định tắt, seed riêng), `Node`, `uct`, `select_child`, `backpropagate` (chỗ lật góc nhìn duy nhất), `last_root_stats()`, `root`. `agents/rollout.py` — `RandomRollout`, `HeavyRollout` (softmax trên `score_fn`, T=100, chưa tối ưu), `make_policy`, `sigmoid_value`. PLAN: phạm vi P3.1/P3.2, đối thủ chuẩn 15×15 (Greedy + AB depth 2), thêm E6. DECISIONS: D-10, D-11.
+- Test: 182 test, 181 passed + 1 xfail chủ ý (full suite ~2 phút gồm `slow`); 59 mới trong `tests/test_mcts.py` + `tests/test_rollout.py` (~5 s không tính `slow`, ~23 s cả `slow`); ruff sạch. Đã thử 4 đột biến lật dấu (backprop lật toàn cục / viết cứng P1 / đảo 1−r từ lá / lật trong UCT) → đều bị test bắt.
+- File đổi: `gameai/agents/{mcts,rollout}.{py,md}`, `tests/test_{mcts,rollout}.py`, `gameai/heuristics/kinrow_eval.md`, `PLAN.md`, `docs/DECISIONS.md`, `PROGRESS.md`.
+- Lưu ý: tốc độ 3×3 1000 iter ≈ 19 ms; 15×15 ≈ 0,32–0,40 ms/iter (cây sâu ~2 ở 1000 iter). Tắt tactics: 15×15 chặn four 0/10 seed ở 1000 iter, 2/10 ở 5000 (số đo phát triển — báo cáo lấy từ E6). 20 ván vs Minimax 3×3 tắt tactics: 1000 iter đủ, 0 thua. MCTS không phân biệt thắng ngay / thắng chắc (thế `. . X / X O X / . O .`) → làm rõ Done P3 ở D-11, chờ nhóm duyệt. `check_tactics` tốn O(b²) (~80 ms với 148 candidate). Heavy trên 15×15 phải có `rollout_limit` cho tới khi P3.2 tăng tốc.
 
 ### 2026-11-04 — P2.5
 - Đã làm: `agents/greedy.py` — `GreedyAgent(score_fn, seed=None, use_candidates=True)`: argmax `score_fn` trên candidate (1-ply), tie-break `random.Random(seed)` chỉ khi hòa điểm; stats `nodes` (= số nước chấm), `iterations`, `time`, `value`.

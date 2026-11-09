@@ -95,13 +95,15 @@ Mỗi task: **mục tiêu → output → Done khi (acceptance)**. Một task = m
   Done P2 khi: trên 3×3 alpha-beta cho **cùng giá trị** với minimax ở mọi trạng thái test; minimax-vs-minimax 3×3 luôn hòa; alpha-beta 15×15 depth 2 thắng ngay nếu có nước thắng, chặn nếu đối thủ có four.
 
 ### P3 — MCTS-UCT (đề ý 2, 4, 5)
-- **P3.1** `agents/mcts.py`: Node(move, parent, children, untried, W, N, player_just_moved); 4 bước select (UCT) → expand → simulate → backprop.
-  - W tính theo góc nhìn **người vừa đi vào node**; thắng = 1, hòa = 0.5, thua = 0.
-  - Tham số: `c`, `iterations` **hoặc** `time_limit`, `rollout_policy`, `final_move ∈ {"max_n", "max_wn"}` (để làm E4), `seed`.
-  - `last_root_stats()` → list (move, W, N, W/N) cho E4.
+- **P3.1** `agents/mcts.py` + `agents/rollout.py` (D-11): Node(move, parent, children, untried, W, N, player_just_moved); 4 bước select (UCT) → expand → simulate → backprop.
+  - W tính theo góc nhìn **người vừa đi vào node**; thắng = 1, hòa = 0.5, thua = 0. Lật góc nhìn duy nhất ở backprop.
+  - Tham số: `c` (√2), `iterations` và/hoặc `time_limit` (dừng khi chạm cái nào trước), `rollout_policy ∈ {"random", "heavy"}` hoặc object, `score_fn` (cho heavy), `rollout_limit` (None = chơi tới hết) + `value_fn` (chấm khi bị cắt, None → 0.5), `final_move ∈ {"max_n", "max_wn"}` (để làm E4), `check_tactics` (mặc định tắt), `seed`.
+  - `last_root_stats()` → list (move, W, N, W/N) cho E4. `stats`: `iterations`, `nodes` (= số node cây), `time`, `value`, `max_depth`, `rollout_plies`, `tactic`.
   - Expand/rollout dùng `candidate_moves()` để 15×15 chạy được.
-- **P3.2** `agents/rollout.py`: `RandomRollout`, `HeuristicRollout` (thắng ngay > chặn thua ngay > chọn ngẫu nhiên có trọng số theo heuristic trên candidate moves).
+  - `rollout.py`: `RandomRollout`, `HeavyRollout(score_fn, temperature)` bản đúng chưa tối ưu: chấm mọi candidate, lấy mẫu theo softmax((s − max)/T) → thắng ngay > chặn thua ngay tự trội nhờ bậc WIN/BLOCK của `move_score`; `sigmoid_value(eval_fn, scale)` làm `value_fn`.
+- **P3.2** Tăng tốc `HeavyRollout` (bản P3.1 tốn ~0,5 ms/bước trên 15×15 do chấm mọi candidate, ~100× random): chỉ dò thắng/chặn quanh 2 nước cuối, chọn `temperature` / `rollout_limit` / scale của `value_fn` bằng đo nhanh trước E5.
   Done P3 khi: MCTS 3×3 (1000 iter) luôn đi nước thắng ngay / chặn thua ngay trong bộ test vị trí; 20 ván vs minimax 3×3 không thua ván nào.
+  (Làm rõ ở D-11: "thắng ngay" được kiểm là "nước thắng chắc theo Minimax" vì MCTS không chiết khấu độ sâu; chặn vẫn phải đúng ô. Hai tiêu chí kiểm với `check_tactics=False`.)
 
 ### P4 — Arena, CLI, khung thí nghiệm
 - **P4.1** `arena.py`: `play_game(game_factory, agent_x, agent_o, seed) -> GameRecord` (winner, số nước, thời gian/nước, nodes); `play_match(..., n_games, swap_first=True)`.
@@ -116,9 +118,16 @@ Trước khi chạy full: chạy `--quick`, ghi **thời gian ước tính** và
 |---|---|---|---|
 | **E1** | Alpha-Beta tiết kiệm bao nhiêu nút? | 3×3: tìm toàn bộ từ bàn trống + 5 thế cờ giữa ván. 15×15: depth 2, 3 trên 5 thế cờ cố định, có/không move ordering | `tables/e1_nodes.csv`: nodes, time, best move giống nhau? |
 | **E2** | MCTS 3×3 có bao giờ thua? | (a) MCTS(1000, 5000 iter) vs Minimax hoàn hảo, vs Random, vs MCTS — mỗi cặp ≥100 ván đổi lượt. (b) **Kiểm chứng vét cạn**: duyệt mọi chuỗi nước của đối thủ (MCTS seed cố định đi 1 nhánh, đối thủ thử mọi nước) → 0 nhánh thua | bảng W/D/L; số nhánh đã kiểm |
-| **E3** | Ảnh hưởng của c | c ∈ {0.5, 1.0, 1.4, 2.0} × iter ∈ {100, 250, 500, 1000, 2500, 5000}; ≥50 ván/điểm, đổi lượt. 3×3 vs Random (đo non-loss/win rate) và 15×15 vs Greedy | `figures/e3_*.png`: 1 đường/c, kèm khoảng tin cậy 95% |
+| **E3** | Ảnh hưởng của c | c ∈ {0.5, 1.0, 1.4, 2.0} × iter ∈ {100, 250, 500, 1000, 2500, 5000}; ≥50 ván/điểm, đổi lượt. 3×3 vs Random (đo non-loss/win rate) và 15×15 vs Greedy **và vs AlphaBeta depth 2** | `figures/e3_*.png`: 1 đường/c, kèm khoảng tin cậy 95% |
 | **E4** | N vs W/N | Lấy stats gốc ở vài thế cờ; so `final_move=max_n` vs `max_wn` đối đầu nhau ≥50 ván | bảng W, N, W/N tại gốc; tỉ lệ thắng max_n vs max_wn |
-| **E5** | Rollout heuristic tốt hơn bao nhiêu? | So random vs heuristic rollout ở **cùng số iteration** và **cùng thời gian/nước** (công bằng); đối đầu trực tiếp + vs Greedy | bảng + đồ thị; nhận xét liên hệ value network |
+| **E5** | Rollout heuristic tốt hơn bao nhiêu? | So random vs heuristic rollout ở **cùng số iteration** và **cùng thời gian/nước** (công bằng); đối đầu trực tiếp + vs Greedy **và vs AlphaBeta depth 2** | bảng + đồ thị; nhận xét liên hệ value network |
+| **E6** | Kiểm tra "thắng ngay / chặn ngay" trước khi search giúp bao nhiêu? | MCTS `check_tactics` bật vs tắt (cùng iteration, rollout random): (a) tỷ lệ chặn đúng trên bộ thế cờ 15×15 có four của đối thủ, theo iteration; (b) tỷ lệ thắng vs Greedy và AlphaBeta depth 2; (c) thời gian/nước tăng thêm | `tables/e6_tactics.csv` + 1 hình |
+
+**Đối thủ chuẩn 15×15 (D-10):** dùng **cả hai** đối thủ cố định khi so sánh các cấu hình MCTS:
+`GreedyAgent(move_score, seed=s)` (rẻ) và `AlphaBetaAgent(depth=2, eval_fn=evaluate, delta_fn=delta_eval, order_fn=move_score, seed=s)`
+(mạnh hơn vì thấy phản ứng của đối thủ). Lý do: tránh ceiling effect. Nếu MCTS thắng gần 100% Greedy ở iteration cao thì các đường
+c / rollout / final_move chồng lên nhau, không phân biệt được. Bắt buộc có `eval_fn` (thiếu thì lá depth 2 = 0). Seed của đối thủ
+đổi theo ván để các ván không trùng nhau.
 
 Ghi chú hiệu năng 15×15: nếu 5000 iter quá chậm, giảm số ván ở mức iteration cao hoặc dùng time budget — **ghi rõ vào báo cáo**, không âm thầm đổi thiết lập.
 

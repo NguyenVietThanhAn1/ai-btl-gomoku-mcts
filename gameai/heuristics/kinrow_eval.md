@@ -29,7 +29,8 @@ def windows_through(n: int, k: int) -> tuple[tuple[int, ...], ...]  # cache: ô 
 
 ## Phụ thuộc
 - Dùng: `games/kinrow.py` (`KInRow`, `cell_of`, `_DIRS`), `core/game.py` (`DRAW`).
-- Được dùng bởi: `agents/alphabeta.py`, `agents/greedy.py`, `agents/rollout.py` (chưa có).
+- Được dùng bởi (truyền qua tham số, không import cứng): `agents/alphabeta.py`, `agents/greedy.py`,
+  `agents/rollout.py` (`HeavyRollout(move_score)`, `sigmoid_value(evaluate, scale)`).
 
 ## Thiết kế & quyết định
 - **Cửa sổ:** mọi đoạn k ô liên tiếp theo 4 hướng, tiền tính theo `(n, k)` (15×15, k=5: 572 cửa sổ;

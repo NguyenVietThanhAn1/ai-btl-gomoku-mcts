@@ -44,3 +44,19 @@
 - `AlphaBetaAgent` nhận hàm qua tham số (`eval_fn`, `delta_fn`, `order_fn`) thay vì import `kinrow_eval` → không phụ thuộc game, dùng lại được cho cờ tướng (P8).
 - TT chỉ dùng lại entry có **cùng** độ sâu còn lại (không phải `≥`) để giá trị gốc luôn bằng Minimax cùng depth (cần cho E1 "best move giống nhau?"). Điểm thắng/thua lưu theo khoảng cách từ nút.
 - Tie-break có seed: xáo thứ tự nước ở gốc rồi sort ổn định theo `order_fn`; không chọn đều tuyệt đối (AB không biết giá trị chính xác của các nước không tốt nhất).
+
+### D-10 (2026-11-10) — Đối thủ chuẩn 15×15: Greedy **và** AlphaBeta depth 2 (bổ sung D-4)
+- Thí nghiệm so sánh cấu hình MCTS trên 15×15 (E3, E5) dùng cả `GreedyAgent(move_score)` và `AlphaBetaAgent(depth=2, eval_fn=evaluate, delta_fn=delta_eval, order_fn=move_score)` làm đối thủ chuẩn ngay từ đầu, thay vì chỉ đổi sang AB khi đã thấy MCTS thắng 100% Greedy như D-4.
+- Lý do: tránh ceiling effect. Khi tỷ lệ thắng bão hòa gần 100% thì các đường c / rollout không phân biệt được nhau; AB depth 2 thấy được phản ứng của đối thủ nên khó hơn Greedy, nhưng vẫn rẻ (có `delta_fn` + ordering).
+- Theo yêu cầu của nhóm khi lập kế hoạch P3.1.
+
+### D-11 (2026-11-10) — Thiết kế MCTS và phạm vi P3.1/P3.2
+- **Phạm vi:** P3.1 làm cả `agents/rollout.py` (`RandomRollout`, `HeavyRollout` bản đúng chưa tối ưu, `sigmoid_value`). P3.2 đổi thành "tăng tốc heavy + chọn tham số". Lý do: đo nhanh 15×15 (sau 6 nước) — rollout random 0,35 ms (trung bình 91 nước), chấm `move_score` trên ~100 candidate 0,5 ms/bước → heavy chơi tới hết ~45 ms/rollout, không dùng được cho thí nghiệm nếu không cắt/tối ưu; nhưng cần có bản đúng sớm để làm chuẩn so sánh.
+- **Heavy:** lấy mẫu theo softmax((s − max)/T) trên `score_fn` (k-in-row: `move_score`), T mặc định 100. Bậc WIN/BLOCK cách delta thường ~10^5 nên thắng ngay / chặn ngay tự được chọn với xác suất ≈ 1, không cần ngưỡng riêng của k-in-row. Loại ε-greedy: đo được rollout chỉ dài 5,8 nước, bên đi trước trong rollout gần như luôn thắng → tín hiệu lệch.
+- **Rollout bị cắt** (`rollout_limit`): z = `value_fn(g)` (xác suất P1 thắng) nếu có, ngược lại 0,5. Mặc định `rollout_limit=None` cho cả hai policy; thí nghiệm dùng heavy tự đặt giới hạn.
+- **Góc nhìn:** backprop là chỗ lật duy nhất: `W += z if player_just_moved == P1 else 1 − z`, `z = result_for(winner, P1)` (D-5). Selection và chọn nước cuối không lật.
+- **`check_tactics`** (mặc định tắt để E6 đo được tác dụng): thắng ngay → đi luôn; tập nước an toàn S (sau đó đối thủ không thắng ngay, tính bằng play/undo nên dùng được cho cờ tướng): |S| = 1 → đi luôn; S = ∅ hoặc S = mọi nước → search bình thường; còn lại → search chỉ trên S. Chi phí O(b²), xấu nhất ~80 ms với 148 candidate; tính vào `time` và `time_limit`.
+- **Ngân sách:** `iterations` và/hoặc `time_limit`, dừng khi chạm cái nào trước; luôn chạy ít nhất 1 iteration. Chỉ ngân sách iteration mới tái lập được theo seed.
+- **`stats["nodes"]`** = số node của cây (kể cả gốc) — độ đo "số nút" của đề cho MCTS. `stats["value"]` = W/N của nước chọn (∈ [0, 1], khác thang AB).
+- Thêm thí nghiệm **E6** (tác dụng `check_tactics`) vào PLAN để báo cáo có số liệu trong `results/`.
+- **Làm rõ "Done P3 — luôn đi nước thắng ngay"** (phát hiện khi test, chờ nhóm duyệt): MCTS thuần không chiết khấu độ sâu. Ở 3×3 `. . X / X O X / . O .` (O đi), O thắng ngay ở 1 nhưng đi 8 cũng thắng chắc (3 đường dọa) → cả hai có W/N = 1 chính xác, N bằng nhau, tie-break có thể chọn 8. Bộ test vị trí vì vậy kiểm "có nước thắng → chọn nước **thắng chắc** theo Minimax" (không bỏ thắng); thế phải chặn vẫn đòi đúng ô chặn; test thắng ngay "chặt" giữ cho các thế mà thắng ngay là nước thắng duy nhất. Không đổi thuật toán để ép "thắng ngay" (khác: ưu tiên con kết thúc thắng khi chọn nước cuối — có thể thêm nếu nhóm muốn, nhưng sẽ chồng lên `check_tactics` mà E6 đo).
