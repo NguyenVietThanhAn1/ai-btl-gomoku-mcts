@@ -128,6 +128,32 @@ N = 3 + 1 + 1 = 5, W = (3 − 2,5) + (1 − 0) + (1 − 0) = 2,5; X2: N = 1 + 2,
 **Vì sao chọn N lớn nhất (E4).** N là số lần UCT đã "tin" nước đó đủ để chọn lại; một con có W/N cao nhưng
 N nhỏ (vd. 1/1) là ước lượng nhiễu. Khi tìm lâu, con tốt nhất gom phần lớn lượt thăm nên max-N ổn định hơn.
 
+**So sánh với Minimax: thắng ngay hay thắng chắc.** Thế 3×3 (đánh số ô 0–8 theo hàng), O đi:
+```
+. . X      0 1 2
+X O X      3 4 5
+. O .      6 7 8
+```
+- O đi **1** thắng ngay (cột 1-4-7).
+- O đi **8** chưa thắng nhưng tạo 3 đường dọa cùng lúc: ô 0 (chéo 0-4-8), ô 6 (hàng 6-7-8), ô 1 (cột 1-4-7).
+  X chỉ chặn được một ô, và sau mọi nước của X, cả hai ô trống còn lại đều là nước thắng của O → thắng chắc ở
+  nước thứ 3 tính từ gốc.
+
+*Minimax* chấm ô kết thúc bằng `±(WIN_SCORE − ply)` (D-9) nên thắng sớm được điểm cao hơn:
+`root_values` cho ô 1 = WIN − 1, ô 8 = WIN − 3, ô 0 và 6 = −(WIN − 2) (X thắng ngay ở ô còn lại) → chọn **1**.
+
+*MCTS* ước lượng **xác suất thắng** W/N và không quan tâm thắng ở nước thứ mấy. Mọi rollout qua ô 8 đều kết
+thúc bằng O thắng (kể cả rollout ngẫu nhiên, vì mọi nước của O ở bước đó đều thắng) → W/N(8) = 1 chính xác,
+bằng W/N(1). Đo thực tế (1000 iter, seed 9, `check_tactics=False`): ô 1 và ô 8 cùng W = N = 483, ô 0 và 6
+cùng 4/17 = 0,24; hai con tốt nhất hòa cả N lẫn W nên tie-break theo thứ tự mở rộng → MCTS chọn **8**.
+Test: `tests/test_mcts.py::test_forced_win_ties_with_immediate_win`.
+
+Ý nghĩa: cả hai thuật toán đều không bỏ lỡ chiến thắng, nhưng chỉ Minimax ưu tiên thắng nhanh nhất vì có
+chiết khấu theo độ sâu. MCTS thuần chỉ trả lời "nước nào thắng chắc nhất", không trả lời "nước nào thắng
+nhanh nhất"; muốn MCTS ưu tiên thắng ngay phải thêm cơ chế riêng (bật `check_tactics`, MCTS-Solver, hoặc
+chiết khấu phần thưởng theo độ dài ván). Đó là lý do tiêu chí "Done P3 — luôn đi nước thắng ngay" được làm rõ
+thành "đi nước thắng chắc theo Minimax" (D-11).
+
 **Chọn tham số.** c = √2 là giá trị lý thuyết của UCB1 với điểm trong [0, 1]; E3 quét c ∈ {0,5; 1; 1,4; 2}.
 3×3: 1000 iter đủ để không thua Minimax (đo ở test). 15×15: rollout random, `candidate_moves` bán kính 2
 (D-3); `check_tactics` tắt khi đo thuật toán gốc, bật khi demo/so khả năng chơi (E6).
@@ -161,4 +187,5 @@ N nhỏ (vd. 1/1) là ước lượng nhiễu. Khi tìm lâu, con tốt nhất g
   chỉ cho cây rất nông.
 - Không chiết khấu độ sâu / không MCTS-Solver: không phân biệt thắng ngay với thắng chắc về sau.
 - `check_tactics` O(b²); với k-in-row có thể O(b) bằng `move_score` (bậc BLOCK) nếu cần nhanh hơn.
-- Heavy rollout chậm (~0,5 ms/bước trên 15×15) — tăng tốc ở P3.2.
+- Heavy rollout bản chuẩn chậm (~0,4–0,8 ms/bước trên 15×15); k-in-row dùng `KInRowHeavyRollout`
+  (`heuristics/kinrow_rollout.md`, P3.2) — cùng cây với bản chuẩn khi cùng seed + iteration (có test).

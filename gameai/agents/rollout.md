@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🔄 bản đúng, chưa tối ưu heavy (P3.2)  ·  **Task:** P3.1 (D-11)  ·  **Cập nhật:** 2026-11-10
+**Trạng thái:** ✅ ổn định (bản chuẩn; bản nhanh cho k-in-row ở `heuristics/kinrow_rollout.py`)  ·  **Task:** P3.1 (D-11), P3.2 (D-12)  ·  **Cập nhật:** 2026-11-10
 
 ## Mục đích
 Chính sách chọn nước trong pha mô phỏng (simulation) của MCTS, và `value_fn` chấm điểm khi rollout bị cắt.
@@ -27,12 +27,16 @@ def sigmoid_value(eval_fn: EvalFn, scale: float) -> ValueFn                    #
 - `make_policy`: `"random"` → `RandomRollout()`; `"heavy"` → `HeavyRollout(score_fn)` (thiếu `score_fn` →
   `ValueError`); callable → trả nguyên; chuỗi khác → `ValueError`. `MCTSAgent` gọi hàm này.
 - `sigmoid_value(eval_fn, scale)(g) = 1 / (1 + exp(−eval_fn(g, P1) / scale))`, không tràn số với eval rất lớn.
+- `HeavyRollout` là **bản chuẩn** (tổng quát, chậm). Với k-in-row dùng `KInRowHeavyRollout(T)`
+  (`heuristics/kinrow_rollout.md`): cùng chuỗi nước với `HeavyRollout(move_score, T)` khi cùng rng (có test),
+  nhanh hơn 4–11× mỗi rollout. `make_policy("heavy")` vẫn trả bản chuẩn.
 - Policy chỉ dùng `rng` được truyền vào (RNG của agent) → tái lập theo seed. Không mutate `game`.
 
 ## Phụ thuộc
 - Dùng: `core/game.py` (`P1`), `agents/alphabeta.py` (`MoveFn`), `agents/minimax.py` (`EvalFn`).
 - Hàm truyền vào: `heuristics/kinrow_eval.py` (`move_score`, `evaluate`).
-- Được dùng bởi: `agents/mcts.py`, `experiments/e5_rollout.py` (chưa có).
+- Được dùng bởi: `agents/mcts.py`, `heuristics/kinrow_rollout.py` (test so với bản chuẩn),
+  `experiments/p32_heavy_speed.py`, `experiments/e5_rollout.py` (chưa có).
 
 ## Thiết kế & quyết định (D-11)
 - **Softmax thay cho ngưỡng thắng/chặn:** bậc WIN (10^6) / BLOCK (10^5) của `move_score` cách delta thường
@@ -43,7 +47,13 @@ def sigmoid_value(eval_fn: EvalFn, scale: float) -> ValueFn                    #
   trước trong rollout gần như luôn thắng → tín hiệu lệch.
 - **Chi phí** (15×15, sau 6 nước, máy dev): random 0,35 ms/rollout (trung bình 91 nước); chấm `move_score`
   ~100 candidate 0,5 ms/bước → heavy ~0,5–0,6 ms/bước, chơi tới hết ~45 ms/rollout (≈ 100× random). Vì vậy
-  dùng heavy trên 15×15 phải đặt `rollout_limit` (+ `value_fn`) hoặc chờ bản tăng tốc ở P3.2.
+  dùng bản nhanh `KInRowHeavyRollout` (P3.2) cho thí nghiệm.
+- **Rollout heavy rất ngắn ở T nhỏ** (`results/tables/p32_heavy_speed.csv`, 15×15): T=100 trung bình
+  9,4 nước sau khai cuộc 6 nước (5,1 sau 20 nước), T=300: 13,3 / 5,8, T=1000: 33,1 / 22,4; random 80–88.
+  Heavy thích tạo open-four nhưng chỉ thấy đe dọa k−1 quân (không chặn open-three) nên ván thử kết thúc
+  nhanh. Vì vậy ở T=100, **`rollout_limit=10` gần như không có tác dụng** (đa số rollout kết thúc trước
+  10 nước); `rollout_limit` chỉ đáng kể ở T lớn. Tính theo rollout, bản chuẩn chậm ~10× random (không
+  phải ~100× như theo bước).
 - `value_fn` trả xác suất của **P1** (không phải người đi) để `backpropagate` chỉ có một quy ước z.
 
 ## Giải thích cho báo cáo
@@ -65,7 +75,8 @@ value_fn(s) = σ(eval(s, P1) / scale) = 1 / (1 + e^(−eval(s, P1)/scale))
 điểm 300, 200, 20 → trọng số 1; e^−1 = 0,37; e^−2,8 = 0,06 → xác suất 0,70 / 0,26 / 0,04.
 
 **Chọn tham số.** T = 100 tạm thời theo thang delta (nước thường ~20, tạo three vài trăm, tạo four ~1000);
-T, `rollout_limit` và `scale` của `sigmoid_value` chọn bằng đo nhanh ở P3.2 trước E5.
+T, `rollout_limit` và `scale` của `sigmoid_value` chọn bằng quét sơ bộ ở P3.3 (sau P4.1) trước E5:
+T ∈ {100, 300, 1000} × {không cắt, cắt 10 + `sigmoid_value`}, `scale` hiệu chỉnh bằng hồi quy logistic (D-12).
 
 ## Test
 - File: `tests/test_rollout.py` — random trả candidate và tái lập theo rng; heavy luôn thắng ngay (15×15) và
@@ -75,6 +86,5 @@ T, `rollout_limit` và `scale` của `sigmoid_value` chọn bằng đo nhanh ở
 - Chạy riêng: `python -m pytest tests/test_rollout.py -q` (< 1 s).
 
 ## Hạn chế / TODO
-- P3.2: tăng tốc heavy (chỉ dò thắng/chặn quanh 2 nước cuối thay vì chấm mọi candidate mỗi bước), chọn T,
-  `rollout_limit`, `scale`.
+- P3.3: chọn T, `rollout_limit`, `scale` (quét sơ bộ, D-12).
 - Heavy dùng `move_score` nên chỉ thấy đe dọa k−1 quân (không thấy open-three của đối thủ là nguy hiểm).

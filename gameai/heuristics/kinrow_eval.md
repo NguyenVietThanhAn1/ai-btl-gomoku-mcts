@@ -31,6 +31,9 @@ def windows_through(n: int, k: int) -> tuple[tuple[int, ...], ...]  # cache: ô 
 - Dùng: `games/kinrow.py` (`KInRow`, `cell_of`, `_DIRS`), `core/game.py` (`DRAW`).
 - Được dùng bởi (truyền qua tham số, không import cứng): `agents/alphabeta.py`, `agents/greedy.py`,
   `agents/rollout.py` (`HeavyRollout(move_score)`, `sigmoid_value(evaluate, scale)`).
+- Import trực tiếp: `heuristics/kinrow_rollout.py` (`windows`, `windows_through`, `_weights`, `win_score`,
+  `block_bonus`, `move_score`) — bản tăng dần phải khớp đúng nhánh của `_scan`; đổi `_scan`/trọng số thì
+  `tests/test_kinrow_rollout.py` sẽ báo lệch.
 
 ## Thiết kế & quyết định
 - **Cửa sổ:** mọi đoạn k ô liên tiếp theo 4 hướng, tiền tính theo `(n, k)` (15×15, k=5: 572 cửa sổ;

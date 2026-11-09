@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P3.2 (chưa bắt đầu; P3.1 ✅)
+- **Task hiện tại:** P4.1 (chưa bắt đầu; P3.2 ✅)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** `/next-task` → P3.2: tăng tốc `HeavyRollout` (bản P3.1 ~0,5 ms/bước trên 15×15 vì chấm mọi candidate; hướng: chỉ dò thắng/chặn quanh 2 nước cuối), đo nhanh để chọn `temperature`, `rollout_limit`, `scale` của `sigmoid_value` trước E5. Xem `gameai/agents/rollout.md`.
+- **Bước tiếp theo:** `/next-task` → P4.1 Arena (`play_game` / `play_match`), rồi P3.3 quét sơ bộ T / `rollout_limit` / `scale` của heavy (thiết lập đã duyệt ở D-12: cùng `time_limit` 0,5 s, Greedy + AB depth 2, 20 ván/cấu hình/đối thủ, 4 worker, `scale` bằng hồi quy logistic trên seed 50 000–50 199). Heavy cho k-in-row: dùng `KInRowHeavyRollout(T)` (`heuristics/kinrow_rollout.md`).
 - **Cảnh báo / blocker:** chờ nhóm xác nhận phần làm rõ "Done P3 — thắng ngay" ở D-11 (MCTS không chiết khấu độ sâu: test kiểm "nước thắng chắc theo Minimax" + W/N nước thắng ngay = 1, thay vì đúng nước thắng ngay).
 
 ## Bảng trạng thái
@@ -24,8 +24,9 @@
 | P2.4 | Alpha-Beta | ✅ | An | 2026-11-04 | spec-reviewer PASS; quyết định ở D-9 |
 | P2.5 | Greedy agent | ✅ | An | 2026-11-04 | spec-reviewer PASS |
 | P3.1 | MCTS-UCT (+ RandomRollout, HeavyRollout bản đúng) | ✅ | An | 2026-11-10 | spec-reviewer PASS; phạm vi/quyết định ở D-11 |
-| P3.2 | Tăng tốc HeavyRollout + chọn tham số | ⬜ | An | | phạm vi đổi theo D-11 |
+| P3.2 | Tăng tốc HeavyRollout (+ test tương đương) | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-12; phần chọn tham số tách sang P3.3 |
 | P4.1 | Arena | ⬜ | An | | |
+| P3.3 | Quét sơ bộ T / rollout_limit / scale (heavy) | ⬜ | An | | sau P4.1; D-12 |
 | P4.2 | Experiment runner | ⬜ | An | | |
 | P4.3 | CLI | ⬜ | An | | |
 | E1 | Nodes Minimax vs AB | ⬜ | An | | |
@@ -49,6 +50,13 @@
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-10 — P3.2
+- Đã làm: profile `HeavyRollout` (~80% ở `kinrow_eval._scan`, chấm lại mọi candidate mỗi bước). `heuristics/kinrow_rollout.py` — `KInRowHeavyRollout(T)`: giữ số quân mỗi cửa sổ + (delta, win, block) mỗi ô × mỗi bên, chỉ cập nhật cửa sổ qua ô vừa đặt; tự đồng bộ theo tiền tố `move_history` (gỡ/áp nước). `KInRow.move_history` (property chỉ đọc). `experiments/p32_heavy_speed.py` đo tốc độ. Thêm mục "So sánh với Minimax: thắng ngay hay thắng chắc" vào `mcts.md` (tư liệu báo cáo, thuộc D-11). PLAN: tách P3.2 / P3.3 (quét tham số, sau P4.1). DECISIONS: D-12.
+- Test: 210 test full suite, 209 passed + 1 xfail chủ ý; 27 mới trong `tests/test_kinrow_rollout.py` (~2 s) + 1 trong `tests/test_kinrow.py`; ruff sạch. 4 đột biến (ngưỡng chặn, bỏ góc nhìn O, không gỡ khi đồng bộ, bỏ kiểm tiền tố) đều bị test bắt.
+- Kết quả đo (`results/tables/p32_heavy_speed.csv`, `p32_mcts_iterations.csv` — số đo phát triển, không phải E5): 300/300 rollout giống hệt bản chuẩn; nhanh hơn 7,1–10,9×/rollout (khai cuộc 6 nước), 4,1–8,4× (20 nước). MCTS 0,5 s/nước, T=100: 387–577 iteration (bản chuẩn 53–76, random 535–637).
+- File đổi: `gameai/heuristics/kinrow_rollout.{py,md}`, `gameai/experiments/p32_heavy_speed.{py,md}`, `gameai/games/kinrow.{py,md}`, `gameai/agents/{rollout,mcts}.md`, `gameai/heuristics/kinrow_eval.md`, `tests/test_kinrow_rollout.py`, `tests/test_kinrow.py`, `results/raw/p32_heavy_speed.csv`, `results/tables/p32_{heavy_speed,mcts_iterations}.csv`, `PLAN.md`, `docs/DECISIONS.md`, `PROGRESS.md`.
+- Lưu ý: rollout heavy rất ngắn ở T nhỏ (T=100: 9,4 nước sau khai cuộc 6, 5,1 sau 20) → `rollout_limit=10` gần như không tác dụng ở T=100. Console Windows cp1252 không in được tiếng Việt → script in ASCII. Đối tượng `KInRowHeavyRollout` có trạng thái: mỗi agent/tiến trình một object.
 
 ### 2026-11-10 — P3.1
 - Đã làm: `agents/mcts.py` — `MCTSAgent` (UCT, `iterations` và/hoặc `time_limit`, `final_move` max_n/max_wn, `rollout_limit` + `value_fn`, `check_tactics` mặc định tắt, seed riêng), `Node`, `uct`, `select_child`, `backpropagate` (chỗ lật góc nhìn duy nhất), `last_root_stats()`, `root`. `agents/rollout.py` — `RandomRollout`, `HeavyRollout` (softmax trên `score_fn`, T=100, chưa tối ưu), `make_policy`, `sigmoid_value`. PLAN: phạm vi P3.1/P3.2, đối thủ chuẩn 15×15 (Greedy + AB depth 2), thêm E6. DECISIONS: D-10, D-11.

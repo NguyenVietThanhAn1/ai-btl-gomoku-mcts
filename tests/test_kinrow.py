@@ -272,3 +272,20 @@ def test_legal_moves_empty_when_terminal_and_render():
 def test_invalid_params():
     with pytest.raises(ValueError):
         KInRow(3, 4)
+
+
+def test_move_history_tracks_play_undo_clone_and_is_read_only():
+    g = KInRow(15, 5)
+    assert g.move_history == ()
+    play_seq(g, [112, 113, 97])
+    assert g.move_history == (112, 113, 97)
+    c = g.clone()
+    g.undo()
+    assert g.move_history == (112, 113)
+    assert c.move_history == (112, 113, 97)  # clone độc lập
+    h = g.move_history
+    assert isinstance(h, tuple)
+    g.play(98)
+    assert h == (112, 113)  # snapshot cũ không đổi theo ván
+    with pytest.raises(AttributeError):
+        g.move_history = ()  # type: ignore[misc]

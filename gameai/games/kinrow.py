@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Hashable
 from functools import cache
+from operator import itemgetter
 
 from gameai.core.game import DRAW, P1, P2
 
@@ -61,6 +62,11 @@ class KInRow:
 
     def winner(self) -> int | None:
         return self._winner
+
+    @property
+    def move_history(self) -> tuple[int, ...]:
+        """Các nước đã đi theo thứ tự (chỉ đọc; tuple mới mỗi lần gọi, O(số nước))."""
+        return tuple(map(itemgetter(0), self._history))
 
     def legal_moves(self) -> list[int]:
         if self._winner is not None:

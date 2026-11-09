@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P1.2 (+ `cell_of` ở P2.2)  ·  **Cập nhật:** 2026-10-28
+**Trạng thái:** ✅ ổn định  ·  **Task:** P1.2 (+ `cell_of` ở P2.2, `move_history` ở P3.2)  ·  **Cập nhật:** 2026-11-10
 
 ## Mục đích
 Cài đặt `Game` (xem `core/game.md`) cho k-in-a-row trên bàn n×n: 3×3 k=3 (thí nghiệm E2) và
@@ -18,12 +18,15 @@ class KInRow:
     def __init__(self, n: int = 15, k: int = 5, radius: int = 2): ...  # ValueError nếu k > n
     n, k, radius: int
     board: bytearray                # index = r*n + c; 0 trống, 1 = X, 2 = O (KHÁC giá trị P1/P2)
+    move_history: tuple[int, ...]   # property chỉ đọc: các nước đã đi theo thứ tự (tuple mới, O(số nước))
     # Toàn bộ interface Game: current_player, legal_moves, candidate_moves, play, undo,
     # is_terminal, winner, clone, key, render
 ```
 - `Move` = `int` (index `r*n + c`). X (P1) đi trước.
 - `play(m)` chỉ `assert` ô trống và ván chưa kết thúc.
 - `key()` = `(bytes(board), current_player)`; hashable, dùng cho transposition table.
+- `move_history`: không phải một phần của `Game` protocol; dùng bởi `heuristics/kinrow_rollout.py` để
+  đồng bộ trạng thái tăng dần (D-12). Gán vào → `AttributeError`.
 - `render()`: chuỗi n dòng, ký tự `.` `X` `O` cách nhau bởi dấu cách.
 
 ### `candidate_moves()`
@@ -53,7 +56,7 @@ class KInRow:
 - File: `tests/test_kinrow.py` — thắng ngang/dọc/2 chéo (3×3), thắng ở giữa đoạn, thắng của O,
   sát mép/góc 15×15, 4 quân không thắng, không quấn hàng, hòa 3×3, undo (kể cả sau hòa/thắng và
   về bàn trống), clone độc lập, key, candidate (bàn trống, 3×3, bán kính 5×5, góc, so với brute
-  force, random playout + undo hết).
+  force, random playout + undo hết), `move_history` (play/undo/clone, chỉ đọc).
 - Chạy riêng: `python -m pytest tests/test_kinrow.py -q`
 
 ## Hạn chế / TODO
