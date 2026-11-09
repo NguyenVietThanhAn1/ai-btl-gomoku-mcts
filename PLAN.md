@@ -108,8 +108,9 @@ Mỗi task: **mục tiêu → output → Done khi (acceptance)**. Một task = m
   (Làm rõ ở D-11: "thắng ngay" được kiểm là "nước thắng chắc theo Minimax" vì MCTS không chiết khấu độ sâu; chặn vẫn phải đúng ô. Hai tiêu chí kiểm với `check_tactics=False`.)
 
 ### P4 — Arena, CLI, khung thí nghiệm
-- **P4.1** `arena.py`: `play_game(game_factory, agent_x, agent_o, seed) -> GameRecord` (winner, số nước, thời gian/nước, nodes); `play_match(..., n_games, swap_first=True)`.
-- **P4.2** `experiments/common.py`: chạy song song `ProcessPoolExecutor`, mỗi ván ghi **1 dòng CSV ngay khi xong** (chạy tiếp được nếu bị ngắt), seed tất định, cờ `--quick` (ít ván/ít iteration để smoke test), `--workers`.
+- **P4.1** (D-13, gộp phần runner của P4.2 cũ) `agents/registry.py`: `AgentSpec`/`GameSpec` (tham số kiểu JSON, pickle được) + `make_agent(spec, seed)` / `make_game(spec)`. `arena.py`: `play_game(game, agent_x, agent_o, max_moves) -> GameRecord` (winner, số nước, chuỗi nước, thời gian do arena đo + `stats` từng nước, lỗi agent → xử thua), `play_seeded_game` (agent **mới** mỗi ván, seed suy tất định từ `pair_seed`, tùy chọn `random_opening`), `play_match(..., n_pairs)` (mỗi seed 2 ván, đổi lượt). `experiments/common.py`: `run_match` chạy song song `ProcessPoolExecutor` (`workers`, mặc định 4), mỗi ván ghi **1 dòng CSV ngay khi xong** + file `*_moves.csv`, chạy tiếp được nếu bị ngắt (kiểm `config_hash`, `git_commit`), `summarize` (W/D/L, win rate + non-loss kèm Wilson 95%, score, số chuỗi nước khác nhau; tách lượt X/O).
+  Done P4.1 khi: test cùng seed cùng kết quả (ngân sách iteration, kể cả song song = tuần tự), đổi lượt đúng, resume đúng (dòng cắt dở, không lặp ván), CSV đủ cột, agent lỗi bị xử thua mà batch không sập.
+- **P4.2** Cờ dòng lệnh chung cho script thí nghiệm: `--quick` (ít ván/ít iteration để smoke test), `--workers`, `--allow-code-change`.
 - **P4.3** `cli.py`: `python -m gameai.cli play --board 15 --k 5 --ai mcts --iters 2000` và `match ...`.
   Done P4 khi: 1 match quick chạy end-to-end ra CSV; ngắt giữa chừng chạy lại không lặp ván đã xong.
 

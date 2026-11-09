@@ -6,10 +6,10 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P4.1 (chưa bắt đầu; P3.2 ✅)
+- **Task hiện tại:** P3.3 (chưa bắt đầu; P4.1 ✅)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** `/next-task` → P4.1 Arena (`play_game` / `play_match`), rồi P3.3 quét sơ bộ T / `rollout_limit` / `scale` của heavy (thiết lập đã duyệt ở D-12: cùng `time_limit` 0,5 s, Greedy + AB depth 2, 20 ván/cấu hình/đối thủ, 4 worker, `scale` bằng hồi quy logistic trên seed 50 000–50 199). Heavy cho k-in-row: dùng `KInRowHeavyRollout(T)` (`heuristics/kinrow_rollout.md`).
-- **Cảnh báo / blocker:** chờ nhóm xác nhận phần làm rõ "Done P3 — thắng ngay" ở D-11 (MCTS không chiết khấu độ sâu: test kiểm "nước thắng chắc theo Minimax" + W/N nước thắng ngay = 1, thay vì đúng nước thắng ngay).
+- **Bước tiếp theo:** `/next-task` → P3.3 quét sơ bộ T / `rollout_limit` / `scale` của heavy (thiết lập đã duyệt ở D-12: cùng `time_limit` 0,5 s, Greedy + AB depth 2, 20 ván/cấu hình/đối thủ, 4 worker, `scale` bằng hồi quy logistic trên seed 50 000–50 199). Chạy bằng `experiments/common.run_match` (spec MCTS: `rollout="heavy_kinrow"`, `temperature`, `rollout_limit`, `value_scale` — xem `agents/registry.md`); commit trước khi chạy full (cột `git_commit`/`git_dirty`).
+- **Cảnh báo / blocker:** — (phần làm rõ "Done P3 — thắng ngay" ở D-11 đã được duyệt 2026-11-10).
 
 ## Bảng trạng thái
 
@@ -25,9 +25,9 @@
 | P2.5 | Greedy agent | ✅ | An | 2026-11-04 | spec-reviewer PASS |
 | P3.1 | MCTS-UCT (+ RandomRollout, HeavyRollout bản đúng) | ✅ | An | 2026-11-10 | spec-reviewer PASS; phạm vi/quyết định ở D-11 |
 | P3.2 | Tăng tốc HeavyRollout (+ test tương đương) | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-12; phần chọn tham số tách sang P3.3 |
-| P4.1 | Arena | ⬜ | An | | |
+| P4.1 | Arena + runner song song/CSV/resume | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-13; gộp phần runner của P4.2 cũ |
 | P3.3 | Quét sơ bộ T / rollout_limit / scale (heavy) | ⬜ | An | | sau P4.1; D-12 |
-| P4.2 | Experiment runner | ⬜ | An | | |
+| P4.2 | Cờ dòng lệnh chung (`--quick`, …) | ⬜ | An | | phần runner đã gộp vào P4.1 (D-13) |
 | P4.3 | CLI | ⬜ | An | | |
 | E1 | Nodes Minimax vs AB | ⬜ | An | | |
 | E2 | 3×3 never lose | ⬜ | An | | |
@@ -50,6 +50,12 @@
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-10 — P4.1
+- Đã làm: D-11 (làm rõ "Done P3 — thắng ngay") được nhóm duyệt. `agents/registry.py` — `AgentSpec`/`GameSpec` (params JSON, pickle được) + `make_agent`/`make_game`. `arena.py` — `play_game` (time do arena đo + bản sao stats mỗi nước; exception / nước sai / mutate game → thua), `derive_seed` (sha256), `random_opening_moves`, `play_seeded_game` (agent mới mỗi ván), `play_match`. `experiments/common.py` — `run_match` (song song, mặc định 4 worker, ghi ván + `*_moves.csv` ngay khi xong, resume: dòng cắt dở, moves mồ côi, `config_hash`, `git_commit`/`git_dirty` + `allow_code_change`), `summarize` (Wilson cho win rate và non-loss, score, `distinct_games`, tách A=X / A=O), `write_summary`, `add_runner_args`. PLAN: gộp runner vào P4.1, P4.2 chỉ còn cờ dòng lệnh. DECISIONS: D-13.
+- Test: 267 test full suite (266 passed + 1 xfail chủ ý); 57 mới trong `tests/test_arena.py` + `tests/test_experiments_common.py` (~40 s, có spawn tiến trình), agent lỗi giả ở `tests/arena_helpers.py`; ruff sạch. Đột biến: 11 đột biến (không đổi lượt, seed bỏ tag, đảo người thắng khi lỗi, bỏ kiểm mutate, không xóa moves mồ côi, không bỏ dòng cắt dở, distinct bỏ vai, không bỏ ván đã xong, bỏ kiểm commit, đổi seed A/B, `FIRST_EXCEPTION`) đều bị test bắt.
+- File đổi: `gameai/arena.{py,md}`, `gameai/agents/registry.{py,md}`, `gameai/experiments/common.{py,md}`, `tests/test_arena.py`, `tests/test_experiments_common.py`, `tests/arena_helpers.py`, `PLAN.md`, `docs/DECISIONS.md`, `PROGRESS.md`.
+- Lưu ý: phát hiện khi kill thật: bản đầu dùng `wait(FIRST_EXCEPTION)` nên chế độ song song chỉ ghi khi **cả batch** xong; đã sửa sang `FIRST_COMPLETED` và thêm test. Đã kill thật một lần giữa batch 15×15 (2 worker): 4 ván giữ nguyên, chạy lại chỉ chơi 16 ván còn thiếu. `git_dirty` không tính file chưa track và không phân biệt hai trạng thái dirty khác nhau cùng commit → commit trước khi chạy dài. Script thí nghiệm phải gọi `run_match` trong `if __name__ == "__main__":`. Đo thử (không phải số liệu): MCTS heavy_kinrow 0,05 s/nước vs Greedy 15×15 thắng 12/80.
 
 ### 2026-11-10 — P3.2
 - Đã làm: profile `HeavyRollout` (~80% ở `kinrow_eval._scan`, chấm lại mọi candidate mỗi bước). `heuristics/kinrow_rollout.py` — `KInRowHeavyRollout(T)`: giữ số quân mỗi cửa sổ + (delta, win, block) mỗi ô × mỗi bên, chỉ cập nhật cửa sổ qua ô vừa đặt; tự đồng bộ theo tiền tố `move_history` (gỡ/áp nước). `KInRow.move_history` (property chỉ đọc). `experiments/p32_heavy_speed.py` đo tốc độ. Thêm mục "So sánh với Minimax: thắng ngay hay thắng chắc" vào `mcts.md` (tư liệu báo cáo, thuộc D-11). PLAN: tách P3.2 / P3.3 (quét tham số, sau P4.1). DECISIONS: D-12.
