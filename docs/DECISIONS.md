@@ -76,6 +76,12 @@
 - **Quyết định:** mọi thí nghiệm MCTS trên 15×15 (P3.3, E3, E5) dùng `check_tactics=True` cho **mọi** cấu hình MCTS. **E6 là nơi duy nhất so bật/tắt.** 3×3 (E2, E3 3×3, E4) giữ theo PLAN.
 - **Đối thủ thứ ba `mrand`:** MCTS rollout random, `time_limit` 0,5 s, `check_tactics=True` — đối thủ cùng loại để tránh floor effect nếu Greedy / AB2 vẫn quá mạnh. Cặp `rand` vs `mrand` giữ làm kiểm tra (~50%).
 - Ảnh hưởng: phần "check_tactics=False" của P3.3 trong D-12 bị thay thế.
+- **Luật chọn cấu hình heavy của P3.3** (nhóm chốt **trước** khi chạy full, cài trong `p33_heavy_sweep.choose_config`, output `results/tables/p33_choice_prelim.csv`):
+  - Đối thủ quyết định chính: **`mrand`**. Greedy / AB2 để tham khảo và phá hòa.
+  - Chỉ chọn trong 6 cấu hình **heavy**; `rand` là mốc so sánh, không được chọn.
+  - `best` = cấu hình có score (W + 0,5D)/n vs `mrand` cao nhất (bằng nhau → cấu hình đứng trước trong danh sách). Tập ứng viên = `best` + mọi cấu hình có khoảng **Wilson 95% của win rate** vs `mrand` chồng với của `best` (score không có CI; hòa hiếm ở 15×15). Trong tập, xét lần lượt: score vs Greedy cao hơn → không cắt rollout (không phụ thuộc `scale`) → nhiều iteration/nước hơn (trung bình `a_iterations_per_move` qua 3 đối thủ).
+  - **Kiểm tra hợp lệ:** khoảng Wilson của win rate `rand` vs `mrand` phải chứa 0,5; không chứa → không chọn (`chosen = 0`, `valid = 0`), báo nhóm trước.
+  - Báo cáo kèm `distinct_games` từng ô; < 15/20 thì báo nhóm, không tự bật `random_opening`. Kết quả là **sơ bộ — không phải số liệu E5**.
 
 ### D-13 (2026-11-10) — Arena và runner thí nghiệm (P4.1)
 - **Phạm vi:** gộp phần chạy song song, CSV, resume (P4.2 cũ) vào P4.1 vì P3.3 cần ngay; P4.2 chỉ còn cờ dòng lệnh chung. Code: `agents/registry.py`, `arena.py`, `experiments/common.py`.

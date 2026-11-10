@@ -229,3 +229,82 @@ def test_opponents_and_paths():
     assert p33.summary_path(False).name == "p33_sweep_prelim.csv"
     assert p33.summary_path(True).name == "p33quick_sweep_prelim.csv"
     assert p33.worker_check_path(4).name.startswith("p33quick_")
+
+
+# ---------------------------------------------------------------- luật chọn (D-14)
+
+_SCALES = {100.0: 500.0, 300.0: 500.0, 1000.0: 1000.0}
+
+
+def _summary(mrand: dict, greedy: dict | None = None, its: dict | None = None, rand_ci=(0.3, 0.7)):
+    """Bảng tổng hợp giả: mrand[label] = (score, lo, hi); greedy[label] = score; its[label]."""
+    greedy, its = greedy or {}, its or {}
+    rows = []
+    for spec in p33.sweep_configs(_SCALES):
+        lab = spec.name
+        s, lo, hi = mrand.get(lab, (0.1, 0.0, 0.3))
+        if lab == "rand":
+            s, lo, hi = 0.5, *rand_ci
+        for opp, sc, l_, h_ in (("mrand", s, lo, hi), ("greedy", greedy.get(lab, 0.2), 0, 1),
+                                ("ab2", 0.0, 0, 0.2)):  # fmt: skip
+            rows.append({"label_a": lab, "label_b": opp, "split": "all", "score": sc,
+                         "win_rate": sc, "win_lo": l_, "win_hi": h_,
+                         "a_iterations_per_move": its.get(lab, 500)})  # fmt: skip
+            rows.append({**rows[-1], "split": "A=X"})  # dòng split khác phải bị bỏ qua
+    return rows
+
+
+def _chosen(choice):
+    return [r["config"] for r in choice if r["chosen"]]
+
+
+def _configs():
+    return p33.sweep_configs(_SCALES)
+
+
+def test_choose_clear_winner():
+    s = _summary({"h300": (0.9, 0.7, 0.97)})
+    choice = p33.choose_config(s, _configs())
+    assert _chosen(choice) == ["h300"]
+    assert {r["config"] for r in choice} == {
+        "h100",
+        "h300",
+        "h1000",
+        "h100c10",
+        "h300c10",
+        "h1000c10",
+    }
+    assert [r["config"] for r in choice if r["in_overlap"]] == ["h300"]
+
+
+def test_choose_overlap_uses_greedy_score():
+    s = _summary({"h300": (0.9, 0.7, 0.97), "h100": (0.8, 0.6, 0.92)},
+                 greedy={"h300": 0.3, "h100": 0.6})  # fmt: skip
+    choice = p33.choose_config(s, _configs())
+    assert _chosen(choice) == ["h100"]
+    best = [r["config"] for r in choice if r["best"]]
+    assert best == ["h300"]
+
+
+def test_choose_overlap_then_no_cutoff_then_iterations():
+    m = {"h300c10": (0.9, 0.7, 0.97), "h300": (0.85, 0.65, 0.95), "h1000": (0.85, 0.65, 0.95)}
+    g = {"h300c10": 0.5, "h300": 0.5, "h1000": 0.5}
+    c1 = p33.choose_config(
+        _summary(m, g, its={"h300": 800, "h1000": 400, "h300c10": 2000}), _configs()
+    )
+    assert _chosen(c1) == ["h300"]  # không cắt trước, rồi nhiều iteration
+    c2 = p33.choose_config(
+        _summary(m, g, its={"h300": 400, "h1000": 800, "h300c10": 2000}), _configs()
+    )
+    assert _chosen(c2) == ["h1000"]
+
+
+def test_rand_never_chosen_and_invalid_check():
+    s = _summary({"h300": (0.9, 0.7, 0.97)}, rand_ci=(0.55, 0.9))
+    choice = p33.choose_config(s, _configs())
+    assert _chosen(choice) == [] and all(r["valid"] == 0 for r in choice)
+    assert any("INVALID" in line for line in p33.describe_choice(choice))
+    ok = p33.choose_config(_summary({"h300": (0.9, 0.7, 0.97)}), _configs())
+    assert all(r["valid"] == 1 for r in ok) and "rand" not in {r["config"] for r in ok}
+    assert p33.choice_path(False).name == "p33_choice_prelim.csv"
+    assert set(ok[0]) == set(p33.CHOICE_COLUMNS)

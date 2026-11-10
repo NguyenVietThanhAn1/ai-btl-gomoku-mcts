@@ -36,6 +36,8 @@ def sweep_configs(scales: dict[T, scale]) -> list[AgentSpec]    # 7 cấu hình;
 def match_path(config, opponent, quick) -> Path; def summary_path(quick) -> Path
 def sweep(quick, workers, allow_code_change) -> None
 def worker_check(spec, workers, allow_code_change) -> None
+def choose_config(summary, configs) -> list[dict]     # luật chọn D-14, cột CHOICE_COLUMNS
+def describe_choice(choice) -> list[str]; def choice_path(quick) -> Path
 ```
 
 ### Bước 1 — hiệu chỉnh `scale` (mỗi T một scale)
@@ -63,6 +65,15 @@ def worker_check(spec, workers, allow_code_change) -> None
   theo đối thủ: Σ thời gian ván (`a_time_sum + b_time_sum`) × 10, tuần tự và ÷ số worker (xấp xỉ).
   Sau đó **kiểm tra worker**: `rand` vs `greedy`, 2 seed × 2 lượt, chạy với 1 và `--workers` tiến trình
   (`p33quick_wcheck_rand_vs_greedy_w<k>.csv`), so `a_iterations_per_move`; giảm > 15% → in cảnh báo.
+
+### Bước 3 — chọn cấu hình (D-14, tự chạy cuối `sweep`)
+- Chỉ xét 6 cấu hình heavy (`rand` là mốc). `best` = score vs `mrand` cao nhất; tập ứng viên = `best` + các
+  cấu hình có Wilson 95% (win rate) vs `mrand` chồng với `best`; xếp hạng: score vs Greedy giảm dần → không
+  cắt trước → iteration/nước (TB 3 đối thủ) giảm dần; hạng 1 = `chosen`.
+- Hợp lệ khi Wilson của `rand` vs `mrand` chứa 0,5; không → `valid = 0`, không chọn, in `INVALID`.
+- File: `results/tables/p33_choice_prelim.csv` (`p33quick_choice_prelim.csv` khi quick): `config, temperature,
+  rollout_limit, value_scale, score_mrand, win_mrand, win_lo_mrand, win_hi_mrand, score_greedy, score_ab2,
+  iterations_per_move, best, in_overlap, rank, chosen, valid, validity_note`.
 
 ## Phụ thuộc
 - Dùng: `experiments/common.py`, `agents/registry.py`, `arena.py` (`derive_seed`, `random_opening_moves`),
@@ -105,7 +116,8 @@ thắng (kèm Wilson 95%) — số liệu sơ bộ, E5 chạy lại với thiế
   rộng lưới ở biên dưới / trên và giới hạn số lần (`at_edge`, `WARNING`); fit theo từng T; dữ liệu hiệu
   chỉnh tất định, dựng lại được, mọi thế chưa kết thúc, `eval_p1` đúng; seed tách biệt; **value_fn của MCTS
   (dựng qua registry) = σ(eval_p1/scale), là xác suất P1 ở cả lượt X và O**; `_simulate` cắt trả đúng z đó;
-  7 cấu hình đúng tham số, dựng được; đối thủ; tên file.
+  7 cấu hình đúng tham số, dựng được; đối thủ; tên file; luật chọn (thắng rõ, chồng CI → Greedy, rồi không
+  cắt, rồi iteration; `rand` không được chọn; `rand` vs `mrand` không chứa 0,5 → không chọn).
 - Chạy: `python -m pytest tests/test_p33_heavy_sweep.py -q` (~5 s).
 
 ## Hạn chế / TODO

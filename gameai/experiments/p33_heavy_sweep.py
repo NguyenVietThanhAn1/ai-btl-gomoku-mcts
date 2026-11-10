@@ -305,10 +305,112 @@ def sweep(quick: bool, workers: int, allow_code_change: bool) -> None:
                   f"~{game_s * factor / 60:.0f} min, {workers} workers ~"
                   f"{game_s * factor / workers / 60:.0f} min")  # fmt: skip
         all_rows.extend(opp_rows)
-    write_summary(summarize(all_rows), summary_path(quick))
+    summary = summarize(all_rows)
+    write_summary(summary, summary_path(quick))
     print(f"summary -> {summary_path(quick).relative_to(ROOT)} (PRELIMINARY, not E5)")
+    choice = choose_config(summary, configs)
+    _write_csv(choice_path(quick), CHOICE_COLUMNS, choice)
+    for line in describe_choice(choice):
+        print(line)
     if quick:
         worker_check(configs[0], workers, allow_code_change)
+
+
+# ---------------------------------------------------------------- luật chọn (D-14)
+
+DECISIVE = "mrand"
+TIEBREAK = "greedy"
+VALIDITY_PAIR = ("rand", "mrand")
+CHOICE_COLUMNS = ["config", "temperature", "rollout_limit", "value_scale", "score_mrand",
+                  "win_mrand", "win_lo_mrand", "win_hi_mrand", "score_greedy", "score_ab2",
+                  "iterations_per_move", "best", "in_overlap", "rank", "chosen", "valid",
+                  "validity_note"]  # fmt: skip
+
+
+def choice_path(quick: bool) -> Path:
+    return TABLE_DIR / f"{_prefix(quick)}_choice_prelim.csv"
+
+
+def _all_rows(summary: Iterable[dict]) -> dict[tuple[str, str], dict]:
+    return {(r["label_a"], r["label_b"]): r for r in summary if r["split"] == "all"}
+
+
+def choose_config(summary: Sequence[dict], configs: Sequence[AgentSpec]) -> list[dict]:
+    """Luật chọn D-14 trên các cấu hình **heavy** (`rand` là mốc, không được chọn).
+
+    1. Cấu hình có score vs `mrand` cao nhất = `best`.
+    2. Tập ứng viên = `best` + mọi cấu hình có khoảng Wilson 95% (win rate) vs `mrand` chồng với của
+       `best`. Trong tập, xét lần lượt: score vs Greedy cao hơn → không cắt rollout → nhiều
+       iteration/nước hơn (trung bình `a_iterations_per_move` qua các đối thủ).
+    3. Hợp lệ khi khoảng Wilson của `rand` vs `mrand` chứa 0,5; không hợp lệ → `chosen` = 0 ở mọi
+       dòng, `valid` = 0 (chờ nhóm xem).
+    """
+    rows = _all_rows(summary)
+    rv = rows.get(VALIDITY_PAIR)
+    valid = rv is not None and float(rv["win_lo"]) <= 0.5 <= float(rv["win_hi"])
+    note = (
+        "missing rand vs mrand" if rv is None
+        else f"rand vs mrand win {float(rv['win_rate']):.3f} "
+             f"[{float(rv['win_lo']):.3f}, {float(rv['win_hi']):.3f}]"
+    )  # fmt: skip
+    out = []
+    for spec in configs:
+        if spec.params.get("rollout") != "heavy_kinrow":
+            continue
+        d = rows[(spec.name, DECISIVE)]
+        its = [float(r["a_iterations_per_move"]) for (a, _), r in rows.items() if a == spec.name]
+        out.append(
+            {"config": spec.name, "temperature": spec.params["temperature"],
+             "rollout_limit": spec.params.get("rollout_limit"),
+             "value_scale": spec.params.get("value_scale"),
+             "score_mrand": float(d["score"]), "win_mrand": float(d["win_rate"]),
+             "win_lo_mrand": float(d["win_lo"]), "win_hi_mrand": float(d["win_hi"]),
+             "score_greedy": float(rows[(spec.name, TIEBREAK)]["score"]),
+             "score_ab2": float(rows[(spec.name, "ab2")]["score"]) if (spec.name, "ab2") in rows
+             else math.nan,
+             "iterations_per_move": sum(its) / len(its), "valid": int(valid),
+             "validity_note": note}
+        )  # fmt: skip
+    best = max(out, key=lambda r: r["score_mrand"])  # bằng nhau → cấu hình đứng trước
+    for r in out:
+        r["best"] = int(r is best)
+        r["in_overlap"] = int(
+            r is best
+            or (
+                r["win_lo_mrand"] <= best["win_hi_mrand"]
+                and best["win_lo_mrand"] <= r["win_hi_mrand"]
+            )
+        )
+    cands = sorted(
+        (r for r in out if r["in_overlap"]),
+        key=lambda r: (
+            -r["score_greedy"],
+            r["rollout_limit"] is not None,
+            -r["iterations_per_move"],
+        ),
+    )
+    for i, r in enumerate(cands, 1):
+        r["rank"] = i
+    for r in out:
+        r.setdefault("rank", "")
+        r["chosen"] = int(valid and r is cands[0])
+    return out
+
+
+def describe_choice(choice: Sequence[dict]) -> list[str]:
+    lines = []
+    for r in sorted(choice, key=lambda r: (r["rank"] == "", r["rank"])):
+        lines.append(
+            f"  {r['config']:9s} mrand score {r['score_mrand']:.3f} win "
+            f"[{r['win_lo_mrand']:.3f}, {r['win_hi_mrand']:.3f}] greedy {r['score_greedy']:.3f} "
+            f"it/move {r['iterations_per_move']:.0f} overlap={r['in_overlap']} rank={r['rank']}"
+            f"{'  <- CHOSEN' if r['chosen'] else ''}"
+        )
+    v = choice[0]
+    lines.append(
+        f"  validity: {v['validity_note']} -> {'OK' if v['valid'] else 'INVALID, ask group'}"
+    )
+    return lines
 
 
 def worker_check_path(workers: int) -> Path:
