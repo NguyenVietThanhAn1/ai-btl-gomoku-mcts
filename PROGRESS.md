@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P4.3 (chưa bắt đầu; E2 ✅)
+- **Task hiện tại:** chưa chọn (E1 ✅, E2 ✅; P4.3 hoãn, gộp với P6)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** `/next-task` → P4.3 CLI. Cấu hình heavy cho E5 (sơ bộ, P3.3): **h300** = `rollout="heavy_kinrow"`, `temperature=300`, không cắt rollout; mọi MCTS 15×15 bật `check_tactics=True` (D-14). Báo iteration ở E3/E5 dùng cột `*_search_iterations_per_move` (D-15): `summarize(rows, read_rows(moves_path_for(path)))`.
+- **Bước tiếp theo:** `/next-task` → E3 (c sweep) hoặc task kế tiếp. Cấu hình heavy cho E5 (sơ bộ, P3.3): **h300** = `rollout="heavy_kinrow"`, `temperature=300`, không cắt rollout; mọi MCTS 15×15 bật `check_tactics=True` (D-14). Báo iteration ở E3/E5 dùng cột `*_search_iterations_per_move` (D-15): `summarize(rows, read_rows(moves_path_for(path)))`.
 - **Cảnh báo / blocker:** theo P3.3, vs AB2 MCTS 0,5 s gần 0% (≤ 2/20 ở mọi cấu hình) → E3/E5 15×15 cần đối thủ phân biệt được cấu hình (kiểu `mrand`, D-14); quyết định khi tới task đó (PLAN E3/E5 hiện ghi AB2 — cần sửa lúc đó). (D-11 "Done P3 — thắng ngay" đã được duyệt 2026-11-10.)
 
 ## Bảng trạng thái
@@ -28,8 +28,8 @@
 | P4.1 | Arena + runner song song/CSV/resume | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-13; gộp phần runner của P4.2 cũ |
 | P3.3 | Quét sơ bộ T / rollout_limit / scale (heavy) | ✅ | An | 2026-11-10 | spec-reviewer PASS; chọn h300 (sơ bộ); D-12, D-14 |
 | P4.2 | Cờ dòng lệnh chung (`--quick`, …) | ✅ | An | 2026-11-10 | `--quick` trong `add_runner_args`; cột `*_search_*` ở `summarize` (D-15); phần runner ở P4.1 (D-13) |
-| P4.3 | CLI | ⬜ | An | | |
-| E1 | Nodes Minimax vs AB | ⬜ | An | | |
+| P4.3 | CLI | ⬜ (hoãn) | An | 2026-11-10 | hoãn, gộp với P6 (yêu cầu của An); D-17 |
+| E1 | Nodes Minimax vs AB | ✅ | An | 2026-11-10 | full 59 s; D-17; `e1_*.csv` |
 | E2 | 3×3 never lose | ✅ | An | 2026-11-10 | spec-reviewer PASS; full xong; D-16 |
 | E3 | c sweep | ⬜ | An | | |
 | E4 | N vs W/N | ⬜ | An | | |
@@ -47,11 +47,19 @@
 
 ## Kết quả thí nghiệm đã có
 
+- **E1:** giá trị gốc AB = Minimax ở 6/6 thế 3×3 (cả 3 biến thể) và 5/5 thế 15×15 depth 2; nước đi `ab` = Minimax, `ab_order`/`ab_order_tt` giống hệt 3/6 nhưng tối ưu 6/6 (hòa giá trị). Nút gộp 3×3 vs Minimax: −96,13 % (ab), −99,60 % (+ordering), −99,76 % (+TT); bàn trống 549 946 → 20 866 → 1 856 → 990. 15×15 depth 2: 46 825 → 21 612 (−53,85 %) → 1 416 (−96,98 %), nhưng thời gian ordering 0,265 s vs 0,247 s (chậm hơn 7,5 %); depth 3: 553 574 → 48 504 nút (−91,24 %), 5,46 → 1,26 s. `results/tables/e1_{nodes,summary,positions}.csv`.
+
 - **E2:** (b) vét cạn 0 nhánh thua trên 10 seed × 2 vai ở 5000 iter (5674 nhánh); 1000 iter 7/5713 thua; 100 iter 279/6247. (a) 5000 iter 0 thua/100 ván vs Minimax, Random, MCTS. `results/tables/e2_*.csv`.
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-10 — E1 (xong)
+- Đã làm: `experiments/e1_nodes.{py,md}` — 3×3 (bàn trống + 5 thế, Minimax / AB / +ordering / +ordering+TT), 15×15 (5 thế cố định, AB depth 2, 3 × có/không ordering; Minimax chỉ depth 2; thêm `ab_evalonly` tách tác dụng `delta_eval`). Kiểm giá trị + nước đi + `move_optimal`; báo % nút và % thời gian, gộp và trung bình theo thế. `--quick` 5 s; full 58,7 s (không cần hỏi trước khi chạy: < 2 phút). P4.3 hoãn, gộp với P6 (ghi ở bảng + PLAN + D-17).
+- Test: full suite pass (1 xfail chủ ý); 4 test mới trong `tests/test_e1_nodes.py`; ruff sạch.
+- File đổi: `gameai/experiments/e1_nodes.{py,md}`, `tests/test_e1_nodes.py`, `results/tables/e1_{nodes,summary,positions}.csv`, `PLAN.md`, `docs/DECISIONS.md` (D-17), `PROGRESS.md`.
+- Lưu ý: 5 thế mỗi bàn **lồng nhau** (cùng playout seed 0) và chỉ 5 thế → không có CI. Ordering giảm nút nhưng ở 15×15 depth 2 không giảm thời gian (chi phí `move_score`); depth 3 mới có lợi. Nước của `ab_order*` khác Minimax khi hòa giá trị là hợp lệ (xem `move_optimal`).
 
 ### 2026-11-10 — E2 (xong)
 - Full: (a) 543 s, (b) 290 s. Vét cạn: 0 nhánh thua trên 10 seed × 2 vai ở 5000 iter (5674 nhánh); 1000 iter còn 7/5713 (2/20 run, MCTS=O); luật mở rộng 10000/20000 không kích hoạt. Sai chủ yếu ở vai O, nước đáp đầu. Sửa `mcts.md` ("1000 iter đủ" chỉ đúng với ván đấu). Chi tiết: `gameai/experiments/e2_never_lose.md`.

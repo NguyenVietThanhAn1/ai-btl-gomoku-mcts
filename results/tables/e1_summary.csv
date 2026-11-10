@@ -1,0 +1,11 @@
+board,depth,variant,n_positions,nodes_sum,time_sum,nodes_saving_vs_minimax_pooled_pct,nodes_saving_vs_minimax_mean_pct,time_saving_vs_minimax_pooled_pct,nodes_saving_vs_ab_pooled_pct,nodes_saving_vs_ab_mean_pct,time_saving_vs_ab_pooled_pct,values_same_as_minimax,moves_same_as_minimax,moves_optimal,values_same_as_ab,moves_same_as_ab,n_compared_minimax
+3x3,full,minimax,6,559426,1.3172,,,,,,,6/6,6/6,6/6,,,6
+3x3,full,ab,6,21626,0.0688,96.13,63.49,94.78,,,,6/6,6/6,6/6,,,6
+3x3,full,ab_order,6,2252,0.0154,99.6,78.78,98.83,89.59,49.77,77.63,6/6,3/6,6/6,6/6,3/6,6
+3x3,full,ab_order_tt,6,1318,0.0087,99.76,79.45,99.34,93.91,54.68,87.35,6/6,3/6,6/6,6/6,3/6,6
+15x15,2,minimax,5,46825,7.0098,,,,,,,5/5,5/5,5/5,,,5
+15x15,2,ab_evalonly,5,21612,3.6925,53.85,57.17,47.32,,,,5/5,5/5,5/5,,,5
+15x15,2,ab,5,21612,0.2466,53.85,57.17,96.48,,,,5/5,5/5,5/5,,,5
+15x15,2,ab_order,5,1416,0.265,96.98,96.3,96.22,93.45,90.02,-7.47,5/5,5/5,5/5,5/5,5/5,5
+15x15,3,ab,5,553574,5.4583,,,,,,,,,,,,0
+15x15,3,ab_order,5,48504,1.2565,,,,91.24,90.48,76.98,,,,5/5,5/5,0

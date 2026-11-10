@@ -111,7 +111,7 @@ Mỗi task: **mục tiêu → output → Done khi (acceptance)**. Một task = m
 - **P4.1** (D-13, gộp phần runner của P4.2 cũ) `agents/registry.py`: `AgentSpec`/`GameSpec` (tham số kiểu JSON, pickle được) + `make_agent(spec, seed)` / `make_game(spec)`. `arena.py`: `play_game(game, agent_x, agent_o, max_moves) -> GameRecord` (winner, số nước, chuỗi nước, thời gian do arena đo + `stats` từng nước, lỗi agent → xử thua), `play_seeded_game` (agent **mới** mỗi ván, seed suy tất định từ `pair_seed`, tùy chọn `random_opening`), `play_match(..., n_pairs)` (mỗi seed 2 ván, đổi lượt). `experiments/common.py`: `run_match` chạy song song `ProcessPoolExecutor` (`workers`, mặc định 4), mỗi ván ghi **1 dòng CSV ngay khi xong** + file `*_moves.csv`, chạy tiếp được nếu bị ngắt (kiểm `config_hash`, `git_commit`), `summarize` (W/D/L, win rate + non-loss kèm Wilson 95%, score, số chuỗi nước khác nhau; tách lượt X/O).
   Done P4.1 khi: test cùng seed cùng kết quả (ngân sách iteration, kể cả song song = tuần tự), đổi lượt đúng, resume đúng (dòng cắt dở, không lặp ván), CSV đủ cột, agent lỗi bị xử thua mà batch không sập.
 - **P4.2** Cờ dòng lệnh chung cho script thí nghiệm: `--quick` (ít ván/ít iteration để smoke test), `--workers`, `--allow-code-change`.
-- **P4.3** `cli.py`: `python -m gameai.cli play --board 15 --k 5 --ai mcts --iters 2000` và `match ...`.
+- **P4.3** (hoãn, gộp với P6 — ghi lại 2026-11-10) `cli.py`: `python -m gameai.cli play --board 15 --k 5 --ai mcts --iters 2000` và `match ...`.
   Done P4 khi: 1 match quick chạy end-to-end ra CSV; ngắt giữa chừng chạy lại không lặp ván đã xong.
 
 ### P5 — Thí nghiệm (dữ liệu cho mục 5 báo cáo)
@@ -119,7 +119,7 @@ Trước khi chạy full: chạy `--quick`, ghi **thời gian ước tính** và
 
 | ID | Câu hỏi | Thiết lập | Output |
 |---|---|---|---|
-| **E1** | Alpha-Beta tiết kiệm bao nhiêu nút? | 3×3: tìm toàn bộ từ bàn trống + 5 thế cờ giữa ván. 15×15: depth 2, 3 trên 5 thế cờ cố định, có/không move ordering | `tables/e1_nodes.csv`: nodes, time, best move giống nhau? |
+| **E1** | Alpha-Beta tiết kiệm bao nhiêu nút? (D-17) | 3×3: Minimax vs AB (không ordering / ordering / ordering+TT), từ bàn trống + 5 thế giữa ván, kiểm giá trị **và** nước đi. 15×15: AB depth 2, 3 trên 5 thế cố định, có/không ordering; Minimax thuần chỉ depth 2 | `tables/e1_{nodes,summary,positions}.csv`: nodes, time, % tiết kiệm, giá trị/nước giống? |
 | **E2** | MCTS 3×3 có bao giờ thua? | (a) MCTS(1000, 5000 iter) vs Minimax hoàn hảo, vs Random, vs MCTS — mỗi cặp ≥100 ván đổi lượt. (b) **Kiểm chứng vét cạn**: duyệt mọi chuỗi nước của đối thủ (MCTS seed cố định đi 1 nhánh, đối thủ thử mọi nước) → 0 nhánh thua | bảng W/D/L; số nhánh đã kiểm |
 | **E3** | Ảnh hưởng của c | c ∈ {0.5, 1.0, 1.4, 2.0} × iter ∈ {100, 250, 500, 1000, 2500, 5000}; ≥50 ván/điểm, đổi lượt. 3×3 vs Random (đo non-loss/win rate) và 15×15 vs Greedy **và vs AlphaBeta depth 2** | `figures/e3_*.png`: 1 đường/c, kèm khoảng tin cậy 95% |
 | **E4** | N vs W/N | Lấy stats gốc ở vài thế cờ; so `final_move=max_n` vs `max_wn` đối đầu nhau ≥50 ván | bảng W, N, W/N tại gốc; tỉ lệ thắng max_n vs max_wn |
