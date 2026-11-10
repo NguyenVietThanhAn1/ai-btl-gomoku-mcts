@@ -357,7 +357,7 @@ def plot_panels(
         ax.set_xticks(its, [str(x) for x in its])
         ax.minorticks_off()
         floor = min(lows, default=0.0)
-        ax.set_ylim(max(0.0, math.floor((floor - 0.02) * 10) / 10) if floor > 0.5 else 0.0, 1.0)
+        ax.set_ylim(max(0.0, math.floor((floor - 0.02) * 10) / 10) if floor > 0.5 else 0.0, 1.03)
         ax.set_facecolor(SURFACE)
         ax.grid(True, axis="y", color=GRID, linewidth=0.8)
         ax.set_axisbelow(True)
@@ -369,7 +369,9 @@ def plot_panels(
         ax.set_xlabel("iteration / nước", color=INK2)
         ax.set_ylabel({"win": "tỉ lệ thắng", "nonloss": "tỉ lệ không thua"}[metric], color=INK2)
         ax.set_title(sub, color=INK, fontsize=11, loc="left")
-        ax.legend(frameon=False, labelcolor=INK, fontsize=9)
+    handles, labels = axes[0][0].get_legend_handles_labels()  # một legend chung, không đè dữ liệu
+    fig.legend(handles, labels, loc="upper right", ncol=len(labels), frameon=False,
+               labelcolor=INK, fontsize=9)  # fmt: skip
     fig.suptitle(title, color=INK, fontsize=12, x=0.01, ha="left")
     fig.text(0.01, 0.005, "Thanh lỗi: Wilson 95 %, tính độc lập từng điểm (các c dùng chung seed).",
              color=INK2, fontsize=8, ha="left", va="bottom")  # fmt: skip

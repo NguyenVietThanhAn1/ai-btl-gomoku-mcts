@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** chưa chọn (E1 ✅, E2 ✅; P4.3 hoãn, gộp với P6)
-- **Việc đang dở:** —
-- **Bước tiếp theo:** `/next-task` → E3 (c sweep) hoặc task kế tiếp. Cấu hình heavy cho E5 (sơ bộ, P3.3): **h300** = `rollout="heavy_kinrow"`, `temperature=300`, không cắt rollout; mọi MCTS 15×15 bật `check_tactics=True` (D-14). Báo iteration ở E3/E5 dùng cột `*_search_iterations_per_move` (D-15): `summarize(rows, read_rows(moves_path_for(path)))`.
+- **Task hiện tại:** E3 🔄 (D-18) — script + test + quick xong, **chờ An duyệt chạy full**.
+- **Việc đang dở:** chạy full theo thứ tự `3x3` (~3–10 phút) → `greedy` (~41 phút) → `ab2-pilot` (~9 phút, c theo luật D-18) → `ab2` chỉ khi pilot ≥ 2/20 (~2 h). Sau full: `plot`, điền kết quả vào `e3_c_sweep.md` + bảng "Kết quả", spec-reviewer, E3 → ✅.
+- **Bước tiếp theo:** sau E3 → `/next-task` E4. Cấu hình heavy cho E5 (sơ bộ, P3.3): **h300** = `rollout="heavy_kinrow"`, `temperature=300`, không cắt rollout; mọi MCTS 15×15 bật `check_tactics=True` (D-14). Báo iteration ở E3/E5 dùng cột `*_search_iterations_per_move` (D-15): `summarize(rows, read_rows(moves_path_for(path)))`.
 - **Cảnh báo / blocker:** theo P3.3, vs AB2 MCTS 0,5 s gần 0% (≤ 2/20 ở mọi cấu hình) → E3/E5 15×15 cần đối thủ phân biệt được cấu hình (kiểu `mrand`, D-14); quyết định khi tới task đó (PLAN E3/E5 hiện ghi AB2 — cần sửa lúc đó). (D-11 "Done P3 — thắng ngay" đã được duyệt 2026-11-10.)
 
 ## Bảng trạng thái
@@ -54,6 +54,13 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-10 — E3 (đang dở: chờ duyệt full)
+- Full suite trước task (sau sửa E1): 306 test, 305 passed + 1 xfail chủ ý.
+- Đã làm: D-18 (lưới, 3×3 vs Random 200 ván + vs Minimax có seed/cache 100 ván, 15×15 h300 + tactics vs Greedy 50 ván, AB2 pilot **sau** Greedy với c tốt nhất ở 5000 iter + cổng ≥ 2/20, ghi chú Wilson độc lập từng điểm); PLAN dòng E3. `experiments/e3_c_sweep.{py,md}` (`CachedMinimaxAgent`, `choose_pilot_c`, `gate_passes`, `run_part`, `estimate_full`, `plot_panels`). Commit `36e9b68` trước quick.
+- Test: 328 full suite (327 passed + 1 xfail chủ ý); 22 mới trong `tests/test_e3_c_sweep.py`; ruff sạch.
+- `--quick` 310 s, mọi ván normal, `git_dirty = 0`. Ước tính full 4 worker: 3x3 ~3–10 phút, greedy ~41 phút, ab2 pilot ~9 phút, ab2 full ~2 h (ván vs AB2 dài 50–83 nước, ~94 s/ván). Chi tiết: `gameai/experiments/e3_c_sweep.md` mục Quick. File `e3quick_*` không commit.
+- Hình: legend chung một hàng phía trên (không đè đường ở 1,0), trần trục y 1,03; bảng màu qua validator dataviz.
 
 ### 2026-11-10 — E1 (xong)
 - Đã làm: `experiments/e1_nodes.{py,md}` — 3×3 (bàn trống + 5 thế, Minimax / AB / +ordering / +ordering+TT), 15×15 (5 thế cố định, AB depth 2, 3 × có/không ordering; Minimax chỉ depth 2; thêm `ab_evalonly` tách tác dụng `delta_eval`). Kiểm giá trị + nước đi + `move_optimal`; báo % nút và % thời gian, gộp và trung bình theo thế. `--quick` 5 s; full 58,7 s (không cần hỏi trước khi chạy: < 2 phút). P4.3 hoãn, gộp với P6 (ghi ở bảng + PLAN + D-17).

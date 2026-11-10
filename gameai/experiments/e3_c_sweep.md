@@ -60,6 +60,22 @@ Quick ghi `e3quick_*`: 3×3 đủ lưới × 2 cặp; greedy c ∈ {0.5, 2.0} ×
   Bảng màu: 4 slot đầu của bảng phân loại mặc định của skill dataviz, đã qua validator (CVD ΔE ≥ 9,1); hai màu
   tương phản < 3:1 nên có marker riêng + bảng CSV đi kèm.
 
+## Quick (2026-11-10, commit `36e9b68`, không commit file `e3quick_*` — không phải số liệu báo cáo)
+Tổng 310 s, 4 worker; mọi ván `normal`, `git_dirty = 0`, `distinct_games` = n ở mọi điểm.
+- 3x3_random 45 s (96 ván), 3x3_minimax 79 s (96 ván), greedy 71 s (12 ván), ab2-pilot 112 s (2 ván, c = 2.0 chọn
+  theo luật từ bảng greedy quick).
+- Ván 15×15 ở 5000 iter: vs Greedy 17–22 nước, MCTS 2,2–2,7 s/nước; **vs AB2 50 và 83 nước** (MCTS trụ lâu rồi thua),
+  MCTS 2,6–3,0 s/nước, AB2 ~0,07 s/nước → ~94 s/ván, đắt hơn ước tính trong plan (~25 s).
+- Ước tính full (`e3quick_estimate.csv`, fit a + b·iter; 4 worker = tuần tự / 3,5) và hiệu chỉnh:
+
+| Phần | Ván | Fit tuần tự | Fit 4 worker | Ghi chú |
+|---|---|---|---|---|
+| 3x3_random | 4 800 | 4,8 phút | 1,4 phút | + ~1,8 s khởi động pool/điểm → ~2–3 phút |
+| 3x3_minimax | 2 400 | 32,5 phút | 9,3 phút | cận trên: a = 0,72 s/ván là cache lạnh (quick 4 ván/điểm) |
+| greedy | 1 200 | 143,6 phút | 41 phút | |
+| ab2 pilot | 20 | 31,3 phút | 8,9 phút | |
+| ab2 full | 380 | 595 phút | 170 phút | quá cao: fit chỉ có điểm 5000 (b = 0); tỉ lệ theo iter → ~440 phút tuần tự, **~2 h** 4 worker |
+
 ## Phụ thuộc
 `experiments/common.py` (`run_match`, `summarize`, `read_rows`, `moves_path_for`, `add_runner_args`),
 `agents/registry.py`, `agents/minimax.py`, matplotlib (Agg).
