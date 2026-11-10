@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🔄 quick xong, chờ duyệt full  ·  **Task:** E3 (D-18)  ·  **Cập nhật:** 2026-11-10
+**Trạng thái:** ✅ full xong  ·  **Task:** E3 (D-18)  ·  **Cập nhật:** 2026-11-11
 
 ## Mục đích
 Đề ý 3: c ∈ {0.5, 1.0, 1.4, 2.0} × iter ∈ {100, 250, 500, 1000, 2500, 5000}, đồ thị iteration – tỉ lệ thắng,
@@ -56,9 +56,51 @@ Quick ghi `e3quick_*`: 3×3 đủ lưới × 2 cặp; greedy c ∈ {0.5, 2.0} ×
 - Bảng: `results/tables/e3_{3x3_random,3x3_minimax,greedy,ab2_pilot,ab2}.csv` = `part, c, iterations` +
   `SUMMARY_COLUMNS` (3 dòng/điểm: `all`, `A=X`, `A=O`). Iteration/nước báo cáo lấy `a_search_iterations_per_move` (D-15).
 - Hình: `results/figures/e3_3x3.png` (3 panel: thắng vs Random, không thua vs Random, không thua vs Minimax),
-  `e3_greedy.png`, `e3_ab2.png` (nếu chạy). Trục x log, 1 đường/c (màu + marker riêng, cố định theo c), thanh lỗi Wilson.
+  `e3_greedy.png`, `e3_ab2.png` (nếu chạy). Trục x log, 1 đường/c (màu + marker riêng, cố định theo c), thanh lỗi Wilson
+  (cắt ở 0 khi cận lệch p do làm tròn ở p = 1), legend chung một hàng dưới tiêu đề.
   Bảng màu: 4 slot đầu của bảng phân loại mặc định của skill dataviz, đã qua validator (CVD ΔE ≥ 9,1); hai màu
   tương phản < 3:1 nên có marker riêng + bảng CSV đi kèm.
+
+## Kết quả full (2026-11-10/11, commit `544ece9`, 4 worker)
+8 800 ván, mọi ván `normal`, 0 lỗi agent, `git_dirty = 0`, cùng commit. Tổng thời gian thực **226,3 phút**: 3×3
+16,7 phút (Random 440 s + Minimax 564 s), Greedy 78,6 phút, pilot AB2 8,3 phút, AB2 122,7 phút (gồm một lần máy
+dừng ~29 phút giữa hai ván ở điểm AB2 c=1.0/2500 lúc 01:11; ngân sách iteration nên kết quả không đổi).
+Win rate [Wilson 95 %] (W/n), dòng `all`. Bảng đầy đủ: `results/tables/e3_*.csv`; hình `results/figures/e3_{3x3,greedy,ab2}.png`.
+
+**3×3 vs Random (200 ván):** win rate 0,915–0,980 ở mọi điểm; **ở mọi mức iteration khoảng Wilson của 4 c chồng
+nhau** → không phân biệt được c. Non-loss ≥ 0,985; chỉ thua ở c = 1.4 / 2.0 và iter ≤ 500 (100: 3/200 mỗi c; 250: 1 và 2/200; 500: 1/200 ở c=1.4).
+**3×3 vs Minimax (100 ván, non-loss):** tăng từ 0,70–0,77 (iter 100) lên 1,00 ở mọi c từ 2500 iter. Iter 100: c=0.5
+0,70 [0,604; 0,781] thấp nhất, c=2.0 0,77 [0,678; 0,842] — chồng nhau; ở mọi iter các c chồng nhau.
+`distinct_games` 51–94/100 (vs Minimax) và 154–197/200 (vs Random) → số mẫu hiệu dụng nhỏ hơn n.
+
+**15×15 vs Greedy (50 ván):** có **giao cắt**: c nhỏ tốt hơn ở 500–1000 iter, c lớn bắt kịp/vượt ở 2500–5000 iter
+(100–250 iter gần sàn, xem dưới bảng).
+
+| iter | c=0.5 | c=1.0 | c=1.4 | c=2.0 |
+|---|---|---|---|---|
+| 500 | **0,38** [0,259; 0,518] | 0,26 [0,159; 0,396] | 0,18 [0,098; 0,308] | 0,08 [0,032; 0,188] |
+| 1000 | **0,62** [0,482; 0,741] | 0,46 [0,330; 0,596] | 0,48 [0,348; 0,615] | 0,22 [0,128; 0,352] |
+| 2500 | 0,78 [0,648; 0,872] | 0,84 [0,715; 0,917] | **0,90** [0,786; 0,957] | 0,78 [0,648; 0,872] |
+| 5000 | 0,82 [0,692; 0,902] | 0,88 [0,762; 0,944] | 0,92 [0,812; 0,968] | **0,96** [0,865; 0,989] |
+
+Cặp c = 0.5 – c = 2.0 tách CI ở 500 và 1000 iter; ở 2500 và 5000 mọi c chồng nhau. Iter 100–250 (0,02–0,22) là vùng
+gần sàn và không theo xu hướng trên: ở 100 c = 2.0 cao nhất (0,10 so với 0,04), ở 250 c = 1.4 thấp bất thường (0,02
+[0,004; 0,105], tách khỏi c = 0.5 và 1.0) → coi là nhiễu, không diễn giải.
+
+**AB2 — cổng:** c pilot = 2.0 (vs Greedy cao nhất ở 5000 iter). Pilot **2/20** = 0,10 [0,028; 0,301] → **qua cổng**
+(đúng ngưỡng ≥ 2) → chạy full (điểm c=2.0/5000 gồm 20 ván pilot + 30 ván resume).
+
+| iter | c=0.5 | c=1.0 | c=1.4 | c=2.0 |
+|---|---|---|---|---|
+| 2500 | **0,26** [0,159; 0,396] (2 hòa) | 0,18 [0,098; 0,308] | 0,10 [0,043; 0,214] | 0,12 [0,056; 0,238] |
+| 5000 | 0,22 [0,128; 0,352] (2 hòa) | **0,36** [0,241; 0,499] | 0,22 [0,128; 0,352] (2 hòa) | 0,20 [0,112; 0,330] |
+
+Mọi c chồng nhau ở cả hai mức. c tốt nhất vs Greedy (2.0) không phải tốt nhất vs AB2. Hòa = bàn đầy.
+
+**Đọc kết quả (thận trọng, D-18):** c chỉ tạo khác biệt rõ ở 15×15, ngân sách 500–1000 iter. Giải thích khả dĩ (chưa
+đo độ sâu cây trong E3): c nhỏ (khai thác nhiều) dồn iteration vào ít nước, có lợi khi ngân sách nhỏ và hệ số nhánh lớn; khi ngân sách đủ lớn, c lớn
+không còn bất lợi. Trên 3×3 cây nhỏ, mọi c đều gần trần → c không quan trọng. Kết luận "c₁ tốt hơn c₂" ở một điểm cụ
+thể cần so sánh cặp theo seed; hình chỉ cho xu hướng.
 
 ## Quick (2026-11-10, commit `36e9b68`, không commit file `e3quick_*` — không phải số liệu báo cáo)
 Tổng 310 s, 4 worker; mọi ván `normal`, `git_dirty = 0`, `distinct_games` = n ở mọi điểm.

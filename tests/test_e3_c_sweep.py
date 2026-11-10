@@ -157,3 +157,10 @@ def test_plot_panels_writes_png(tmp_path):
                          "nonloss_lo": p - 0.1, "nonloss_hi": 1.0})  # fmt: skip
     path = e3.plot_panels([(rows, "win", "a"), (rows, "nonloss", "b")], tmp_path / "f.png", "t")
     assert path.exists() and path.read_bytes()[:4] == b"\x89PNG"
+
+
+def test_plot_panels_tolerates_rounding_at_one(tmp_path):
+    # p = 1 với cận trên Wilson làm tròn xuống dưới 1 (lỗi đã gặp khi chạy full)
+    rows = [{"split": "all", "c": "1.4", "iterations": "100", "win_rate": 1.0,
+             "win_lo": 0.98, "win_hi": 0.9999999999999999}]  # fmt: skip
+    assert e3.plot_panels([(rows, "win", "a")], tmp_path / "g.png", "t").exists()

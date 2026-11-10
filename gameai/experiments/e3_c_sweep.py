@@ -333,7 +333,8 @@ def plot_panels(
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(1, len(panels), figsize=(5.2 * len(panels), 4.2), squeeze=False,
+    fig, axes = plt.subplots(1, len(panels), figsize=(max(6.4, 5.2 * len(panels)), 4.6),
+                             squeeze=False,
                              facecolor=SURFACE)  # fmt: skip
     for ax, (rows, metric, sub) in zip(axes[0], panels, strict=True):
         key, lo_k, hi_k = METRICS[metric]
@@ -347,7 +348,8 @@ def plot_panels(
             shift = 10 ** (0.025 * (i - 1.5))
             xs = [p[0] * shift for p in pts]
             ys = [p[1] for p in pts]
-            err = [[p[1] - p[2] for p in pts], [p[3] - p[1] for p in pts]]
+            # max(0, …): ở p = 1 cận Wilson có thể lệch p ~1e-16 do làm tròn → yerr âm
+            err = [[max(0.0, p[1] - p[2]) for p in pts], [max(0.0, p[3] - p[1]) for p in pts]]
             lows += [p[2] for p in pts]
             ax.errorbar(xs, ys, yerr=err, color=SERIES_COLORS[i], marker=MARKERS[i],
                         markersize=6, linewidth=2, elinewidth=1.2, capsize=0,
@@ -370,12 +372,13 @@ def plot_panels(
         ax.set_ylabel({"win": "tỉ lệ thắng", "nonloss": "tỉ lệ không thua"}[metric], color=INK2)
         ax.set_title(sub, color=INK, fontsize=11, loc="left")
     handles, labels = axes[0][0].get_legend_handles_labels()  # một legend chung, không đè dữ liệu
-    fig.legend(handles, labels, loc="upper right", ncol=len(labels), frameon=False,
-               labelcolor=INK, fontsize=9)  # fmt: skip
-    fig.suptitle(title, color=INK, fontsize=12, x=0.01, ha="left")
+    # hàng riêng dưới tiêu đề: không đè tiêu đề ở hình 1 panel, không đè dữ liệu ở 1,0
+    fig.legend(handles, labels, loc="upper left", bbox_to_anchor=(0.005, 0.94),
+               ncol=len(labels), frameon=False, labelcolor=INK, fontsize=9)  # fmt: skip
+    fig.suptitle(title, color=INK, fontsize=12, x=0.01, y=0.99, ha="left")
     fig.text(0.01, 0.005, "Thanh lỗi: Wilson 95 %, tính độc lập từng điểm (các c dùng chung seed).",
              color=INK2, fontsize=8, ha="left", va="bottom")  # fmt: skip
-    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.tight_layout(rect=(0, 0.03, 1, 0.88))
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=150, facecolor=SURFACE)
     plt.close(fig)
