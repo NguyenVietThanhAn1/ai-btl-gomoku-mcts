@@ -52,6 +52,8 @@ SUMMARY_COLUMNS: list[str] = [
     "distinct_games", "mean_moves", "errors", "a_errors", "b_errors", "max_moves_draws",
     "a_time_per_move", "b_time_per_move", "a_nodes_per_move", "b_nodes_per_move",
     "a_iterations_per_move", "b_iterations_per_move",
+    "a_search_moves", "b_search_moves",
+    "a_search_iterations_per_move", "b_search_iterations_per_move",
 ]  # fmt: skip
 
 
@@ -366,7 +368,9 @@ def run_match(
 
 
 def add_runner_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-    """Thêm `--workers` (mặc định 4) và `--allow-code-change` cho script thí nghiệm."""
+    """Thêm `--quick`, `--workers` (mặc định 4), `--allow-code-change` cho script thí nghiệm."""
+    parser.add_argument("--quick", action="store_true",
+                        help="smoke test: ít ván, file *quick* riêng")  # fmt: skip
     parser.add_argument("--workers", type=int, default=DEFAULT_WORKERS,
                         help=f"số tiến trình (mặc định {DEFAULT_WORKERS})")  # fmt: skip
     parser.add_argument("--allow-code-change", action="store_true",
@@ -387,7 +391,37 @@ def _per_move(rows: Sequence[dict[str, str]], side: str, key: str) -> float:
     return total / moves if moves else math.nan
 
 
-def _summary_row(label_a: str, label_b: str, split: str, rows: list[dict[str, str]]) -> dict:
+# Nước đi thẳng nhờ tactics (MCTS: thắng ngay = 1, chặn ngay = 2) không search → 0 iteration.
+# Mã 3 (restrict) vẫn search nên tính là nước có search.
+_DIRECT_TACTICS = frozenset({"1", "2"})
+
+
+def _search_stats(
+    rows: list[dict[str, str]], moves: dict[str, list[dict[str, str]]] | None
+) -> dict[str, float]:
+    """Số nước có search và iteration/nước chỉ tính các nước đó (nan nếu không có `moves`)."""
+    out: dict[str, float] = {}
+    for side in ("a", "b"):
+        n, its = 0, 0.0
+        if moves is not None:
+            for r in rows:
+                for m in moves.get(r["game_id"], ()):
+                    if m["side"] == side.upper() and m["tactic"] not in _DIRECT_TACTICS:
+                        if m["iterations"] != "":
+                            n += 1
+                            its += float(m["iterations"])
+        out[f"{side}_search_moves"] = n if moves is not None else math.nan
+        out[f"{side}_search_iterations_per_move"] = its / n if n else math.nan
+    return out
+
+
+def _summary_row(
+    label_a: str,
+    label_b: str,
+    split: str,
+    rows: list[dict[str, str]],
+    moves: dict[str, list[dict[str, str]]] | None = None,
+) -> dict:
     n = len(rows)
     res = [float(r["result_a"]) for r in rows]
     wins, draws = res.count(1.0), res.count(0.5)
@@ -414,23 +448,34 @@ def _summary_row(label_a: str, label_b: str, split: str, rows: list[dict[str, st
         "max_moves_draws": sum(1 for r in rows if r["termination"] == "max_moves"),
         **{f"{s}_{k}_per_move": _per_move(rows, s, k)
            for k in ("time", "nodes", "iterations") for s in ("a", "b")},
+        **_search_stats(rows, moves),
     }  # fmt: skip
 
 
-def summarize(rows: Iterable[dict[str, str]]) -> list[dict[str, Any]]:
+def summarize(
+    rows: Iterable[dict[str, str]], moves: Iterable[dict[str, str]] | None = None
+) -> list[dict[str, Any]]:
     """Bảng tổng hợp theo cặp (label_a, label_b), mỗi cặp 3 dòng: all, A=X, A=O.
 
     Số chính: win rate W/n + Wilson 95%; thêm non-loss (W+D)/n + Wilson; score (W + 0.5D)/n không có
     CI. `distinct_games`: số chuỗi nước khác nhau (gồm khai cuộc; dòng "all" tính cả vai A/B).
+    `moves` (dòng của `*_moves.csv`, xem `read_rows(moves_path_for(path))`) → tính thêm
+    `{a,b}_search_moves` và `{a,b}_search_iterations_per_move` (bỏ nước đi thẳng nhờ tactics);
+    không truyền → các cột này là nan. Cột `*_iterations_per_move` cũ giữ nguyên (tính mọi nước).
     """
+    by_game: dict[str, list[dict[str, str]]] | None = None
+    if moves is not None:
+        by_game = {}
+        for m in moves:
+            by_game.setdefault(m["game_id"], []).append(m)
     groups: dict[tuple[str, str], list[dict[str, str]]] = {}
     for r in rows:
         groups.setdefault((r["label_a"], r["label_b"]), []).append(r)
     out = []
     for (la, lb), rs in groups.items():
-        out.append(_summary_row(la, lb, "all", rs))
-        out.append(_summary_row(la, lb, "A=X", [r for r in rs if r["a_is_x"] == "1"]))
-        out.append(_summary_row(la, lb, "A=O", [r for r in rs if r["a_is_x"] == "0"]))
+        out.append(_summary_row(la, lb, "all", rs, by_game))
+        out.append(_summary_row(la, lb, "A=X", [r for r in rs if r["a_is_x"] == "1"], by_game))
+        out.append(_summary_row(la, lb, "A=O", [r for r in rs if r["a_is_x"] == "0"], by_game))
     return out
 
 

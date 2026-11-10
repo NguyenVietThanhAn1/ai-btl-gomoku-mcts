@@ -328,9 +328,60 @@ def test_add_runner_args_defaults():
 
     p = common.add_runner_args(argparse.ArgumentParser())
     ns = p.parse_args([])
-    assert ns.workers == 4 and ns.allow_code_change is False
-    ns = p.parse_args(["--workers", "2", "--allow-code-change"])
-    assert ns.workers == 2 and ns.allow_code_change is True
+    assert ns.workers == 4 and ns.allow_code_change is False and ns.quick is False
+    ns = p.parse_args(["--workers", "2", "--allow-code-change", "--quick"])
+    assert ns.workers == 2 and ns.allow_code_change is True and ns.quick is True
+
+
+def _fake_game(gid, a_is_x, result_a):
+    r = {c: "" for c in GAME_COLUMNS}
+    r.update(game_id=gid, label_a="A", label_b="B", a_is_x=a_is_x, result_a=result_a,
+             termination="normal", error_side="", n_moves="0", opening="", moves="",
+             a_moves="4", a_iterations_sum="300")  # fmt: skip
+    return r
+
+
+def _fake_move(gid, ply, side, its, tactic):
+    return {"game_id": gid, "ply": str(ply), "side": side, "iterations": str(its),
+            "tactic": str(tactic)}  # fmt: skip
+
+
+def test_summarize_search_iterations_skip_direct_moves():
+    """Nước thắng/chặn ngay (tactic 1, 2; 0 iteration) bị bỏ; restrict (3) vẫn tính là search."""
+    rows = [_fake_game("0-AX", "1", "1.0"), _fake_game("0-BX", "0", "0.0")]
+    moves = [
+        _fake_move("0-AX", 0, "A", 100, 0), _fake_move("0-AX", 1, "A", 0, 2),
+        _fake_move("0-AX", 2, "A", 200, 3), _fake_move("0-AX", 3, "A", 0, 1),
+        _fake_move("0-AX", 4, "B", "", ""), _fake_move("0-BX", 0, "A", 300, 0),
+        _fake_move("0-BX", 1, "B", "", ""),
+    ]  # fmt: skip
+    by = {s["split"]: s for s in common.summarize(rows, moves)}
+    # A: 3 nước có search (100, 200, 300) trên 5 nước → 200/nước, cột cũ không đổi quy ước
+    assert by["all"]["a_search_moves"] == 3
+    assert by["all"]["a_search_iterations_per_move"] == pytest.approx(200.0)
+    assert by["A=X"]["a_search_moves"] == 2  # chỉ ván 0-AX: 100, 200
+    assert by["A=X"]["a_search_iterations_per_move"] == pytest.approx(150.0)
+    assert by["A=O"]["a_search_iterations_per_move"] == pytest.approx(300.0)
+    # B không có khóa iterations (ô trống) → không có nước search, nan
+    assert by["all"]["b_search_moves"] == 0
+    assert math.isnan(by["all"]["b_search_iterations_per_move"])
+    assert by["all"]["a_iterations_per_move"] == pytest.approx(300 * 2 / 8)  # cột cũ: tính mọi nước
+
+
+def test_summarize_without_moves_gives_nan_search_columns():
+    s = common.summarize([_fake_game("0-AX", "1", "1.0")])[0]
+    assert math.isnan(s["a_search_moves"]) and math.isnan(s["a_search_iterations_per_move"])
+
+
+def test_summarize_search_iterations_real_match(tmp_path):
+    """Qua run_match thật: khớp nguyên văn với moves file; agent không tactic → bằng cột cũ."""
+    out = tmp_path / "m.csv"
+    rows = _run(out)
+    moves = common.read_rows(common.moves_path_for(out))
+    s = [x for x in common.summarize(rows, moves) if x["split"] == "all"][0]
+    expect = [float(m["iterations"]) for m in moves if m["side"] == "A" and m["iterations"] != ""]
+    assert s["a_search_moves"] == len(expect)
+    assert s["a_search_iterations_per_move"] == pytest.approx(sum(expect) / len(expect))
 
 
 def test_parallel_writes_each_game_as_it_finishes(tmp_path):

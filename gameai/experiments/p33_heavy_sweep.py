@@ -441,9 +441,7 @@ def worker_check(spec: AgentSpec, workers: int, allow_code_change: bool) -> None
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("step", choices=("calibrate", "sweep", "all"))
-    ap.add_argument("--quick", action="store_true",
-                    help=f"{QUICK_PAIRS} seed x 2 games/match, files p33quick_*")  # fmt: skip
-    add_runner_args(ap)
+    add_runner_args(ap)  # --quick ở đây: QUICK_PAIRS seed x 2 ván/match, file p33quick_*
     args = ap.parse_args()
     if args.step in ("calibrate", "all"):
         calibrate()
