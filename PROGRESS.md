@@ -31,7 +31,7 @@
 | P4.3 | CLI | ⬜ (hoãn) | An | 2026-11-10 | hoãn, gộp với P6 (yêu cầu của An); D-17 |
 | E1 | Nodes Minimax vs AB | ✅ | An | 2026-11-10 | full 59 s; D-17; `e1_*.csv` |
 | E2 | 3×3 never lose | ✅ | An | 2026-11-10 | spec-reviewer PASS; full xong; D-16 |
-| E3 | c sweep | ⬜ | An | | |
+| E3 | c sweep | 🔄 | An | 2026-11-10 | D-18; quick xong, chờ duyệt full |
 | E4 | N vs W/N | ⬜ | An | | |
 | E5 | Random vs heuristic rollout | ⬜ | An | | |
 | E6 | Tác dụng check_tactics | ⬜ | An | | thêm theo D-11 |
