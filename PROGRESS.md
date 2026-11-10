@@ -6,8 +6,8 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P4.3 (chưa bắt đầu; P4.2 ✅)
-- **Việc đang dở:** —
+- **Task hiện tại:** E2 (code + `--quick` xong, **chờ duyệt chạy full**; P4.3 chưa bắt đầu)
+- **Việc đang dở:** E2: chạy full `python -m gameai.experiments.e2_never_lose all` (ước ~20 phút, 4 worker) sau khi An đồng ý; rồi spec-reviewer, cập nhật `mcts.md` ("1000 iter đủ"), đánh dấu ✅.
 - **Bước tiếp theo:** `/next-task` → P4.3 CLI. Cấu hình heavy cho E5 (sơ bộ, P3.3): **h300** = `rollout="heavy_kinrow"`, `temperature=300`, không cắt rollout; mọi MCTS 15×15 bật `check_tactics=True` (D-14). Báo iteration ở E3/E5 dùng cột `*_search_iterations_per_move` (D-15): `summarize(rows, read_rows(moves_path_for(path)))`.
 - **Cảnh báo / blocker:** theo P3.3, vs AB2 MCTS 0,5 s gần 0% (≤ 2/20 ở mọi cấu hình) → E3/E5 15×15 cần đối thủ phân biệt được cấu hình (kiểu `mrand`, D-14); quyết định khi tới task đó (PLAN E3/E5 hiện ghi AB2 — cần sửa lúc đó). (D-11 "Done P3 — thắng ngay" đã được duyệt 2026-11-10.)
 
@@ -30,7 +30,7 @@
 | P4.2 | Cờ dòng lệnh chung (`--quick`, …) | ✅ | An | 2026-11-10 | `--quick` trong `add_runner_args`; cột `*_search_*` ở `summarize` (D-15); phần runner ở P4.1 (D-13) |
 | P4.3 | CLI | ⬜ | An | | |
 | E1 | Nodes Minimax vs AB | ⬜ | An | | |
-| E2 | 3×3 never lose | ⬜ | An | | |
+| E2 | 3×3 never lose | 🟡 | An | 2026-11-10 | code + quick xong, chưa chạy full; D-16 |
 | E3 | c sweep | ⬜ | An | | |
 | E4 | N vs W/N | ⬜ | An | | |
 | E5 | Random vs heuristic rollout | ⬜ | An | | |
@@ -51,6 +51,10 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-10 — E2 (dở: chưa chạy full)
+- Đã làm: `experiments/e2_never_lose.{py,md}`, `tests/test_e2_never_lose.py`, D-16. (a) 3 đối thủ × iter {100,250,1000,5000}, 100 ván/cặp; (b) vét cạn seed theo `key`, 10 base_seed × 2 vai. `--quick` chạy xong (`results/*/e2quick_*`): vét cạn thua 54/1239, 16/1187, 3/1132, 0/1133 nhánh ở 100/250/1000/5000 iter.
+- Còn dở: chạy full (~20 phút, chờ duyệt), spec-reviewer, sửa `mcts.md` mục "1000 iter đủ", commit `E2: ...`.
 
 ### 2026-11-10 — P4.2
 - Đã làm: `add_runner_args` thêm `--quick` (chỉ đăng ký cờ; script tự định nghĩa quick + file riêng); `p33_heavy_sweep` bỏ khai `--quick` trùng. `summarize(rows, moves=None)` thêm `{a,b}_search_moves`, `{a,b}_search_iterations_per_move` (bỏ nước tactic thắng/chặn ngay; restrict vẫn tính), cột cũ giữ nguyên (D-15). Không đổi schema CSV, không chạy lại p33. Ghi cảnh báo AB2/E3/E5 vào "Cảnh báo".
