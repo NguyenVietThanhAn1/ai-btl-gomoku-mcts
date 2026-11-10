@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P3.3 🔄 (script, test, hiệu chỉnh, `--quick` xong; **chưa chạy full**)
-- **Việc đang dở:** D-14 đã áp dụng (`check_tactics=True`, thêm đối thủ `mrand`); `--quick` lần 2 xong (commit `97c9f9c`). Chưa chạy full.
-- **Bước tiếp theo:** nhóm duyệt rồi chạy full `python -m gameai.experiments.p33_heavy_sweep sweep` (21 match, 420 ván; ước tính theo quick: Greedy ~8 phút tuần tự / ~2 phút 4 worker, AB2 ~8 / ~2, mrand ~24 / ~6). Khi báo full: kèm `distinct_games` từng cấu hình, < 15/20 thì báo nhóm, không tự bật `random_opening`. Sau đó chọn cấu hình heavy cho E5 + spec-reviewer.
+- **Task hiện tại:** P4.2 (chưa bắt đầu; P3.3 ✅)
+- **Việc đang dở:** —
+- **Bước tiếp theo:** `/next-task` → P4.2 cờ dòng lệnh chung. Cấu hình heavy cho E5 (sơ bộ, P3.3): **h300** = `rollout="heavy_kinrow"`, `temperature=300`, không cắt rollout; mọi MCTS 15×15 bật `check_tactics=True` (D-14). Báo iteration ở E5 nên tách nước có search khỏi nước đi thẳng nhờ tactics.
 - **Cảnh báo / blocker:** — (phần làm rõ "Done P3 — thắng ngay" ở D-11 đã được duyệt 2026-11-10).
 
 ## Bảng trạng thái
@@ -26,7 +26,7 @@
 | P3.1 | MCTS-UCT (+ RandomRollout, HeavyRollout bản đúng) | ✅ | An | 2026-11-10 | spec-reviewer PASS; phạm vi/quyết định ở D-11 |
 | P3.2 | Tăng tốc HeavyRollout (+ test tương đương) | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-12; phần chọn tham số tách sang P3.3 |
 | P4.1 | Arena + runner song song/CSV/resume | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-13; gộp phần runner của P4.2 cũ |
-| P3.3 | Quét sơ bộ T / rollout_limit / scale (heavy) | 🔄 | An | 2026-11-10 | script + quick xong; chờ chạy full; D-12, D-14 |
+| P3.3 | Quét sơ bộ T / rollout_limit / scale (heavy) | ✅ | An | 2026-11-10 | spec-reviewer PASS; chọn h300 (sơ bộ); D-12, D-14 |
 | P4.2 | Cờ dòng lệnh chung (`--quick`, …) | ⬜ | An | | phần runner đã gộp vào P4.1 (D-13) |
 | P4.3 | CLI | ⬜ | An | | |
 | E1 | Nodes Minimax vs AB | ⬜ | An | | |
@@ -48,10 +48,18 @@
 ## Kết quả thí nghiệm đã có
 
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
+- **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
 
-### 2026-11-10 — P3.3 (đang dở)
+### 2026-11-10 — P3.3 (chạy full, xong)
+- Đã làm: luật chọn D-14 (nhóm chốt trước khi chạy) cài trong `choose_config` → `results/tables/p33_choice_prelim.csv`; commit `217aabd`, chạy full 4 worker: 21 match, 420 ván, 11 phút 27 s, mọi ván `normal`, `git_dirty = 0`, `distinct_games` = 20/20 ở cả 21 ô (không cần `random_opening`).
+- Kết quả (sơ bộ — không phải E5), thắng/20 vs mrand · Greedy · AB2 (không có hòa): rand 9 · 0 · 0; h100 19 · 6 · 2; h300 19 · 8 · 0; h1000 16 · 2 · 0; h100c10 19 · 8 · 2; h300c10 16 · 4 · 0; h1000c10 19 · 5 · 1. Kiểm tra hợp lệ rand vs mrand 9/20, Wilson [0,258; 0,658] ∋ 0,5. Bốn cấu hình hòa nhất vs mrand (19/20, Wilson [0,764; 0,991]), cả 6 cấu hình heavy chồng CI → phá hòa: Greedy 0,40 (h300 = h100c10) → không cắt → **h300**.
+- Lưu ý: `a_iterations_per_move` tính cả nước đi thẳng nhờ tactics (0 iteration): rand vs greedy 897 trên 102 nước, 1 040 trên 88 nước có search (`p33_rand_vs_greedy_moves.csv`). So cùng nước (seed 0–1, 14 nước có search) quick 1 worker / quick 4 worker / full: 1 464 / 1 264 / 1 273 → full không bị tải thêm so với quick 4 worker. Vs AB2 gần sàn (≤ 2/20) → mrand là đối thủ phân biệt được cấu hình.
+- Test: 290 full suite (289 passed + 1 xfail chủ ý), 23 trong `tests/test_p33_heavy_sweep.py` (thêm 4 test luật chọn); ruff sạch. spec-reviewer PASS (đã sửa 1 số không truy được trong `p33_heavy_sweep.md`).
+- File đổi: `gameai/experiments/p33_heavy_sweep.{py,md}`, `tests/test_p33_heavy_sweep.py`, `gameai/agents/rollout.md`, `docs/DECISIONS.md` (D-14 luật chọn), `PROGRESS.md`, `results/raw/p33_*_vs_*.csv` (+ `_moves.csv`), `results/tables/p33_{sweep,choice}_prelim.csv`. File `p33quick_*` không commit.
+
+### 2026-11-10 — P3.3
 - Đã làm: `experiments/p33_heavy_sweep.{py,md}` — `calibrate` (mỗi T một scale, mọi thế dọc rollout heavy sau khai cuộc 4–20 quân, seed 50 000–50 199, lưới D-12 + mở rộng khi chạm biên) và `sweep` (7 cấu hình × Greedy / AB2, 0,5 s/nước, `--quick` = 1 seed + kiểm tra worker 1 vs 4). D-12 bổ sung 5 điểm. Commit `4d6a8d9` trước khi chạy (`git_dirty = False`).
 - Test: 286 full suite (285 passed + 1 xfail chủ ý); 19 mới trong `tests/test_p33_heavy_sweep.py` (gồm khớp `value_fn` của MCTS với σ(eval_P1/scale) đã fit ở cả lượt X và O — không lệch dấu); ruff sạch.
 - Hiệu chỉnh (`results/tables/p33_scale_prelim.csv`, 9 343 thế, 1,9 s): T=100 → scale 500 (LL 300/500/1000: −0,6045 / **−0,5590** / −0,5686, 1 554 thế); T=300 → 500 (−0,5855 / **−0,5657** / −0,5835, 1 962 thế); T=1000 → 1000 (500/1000/2000: −0,6862 / **−0,6619** / −0,6670, 5 827 thế). Không chạm biên, không mở rộng lưới. LL gần log 0,5 = −0,693 (nhất là T=1000) → eval dự đoán yếu kết quả rollout.

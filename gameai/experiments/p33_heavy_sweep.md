@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🔄 script xong, mới chạy hiệu chỉnh + `--quick`  ·  **Task:** P3.3 (D-12, D-14)  ·  **Cập nhật:** 2026-11-10
+**Trạng thái:** ✅ đã chạy full (sơ bộ)  ·  **Task:** P3.3 (D-12, D-14)  ·  **Cập nhật:** 2026-11-10
 
 ## Mục đích
 Chọn T, `rollout_limit` và `scale` của `sigmoid_value` cho heavy rollout trước E5. Kết quả là **số liệu sơ
@@ -120,6 +120,17 @@ thắng (kèm Wilson 95%) — số liệu sơ bộ, E5 chạy lại với thiế
   cắt, rồi iteration; `rand` không được chọn; `rand` vs `mrand` không chứa 0,5 → không chọn).
 - Chạy: `python -m pytest tests/test_p33_heavy_sweep.py -q` (~5 s).
 
+## Kết quả (sơ bộ — không phải số liệu E5)
+- Full: commit `217aabd`, 4 worker, 420 ván, 11 phút 27 s; mọi ván `normal`, `distinct_games` = 20/20 mọi ô.
+- Bảng: `results/tables/p33_sweep_prelim.csv` (score, Wilson, iteration/nước), `p33_choice_prelim.csv`.
+- Chọn theo D-14: **`h300`** (T = 300, không cắt rollout). Bốn cấu hình hòa nhất vs `mrand` (19/20); phá hòa
+  bằng score vs Greedy (h300 = h100c10 = 0,40) rồi "không cắt" → h300. Kiểm tra hợp lệ `rand` vs `mrand`
+  9/20, Wilson [0,258; 0,658] ∋ 0,5.
+- Lưu ý đọc số: `a_iterations_per_move` tính cả nước đi thẳng nhờ tactics (0 iteration) nên thấp hơn số
+  iteration của một nước có search (rand vs greedy, `p33_rand_vs_greedy_moves.csv` cột `iterations`, bên A:
+  897 trên 102 nước, 1 040 trên 88 nước có iteration > 0).
+
 ## Hạn chế / TODO
-- Chưa chạy full sweep; chưa chọn cấu hình cho E5.
+- 20 ván/ô: khoảng tin cậy rộng (6 cấu hình heavy đều chồng nhau vs `mrand`) → lựa chọn mang tính sơ bộ.
+- `a_iterations_per_move` lẫn nước tactics (xem trên); E5 nên tách nước có search khi báo iteration.
 - Ước tính thời gian từ `--quick` (2 ván/match) chỉ là xấp xỉ; độ dài ván thay đổi nhiều.

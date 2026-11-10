@@ -86,5 +86,6 @@ T ∈ {100, 300, 1000} × {không cắt, cắt 10 + `sigmoid_value`}, `scale` hi
 - Chạy riêng: `python -m pytest tests/test_rollout.py -q` (< 1 s).
 
 ## Hạn chế / TODO
-- P3.3: chọn T, `rollout_limit`, `scale` (quét sơ bộ, D-12).
+- P3.3 (sơ bộ, D-14): chọn T = 300, không cắt rollout (`results/tables/p33_choice_prelim.csv`); `scale`
+  đã hiệu chỉnh: T=100 → 500, 300 → 500, 1000 → 1000 (`p33_scale_prelim.csv`) cho cấu hình có cắt.
 - Heavy dùng `move_score` nên chỉ thấy đe dọa k−1 quân (không thấy open-three của đối thủ là nguy hiểm).
