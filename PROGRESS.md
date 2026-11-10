@@ -7,8 +7,8 @@
 ## Đang ở đâu (đọc mục này trước tiên)
 
 - **Task hiện tại:** P3.3 🔄 (script, test, hiệu chỉnh, `--quick` xong; **chưa chạy full**)
-- **Việc đang dở:** `--quick` cho thấy **mọi cấu hình thua 28/28** (MCTS 0,5 s/nước, `check_tactics=False` không chặn four → ván ~9,5 nước) → quét full theo thiết lập D-12 sẽ ra 0% ở mọi ô, không phân biệt được tham số. Chờ nhóm quyết định thiết lập trước khi chạy full.
-- **Bước tiếp theo:** nhóm chọn cách xử lý floor effect (vd. bật `check_tactics` cho bước quét, hoặc giữ nguyên) → ghi DECISIONS → commit → chạy full `python -m gameai.experiments.p33_heavy_sweep sweep` (ước tính theo quick: ~7 phút tuần tự / ~2 phút 4 worker vs Greedy; ~8 / ~2 phút vs AB2; sẽ dài hơn nếu ván dài hơn). Khi báo full: kèm `distinct_games` từng cấu hình, < 15/20 thì báo nhóm, không tự bật `random_opening`. Sau đó spec-reviewer.
+- **Việc đang dở:** D-14 đã áp dụng (`check_tactics=True`, thêm đối thủ `mrand`); `--quick` lần 2 xong (commit `97c9f9c`). Chưa chạy full.
+- **Bước tiếp theo:** nhóm duyệt rồi chạy full `python -m gameai.experiments.p33_heavy_sweep sweep` (21 match, 420 ván; ước tính theo quick: Greedy ~8 phút tuần tự / ~2 phút 4 worker, AB2 ~8 / ~2, mrand ~24 / ~6). Khi báo full: kèm `distinct_games` từng cấu hình, < 15/20 thì báo nhóm, không tự bật `random_opening`. Sau đó chọn cấu hình heavy cho E5 + spec-reviewer.
 - **Cảnh báo / blocker:** — (phần làm rõ "Done P3 — thắng ngay" ở D-11 đã được duyệt 2026-11-10).
 
 ## Bảng trạng thái
@@ -26,7 +26,7 @@
 | P3.1 | MCTS-UCT (+ RandomRollout, HeavyRollout bản đúng) | ✅ | An | 2026-11-10 | spec-reviewer PASS; phạm vi/quyết định ở D-11 |
 | P3.2 | Tăng tốc HeavyRollout (+ test tương đương) | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-12; phần chọn tham số tách sang P3.3 |
 | P4.1 | Arena + runner song song/CSV/resume | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-13; gộp phần runner của P4.2 cũ |
-| P3.3 | Quét sơ bộ T / rollout_limit / scale (heavy) | 🔄 | An | 2026-11-10 | script xong; chờ chạy full; D-12 |
+| P3.3 | Quét sơ bộ T / rollout_limit / scale (heavy) | 🔄 | An | 2026-11-10 | script + quick xong; chờ chạy full; D-12, D-14 |
 | P4.2 | Cờ dòng lệnh chung (`--quick`, …) | ⬜ | An | | phần runner đã gộp vào P4.1 (D-13) |
 | P4.3 | CLI | ⬜ | An | | |
 | E1 | Nodes Minimax vs AB | ⬜ | An | | |
@@ -58,6 +58,8 @@
 - `--quick` (`results/tables/p33quick_sweep_prelim.csv`, không commit; 1 phút 27 s tổng): 7 cấu hình × 2 đối thủ × 2 ván = 28 ván, **MCTS thua cả 28** (termination normal, không lỗi), ván trung bình 9,5–27,5 nước; MCTS không chặn four (`check_tactics=False`). Iteration/nước: rand ~1 530, h100 ~1 100, h300 ~860–935, h1000 ~530–720, cấu hình c10 1 200–1 800. Ước tính full: vs Greedy 140 ván ~7 phút tuần tự / ~2 phút 4 worker; vs AB2 140 ván ~8 / ~2 phút. Kiểm tra worker (rand vs greedy, 4 ván): 1 worker 1 106 it/nước, 4 worker 1 282 (+15,9%) → 4 worker không làm giảm iteration.
 - File đổi: `gameai/experiments/p33_heavy_sweep.{py,md}`, `tests/test_p33_heavy_sweep.py`, `gameai/agents/rollout.md`, `gameai/heuristics/kinrow_rollout.md`, `docs/DECISIONS.md`, `PROGRESS.md`, `results/raw/p33_calib_positions.csv`, `results/tables/p33_scale_prelim.csv`.
 - Còn dở: chờ quyết định về floor effect rồi chạy full; chọn cấu hình cho E5; spec-reviewer.
+- **Tiếp (cùng ngày) — D-14:** sanity check (script tạm, không lưu; 3 thế 15×15 có four của O, tactics tắt, h100 iteration cố định, 5 seed): 2000 iteration chặn 0/5 ở cả 3 thế (ô chặn chiếm 1–3% N gốc); 5000 iteration chặn 5/5 ở 2 thế ~58 candidate (3–5% N), 0/5 ở thế chéo ~100 candidate; 20 000 (seed 0) chặn ở cả 3, ô chặn W/N 0,39–0,75, cao nhất. Không phải bug: nước sai chỉ bị bác bỏ sau khi nút con mở rộng tới nước thắng của O. Iteration/nước ở 0,5 s (thế four kín): rand 1 682, h100 1 104, h300 867, h1000 389. → D-14: `check_tactics=True` cho mọi MCTS 15×15 (P3.3, E3, E5), chỉ E6 so bật/tắt; thêm đối thủ `mrand`. PLAN + doc cập nhật; xóa file `p33quick_*` cũ (chưa commit, config cũ).
+- `--quick` lần 2 (42 ván, 3 phút 23 s, `results/tables/p33quick_sweep_prelim.csv`, không commit): MCTS thắng/hòa/thua — vs Greedy 4/0/10 (h300c10 2/2, h100 1/2, h100c10 1/2, còn lại 0), vs AB2 1/0/13 (chỉ h100 1/2), vs mrand 11/0/3 (rand 0/2, h300c10 1/2, còn lại 2/2). Độ dài ván TB (trung bình các cấu hình): 17,2 / 16,4 / 23,1 nước. Ước tính full: Greedy ~8 phút tuần tự / ~2 phút 4 worker; AB2 ~8 / ~2; mrand ~24 / ~6. Kiểm tra worker: 1 worker 1 256 it/nước, 4 worker 1 124 (−10,5%, dưới ngưỡng 15%).
 
 ### 2026-11-10 — P4.1
 - Đã làm: D-11 (làm rõ "Done P3 — thắng ngay") được nhóm duyệt. `agents/registry.py` — `AgentSpec`/`GameSpec` (params JSON, pickle được) + `make_agent`/`make_game`. `arena.py` — `play_game` (time do arena đo + bản sao stats mỗi nước; exception / nước sai / mutate game → thua), `derive_seed` (sha256), `random_opening_moves`, `play_seeded_game` (agent mới mỗi ván), `play_match`. `experiments/common.py` — `run_match` (song song, mặc định 4 worker, ghi ván + `*_moves.csv` ngay khi xong, resume: dòng cắt dở, moves mồ côi, `config_hash`, `git_commit`/`git_dirty` + `allow_code_change`), `summarize` (Wilson cho win rate và non-loss, score, `distinct_games`, tách A=X / A=O), `write_summary`, `add_runner_args`. PLAN: gộp runner vào P4.1, P4.2 chỉ còn cờ dòng lệnh. DECISIONS: D-13.
