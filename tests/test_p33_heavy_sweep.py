@@ -187,7 +187,7 @@ def test_sweep_configs():
                                        "h1000c10"]  # fmt: skip
     for s in specs:
         assert s.params["time_limit"] == 0.5 and s.params["iterations"] is None
-        assert s.params["check_tactics"] is False
+        assert s.params["check_tactics"] is True  # D-14
         make_agent(s, 0)  # dựng được
     for s in specs[1:4]:
         assert s.params["rollout"] == "heavy_kinrow" and s.params["rollout_limit"] is None
@@ -204,7 +204,17 @@ def test_sweep_configs_missing_scale():
 
 
 def test_opponents_and_paths():
-    assert set(p33.OPPONENTS) == {"greedy", "ab2"}
+    assert set(p33.OPPONENTS) == {"greedy", "ab2", "mrand"}
+    mrand = p33.OPPONENTS["mrand"].params
+    assert mrand == {
+        "iterations": None,
+        "time_limit": 0.5,
+        "check_tactics": True,
+        "rollout": "random",
+    }
+    assert (
+        mrand == p33.sweep_configs({100.0: 1.0, 300.0: 1.0, 1000.0: 1.0})[0].params
+    )  # = cấu hình rand
     ab = p33.OPPONENTS["ab2"]
     assert ab.params == {
         "depth": 2,

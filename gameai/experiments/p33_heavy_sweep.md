@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🔄 script xong, mới chạy hiệu chỉnh + `--quick`  ·  **Task:** P3.3 (D-12)  ·  **Cập nhật:** 2026-11-10
+**Trạng thái:** 🔄 script xong, mới chạy hiệu chỉnh + `--quick`  ·  **Task:** P3.3 (D-12, D-14)  ·  **Cập nhật:** 2026-11-10
 
 ## Mục đích
 Chọn T, `rollout_limit` và `scale` của `sigmoid_value` cho heavy rollout trước E5. Kết quả là **số liệu sơ
@@ -23,7 +23,7 @@ Commit trước khi chạy sweep (cột `git_commit` / `git_dirty`, xem `common.
 TEMPERATURES = (100, 300, 1000); SCALES = (100, 200, 300, 500, 1000, 2000, 5000)
 CALIB_SEEDS = range(50_000, 50_200); OPENING_RANGE = (4, 20); TIME_LIMIT = 0.5; ROLLOUT_LIMIT = 10
 BASE_SEED = 0; N_PAIRS = 10; QUICK_PAIRS = 1; MAX_GRID_EXTENSIONS = 4
-OPPONENTS: dict[str, AgentSpec]                       # "greedy", "ab2" (đối thủ chuẩn D-10)
+OPPONENTS: dict[str, AgentSpec]   # "greedy", "ab2" (chuẩn D-10), "mrand" (MCTS random 0,5 s + tactics, D-14)
 def calibration_samples(temperature, seed) -> list[dict]   # mọi thế chưa kết thúc của 1 rollout
 def generate_calibration(seeds=CALIB_SEEDS, temperatures=TEMPERATURES) -> list[dict]
 def mean_loglik(samples: Iterable[(eval, z)], scale) -> float
@@ -51,14 +51,15 @@ def worker_check(spec, workers, allow_code_change) -> None
 
 ### Bước 2 — quét
 - Đọc scale từ `p33_scale_prelim.csv` (thiếu → dừng, yêu cầu `calibrate`).
-- 7 cấu hình MCTS, chung `iterations=None`, `time_limit=0.5`, `check_tactics=False`, `c` / `final_move` mặc
-  định: `rand`; `h100`, `h300`, `h1000` (`heavy_kinrow`, không cắt); `h100c10`, `h300c10`, `h1000c10`
+- 7 cấu hình MCTS, chung `iterations=None`, `time_limit=0.5`, **`check_tactics=True` (D-14)**, `c` /
+  `final_move` mặc định: `rand`; `h100`, `h300`, `h1000` (`heavy_kinrow`, không cắt); `h100c10`, `h300c10`, `h1000c10`
   (`rollout_limit=10`, `value_scale` = scale của đúng T).
-- × 2 đối thủ (`greedy`, `ab2`) = 14 match, mỗi match `run_match(n_pairs=10, base_seed=0, random_opening=0)`
-  = 20 ván → **280 ván** full (140 mỗi đối thủ). Iteration mỗi ván: cột `a_iterations_*` của file ván.
+- × 3 đối thủ (`greedy`, `ab2`, `mrand`) = 21 match, mỗi match `run_match(n_pairs=10, base_seed=0,
+  random_opening=0)` = 20 ván → **420 ván** full (140 mỗi đối thủ). `rand` vs `mrand` là cùng một agent →
+  kiểm tra ~50% (sai lệch lớn = có vấn đề ở lượt / seed / tải). Iteration mỗi ván: cột `a_iterations_*` của file ván.
 - File full: `results/raw/p33_<cfg>_vs_<opp>.csv` (+ `_moves.csv`), bảng `results/tables/p33_sweep_prelim.csv`
   (`summarize`, gồm `distinct_games`, `a_iterations_per_move`).
-- `--quick`: `n_pairs=1` (28 ván), file `p33quick_*` (không trộn với full, không commit). In ước tính full
+- `--quick`: `n_pairs=1` (42 ván), file `p33quick_*` (không trộn với full, không commit). In ước tính full
   theo đối thủ: Σ thời gian ván (`a_time_sum + b_time_sum`) × 10, tuần tự và ÷ số worker (xấp xỉ).
   Sau đó **kiểm tra worker**: `rand` vs `greedy`, 2 seed × 2 lượt, chạy với 1 và `--workers` tiến trình
   (`p33quick_wcheck_rand_vs_greedy_w<k>.csv`), so `a_iterations_per_move`; giảm > 15% → in cảnh báo.
@@ -75,6 +76,9 @@ def worker_check(spec, workers, allow_code_change) -> None
   nước thứ 10 thì T=100 gần như không có mẫu (rollout trung bình ~9 nước).
 - **Khớp fit ↔ chạy:** MCTS dùng `sigmoid_value(evaluate, scale)(g) = σ(evaluate(g, P1)/scale)` làm z (điểm
   P1) khi cắt rollout — đúng công thức và đúng góc nhìn của nhãn khi fit (test kiểm cả lượt X và O).
+- **`check_tactics=True` (D-14):** `--quick` đầu tiên với tactics tắt thua 28/28 (MCTS 0,5 s ~1 100 iteration
+  không chặn được four; sanity check: cần ~5 000 iteration với ~58 candidate, ~20 000 với ~100) → mọi ô 0%.
+  `mrand` thêm làm đối thủ không bị thua sàn.
 - Ván quét `random_opening = 0` như chuẩn D-10; đa dạng nhờ seed đối thủ + MCTS theo thời gian. Kiểm
   `distinct_games`; nếu < 15/20 thì báo nhóm, **không** tự bật `random_opening`.
 

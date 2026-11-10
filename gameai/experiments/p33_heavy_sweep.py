@@ -3,9 +3,9 @@
 Bước 1 `calibrate`: hiệu chỉnh `scale` của `sigmoid_value(evaluate, scale)` cho từng T bằng hồi quy
 logistic một tham số (chọn trên lưới theo log-likelihood) trên các thế cờ của rollout heavy, seed
 50 000–50 199 (tách biệt với seed 0–9 của bước quét, D-12).
-Bước 2 `sweep`: 7 cấu hình MCTS (random + T ∈ {100, 300, 1000} × {không cắt; cắt 10 +
-sigmoid_value}),
-cùng 0,5 s/nước, vs Greedy và vs AlphaBeta depth 2, 10 seed × 2 lượt mỗi cặp.
+Bước 2 `sweep` (D-14: `check_tactics=True`): 7 cấu hình MCTS (random + T ∈ {100, 300, 1000} ×
+{không cắt; cắt 10 + sigmoid_value}), cùng 0,5 s/nước, vs Greedy, AlphaBeta depth 2 và MCTS random
+(`mrand`), 10 seed × 2 lượt mỗi cặp.
 
     python -m gameai.experiments.p33_heavy_sweep calibrate
     python -m gameai.experiments.p33_heavy_sweep sweep --quick
@@ -61,6 +61,12 @@ OPPONENTS: dict[str, AgentSpec] = {
         "alphabeta",
         {"depth": 2, "eval": "evaluate", "delta": "delta_eval", "order": "move_score"},
         label="ab2",
+    ),
+    # MCTS rollout random cùng ngân sách: đối thủ không bị "thua sàn" (D-14)
+    "mrand": AgentSpec(
+        "mcts",
+        {"iterations": None, "time_limit": TIME_LIMIT, "check_tactics": True, "rollout": "random"},
+        label="mrand",
     ),
 }
 
@@ -232,8 +238,8 @@ def describe_fit(fitted: Sequence[dict]) -> list[str]:
 
 
 def sweep_configs(scales: dict[float, float]) -> list[AgentSpec]:
-    """7 cấu hình MCTS cùng `time_limit` 0,5 s/nước, `check_tactics=False` (D-12)."""
-    base = {"iterations": None, "time_limit": TIME_LIMIT, "check_tactics": False}
+    """7 cấu hình MCTS cùng `time_limit` 0,5 s/nước, `check_tactics=True` (D-12, D-14)."""
+    base = {"iterations": None, "time_limit": TIME_LIMIT, "check_tactics": True}
     specs = [AgentSpec("mcts", {**base, "rollout": "random"}, label="rand")]
     for t in TEMPERATURES:
         heavy = {**base, "rollout": "heavy_kinrow", "temperature": t}
