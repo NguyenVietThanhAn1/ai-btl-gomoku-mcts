@@ -75,7 +75,7 @@ TACTIC_NONE, TACTIC_WIN, TACTIC_BLOCK, TACTIC_RESTRICT = 0, 1, 2, 3
   - Tắt tactics, 15×15, phải chặn four (thế `BLOCK15` trong test): chặn đúng 0/10 seed ở 1000 iter,
     2/10 ở 5000 iter. Lý do: mỗi con của gốc ~10 lượt thăm → chỉ mở rộng ~10/100 nước đáp trả, ít khi gặp ô
     thắng của đối thủ; rollout random chọn trúng ô đó ~1%.
-  - 20 ván vs `MinimaxAgent` hoàn hảo 3×3, tắt tactics: **1000 iter đủ** — 0 thua (20 hòa). Không cần tăng.
+  - 20 ván vs `MinimaxAgent` hoàn hảo 3×3, tắt tactics, 1000 iter: 0 thua (20 hòa) — mẫu nhỏ. **E2 (full, 2026-11-10)** chỉnh lại: 100 ván/cặp vs Minimax có seed, 1000 iter thua 2/100, 5000 iter 0/100; vét cạn (10 seed × 2 vai) còn 7 nhánh thua ở 1000 iter (2/20 run, đều khi MCTS cầm O), **0 nhánh thua trên 10 seed × 2 vai ở 5000 iter** (xem `experiments/e2_never_lose.md`). Vậy "1000 iter đủ" chỉ đúng với ván đấu, không đúng với vét cạn.
   - MCTS **không chiết khấu độ sâu**: ở 3×3 `. . X / X O X / . O .` (O đi), O thắng ngay ở 1 nhưng O đi 8 cũng
     thắng chắc (3 đường dọa) → cả hai có W/N = 1 chính xác, N bằng nhau, tie-break theo thứ tự mở rộng có
     thể chọn 8. Không mất thắng, nhưng không phải "thắng ngay". Trong bộ 30 thế của test (16 thế có
@@ -155,7 +155,7 @@ chiết khấu phần thưởng theo độ dài ván). Đó là lý do tiêu ch�
 thành "đi nước thắng chắc theo Minimax" (D-11).
 
 **Chọn tham số.** c = √2 là giá trị lý thuyết của UCB1 với điểm trong [0, 1]; E3 quét c ∈ {0,5; 1; 1,4; 2}.
-3×3: 1000 iter đủ để không thua Minimax (đo ở test). 15×15: rollout random, `candidate_moves` bán kính 2
+3×3: 1000 iter gần như không thua Minimax nhưng vét cạn còn nhánh thua; 5000 iter 0 nhánh thua trên 10 seed × 2 vai (E2). 15×15: rollout random, `candidate_moves` bán kính 2
 (D-3); `check_tactics` tắt khi đo thuật toán gốc, bật khi demo/so khả năng chơi (E6).
 
 ## Test

@@ -37,13 +37,54 @@ def test_exhaustive_loss_example_is_real_loss_and_seed_matters() -> None:
 
 
 def test_exhaustive_mcts_moves_follow_key_seed() -> None:
-    """Nước ở nhánh vét cạn = nước của agent dựng mới với seed derive_seed(base_seed, key)."""
+    """MCTS đi ở thế gốc đúng bằng agent dựng với derive_seed(base_seed, repr(key))."""
     from gameai.arena import derive_seed
 
     spec = mcts_spec(20)
     g = make_game(G3)
-    seed = derive_seed(3, repr(g.key()))
-    assert make_agent(spec, seed).select_move(g) == make_agent(spec, seed).select_move(g)
+    expect = make_agent(spec, derive_seed(3, repr(g.key()))).select_move(g)
+    res = exhaustive_check(make_game(G3), spec, 3, P1)  # MCTS đi trước: nước đầu = nước ở gốc
+    first = {int(x.split()[0]) for x in [str(res["loss_example"])] if x}
+    assert first <= {expect}  # nếu có chuỗi thua thì nó bắt đầu bằng đúng nước đó
+    other = make_agent(spec, derive_seed(4, repr(g.key()))).select_move(g)
+    assert isinstance(other, int)
+
+
+def test_by_role_mistakes_and_extension_rule(monkeypatch, capsys) -> None:
+    from gameai.experiments import e2_never_lose as e2
+
+    rows = [
+        {"iterations": 10, "base_seed": 0, "mcts_player": 1, "branches": 5, "losses": 0,
+         "draws": 1, "wins": 4, "mistakes": {}},
+        {"iterations": 10, "base_seed": 0, "mcts_player": -1, "branches": 7, "losses": 2,
+         "draws": 1, "wins": 4, "mistakes": {((4,), 1): 2}},
+    ]  # fmt: skip
+    by_role = e2.summarize_by_role(rows)
+    assert [(r["mcts_player"], r["seeds_zero_loss"], r["n_seeds"]) for r in by_role] == [
+        (1, 1, 1), (-1, 0, 1)]  # fmt: skip
+    mrows = e2.mistake_rows(rows)
+    assert len(mrows) == 1 and mrows[0]["move_type"] == "edge"
+    assert (mrows[0]["opp_last_type"], mrows[0]["ply"]) == ("center", 1)
+    (agg,) = e2.summarize_mistakes(mrows)
+    assert (agg["mistakes"], agg["losing_leaves"]) == (1, 2)
+    # luật mở rộng: không seed thua ở iter cao nhất → không chạy gì; có → chạy đúng seed đó
+    top = max(e2.ITERATIONS)
+    calls = []
+    monkeypatch.setattr(e2, "_run_tasks", lambda tasks, stem, w: calls.append(tasks) or [])
+    assert e2.run_extension([{**rows[0], "iterations": top}], True, 1) == [] and not calls
+    e2.run_extension([{**rows[1], "iterations": top, "base_seed": 7}], True, 1)
+    assert sorted(calls[0]) == sorted(
+        (it, 7, p) for it in e2.EXT_ITERATIONS for p in (1, -1))  # fmt: skip
+
+
+def test_solve_values() -> None:
+    from gameai.experiments.e2_never_lose import solve
+
+    g = make_game(G3)
+    assert solve(g, {}) == 0  # bàn trống 3×3 là hòa
+    for m in (0, 3, 1, 4):  # X: 0,1 — O: 3,4 → X đi, thắng ngay ở 2
+        g.play(m)
+    assert solve(g, {}) == 1
 
 
 def test_summarize_exhaustive() -> None:
