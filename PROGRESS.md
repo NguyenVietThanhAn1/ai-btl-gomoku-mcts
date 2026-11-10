@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P3.3 🔄 (script + test xong; đang chạy hiệu chỉnh + `--quick`)
-- **Việc đang dở:** —
-- **Bước tiếp theo:** `/next-task` → P3.3 quét sơ bộ T / `rollout_limit` / `scale` của heavy (thiết lập đã duyệt ở D-12: cùng `time_limit` 0,5 s, Greedy + AB depth 2, 20 ván/cấu hình/đối thủ, 4 worker, `scale` bằng hồi quy logistic trên seed 50 000–50 199). Chạy bằng `experiments/common.run_match` (spec MCTS: `rollout="heavy_kinrow"`, `temperature`, `rollout_limit`, `value_scale` — xem `agents/registry.md`); commit trước khi chạy full (cột `git_commit`/`git_dirty`).
+- **Task hiện tại:** P3.3 🔄 (script, test, hiệu chỉnh, `--quick` xong; **chưa chạy full**)
+- **Việc đang dở:** `--quick` cho thấy **mọi cấu hình thua 28/28** (MCTS 0,5 s/nước, `check_tactics=False` không chặn four → ván ~9,5 nước) → quét full theo thiết lập D-12 sẽ ra 0% ở mọi ô, không phân biệt được tham số. Chờ nhóm quyết định thiết lập trước khi chạy full.
+- **Bước tiếp theo:** nhóm chọn cách xử lý floor effect (vd. bật `check_tactics` cho bước quét, hoặc giữ nguyên) → ghi DECISIONS → commit → chạy full `python -m gameai.experiments.p33_heavy_sweep sweep` (ước tính theo quick: ~7 phút tuần tự / ~2 phút 4 worker vs Greedy; ~8 / ~2 phút vs AB2; sẽ dài hơn nếu ván dài hơn). Khi báo full: kèm `distinct_games` từng cấu hình, < 15/20 thì báo nhóm, không tự bật `random_opening`. Sau đó spec-reviewer.
 - **Cảnh báo / blocker:** — (phần làm rõ "Done P3 — thắng ngay" ở D-11 đã được duyệt 2026-11-10).
 
 ## Bảng trạng thái
@@ -50,6 +50,14 @@
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-10 — P3.3 (đang dở)
+- Đã làm: `experiments/p33_heavy_sweep.{py,md}` — `calibrate` (mỗi T một scale, mọi thế dọc rollout heavy sau khai cuộc 4–20 quân, seed 50 000–50 199, lưới D-12 + mở rộng khi chạm biên) và `sweep` (7 cấu hình × Greedy / AB2, 0,5 s/nước, `--quick` = 1 seed + kiểm tra worker 1 vs 4). D-12 bổ sung 5 điểm. Commit `4d6a8d9` trước khi chạy (`git_dirty = False`).
+- Test: 286 full suite (285 passed + 1 xfail chủ ý); 19 mới trong `tests/test_p33_heavy_sweep.py` (gồm khớp `value_fn` của MCTS với σ(eval_P1/scale) đã fit ở cả lượt X và O — không lệch dấu); ruff sạch.
+- Hiệu chỉnh (`results/tables/p33_scale_prelim.csv`, 9 343 thế, 1,9 s): T=100 → scale 500 (LL 300/500/1000: −0,6045 / **−0,5590** / −0,5686, 1 554 thế); T=300 → 500 (−0,5855 / **−0,5657** / −0,5835, 1 962 thế); T=1000 → 1000 (500/1000/2000: −0,6862 / **−0,6619** / −0,6670, 5 827 thế). Không chạm biên, không mở rộng lưới. LL gần log 0,5 = −0,693 (nhất là T=1000) → eval dự đoán yếu kết quả rollout.
+- `--quick` (`results/tables/p33quick_sweep_prelim.csv`, không commit; 1 phút 27 s tổng): 7 cấu hình × 2 đối thủ × 2 ván = 28 ván, **MCTS thua cả 28** (termination normal, không lỗi), ván trung bình 9,5–27,5 nước; MCTS không chặn four (`check_tactics=False`). Iteration/nước: rand ~1 530, h100 ~1 100, h300 ~860–935, h1000 ~530–720, cấu hình c10 1 200–1 800. Ước tính full: vs Greedy 140 ván ~7 phút tuần tự / ~2 phút 4 worker; vs AB2 140 ván ~8 / ~2 phút. Kiểm tra worker (rand vs greedy, 4 ván): 1 worker 1 106 it/nước, 4 worker 1 282 (+15,9%) → 4 worker không làm giảm iteration.
+- File đổi: `gameai/experiments/p33_heavy_sweep.{py,md}`, `tests/test_p33_heavy_sweep.py`, `gameai/agents/rollout.md`, `gameai/heuristics/kinrow_rollout.md`, `docs/DECISIONS.md`, `PROGRESS.md`, `results/raw/p33_calib_positions.csv`, `results/tables/p33_scale_prelim.csv`.
+- Còn dở: chờ quyết định về floor effect rồi chạy full; chọn cấu hình cho E5; spec-reviewer.
 
 ### 2026-11-10 — P4.1
 - Đã làm: D-11 (làm rõ "Done P3 — thắng ngay") được nhóm duyệt. `agents/registry.py` — `AgentSpec`/`GameSpec` (params JSON, pickle được) + `make_agent`/`make_game`. `arena.py` — `play_game` (time do arena đo + bản sao stats mỗi nước; exception / nước sai / mutate game → thua), `derive_seed` (sha256), `random_opening_moves`, `play_seeded_game` (agent mới mỗi ván), `play_match`. `experiments/common.py` — `run_match` (song song, mặc định 4 worker, ghi ván + `*_moves.csv` ngay khi xong, resume: dòng cắt dở, moves mồ côi, `config_hash`, `git_commit`/`git_dirty` + `allow_code_change`), `summarize` (Wilson cho win rate và non-loss, score, `distinct_games`, tách A=X / A=O), `write_summary`, `add_runner_args`. PLAN: gộp runner vào P4.1, P4.2 chỉ còn cờ dòng lệnh. DECISIONS: D-13.
