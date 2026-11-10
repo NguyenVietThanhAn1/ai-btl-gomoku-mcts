@@ -36,7 +36,7 @@ def sigmoid_value(eval_fn: EvalFn, scale: float) -> ValueFn                    #
 - Dùng: `core/game.py` (`P1`), `agents/alphabeta.py` (`MoveFn`), `agents/minimax.py` (`EvalFn`).
 - Hàm truyền vào: `heuristics/kinrow_eval.py` (`move_score`, `evaluate`).
 - Được dùng bởi: `agents/mcts.py`, `heuristics/kinrow_rollout.py` (test so với bản chuẩn),
-  `experiments/p32_heavy_speed.py`, `experiments/e5_rollout.py` (chưa có).
+  `experiments/p32_heavy_speed.py`, `experiments/p33_heavy_sweep.py`, `experiments/e5_rollout.py` (chưa có).
 
 ## Thiết kế & quyết định (D-11)
 - **Softmax thay cho ngưỡng thắng/chặn:** bậc WIN (10^6) / BLOCK (10^5) của `move_score` cách delta thường

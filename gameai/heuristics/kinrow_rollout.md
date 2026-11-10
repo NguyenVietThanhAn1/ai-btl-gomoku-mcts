@@ -29,7 +29,7 @@ class KInRowHeavyRollout:
 ## Phụ thuộc
 - Dùng: `games/kinrow.py` (`KInRow.move_history`, `cell_of`), `heuristics/kinrow_eval.py` (`windows`,
   `windows_through`, `_weights`, `win_score`, `block_bonus`, `move_score` cho trường hợp ô trống cuối).
-- Được dùng bởi: `experiments/p32_heavy_speed.py`; sẽ dùng ở bước quét tham số (P3.3) và E5.
+- Được dùng bởi: `experiments/p32_heavy_speed.py`, `experiments/p33_heavy_sweep.py` (hiệu chỉnh `scale` + quét qua registry); sẽ dùng ở E5.
 
 ## Thiết kế & quyết định (D-12)
 - **Profile bản chuẩn** (15×15): ~80% thời gian ở `kinrow_eval._scan` — mỗi bước gọi `move_score` cho **mọi**

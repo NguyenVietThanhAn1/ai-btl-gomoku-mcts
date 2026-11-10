@@ -6,7 +6,7 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P3.3 (chưa bắt đầu; P4.1 ✅)
+- **Task hiện tại:** P3.3 🔄 (script + test xong; đang chạy hiệu chỉnh + `--quick`)
 - **Việc đang dở:** —
 - **Bước tiếp theo:** `/next-task` → P3.3 quét sơ bộ T / `rollout_limit` / `scale` của heavy (thiết lập đã duyệt ở D-12: cùng `time_limit` 0,5 s, Greedy + AB depth 2, 20 ván/cấu hình/đối thủ, 4 worker, `scale` bằng hồi quy logistic trên seed 50 000–50 199). Chạy bằng `experiments/common.run_match` (spec MCTS: `rollout="heavy_kinrow"`, `temperature`, `rollout_limit`, `value_scale` — xem `agents/registry.md`); commit trước khi chạy full (cột `git_commit`/`git_dirty`).
 - **Cảnh báo / blocker:** — (phần làm rõ "Done P3 — thắng ngay" ở D-11 đã được duyệt 2026-11-10).
@@ -26,7 +26,7 @@
 | P3.1 | MCTS-UCT (+ RandomRollout, HeavyRollout bản đúng) | ✅ | An | 2026-11-10 | spec-reviewer PASS; phạm vi/quyết định ở D-11 |
 | P3.2 | Tăng tốc HeavyRollout (+ test tương đương) | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-12; phần chọn tham số tách sang P3.3 |
 | P4.1 | Arena + runner song song/CSV/resume | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-13; gộp phần runner của P4.2 cũ |
-| P3.3 | Quét sơ bộ T / rollout_limit / scale (heavy) | ⬜ | An | | sau P4.1; D-12 |
+| P3.3 | Quét sơ bộ T / rollout_limit / scale (heavy) | 🔄 | An | 2026-11-10 | script xong; chờ chạy full; D-12 |
 | P4.2 | Cờ dòng lệnh chung (`--quick`, …) | ⬜ | An | | phần runner đã gộp vào P4.1 (D-13) |
 | P4.3 | CLI | ⬜ | An | | |
 | E1 | Nodes Minimax vs AB | ⬜ | An | | |
