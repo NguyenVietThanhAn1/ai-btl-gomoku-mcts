@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** E4 (N vs W/N) 🔄 — D-19 đã chốt
-- **Việc đang dở:** E4 — script + test + D-19 xong, `--quick` xong (17 s); **chờ An duyệt full**.
-- **Bước tiếp theo:** chạy full `python -m gameai.experiments.e4_final_move roots` rồi `... match` (ước tính ~1,3 + ~5,5 + ~0,3–1 phút, tổng < 10 phút) → điền "Kết quả full" + ví dụ trace tay vào `e4_final_move.md` → spec-reviewer → ✅. Cấu hình heavy cho E5: **h300** = `rollout="heavy_kinrow"`, `temperature=300`; MCTS 15×15 bật `check_tactics=True` (D-14); iteration báo theo cột `*_search_*` (D-15).
+- **Task hiện tại:** chưa chọn (E1–E4 ✅; P4.3 hoãn, gộp với P6)
+- **Việc đang dở:** —
+- **Bước tiếp theo:** `/next-task` E5 (random vs heuristic rollout). Cấu hình heavy: **h300** = `rollout="heavy_kinrow"`, `temperature=300`, không cắt rollout; mọi MCTS 15×15 bật `check_tactics=True` (D-14); báo iteration theo cột `*_search_*` (D-15). Lưu ý từ E4: ở cây nông W/N của h300 lạc quan (11/11 → ~0,42 ở 20 000 iter).
 - **Cảnh báo / blocker:** theo P3.3, vs AB2 MCTS 0,5 s gần 0% (≤ 2/20 ở mọi cấu hình) → E3/E5 15×15 cần đối thủ phân biệt được cấu hình (kiểu `mrand`, D-14); quyết định khi tới task đó (PLAN E3/E5 hiện ghi AB2 — cần sửa lúc đó). (D-11 "Done P3 — thắng ngay" đã được duyệt 2026-11-10.)
 
 ## Bảng trạng thái
@@ -32,7 +32,7 @@
 | E1 | Nodes Minimax vs AB | ✅ | An | 2026-11-10 | full 59 s; D-17; `e1_*.csv` |
 | E2 | 3×3 never lose | ✅ | An | 2026-11-10 | spec-reviewer PASS; full xong; D-16 |
 | E3 | c sweep | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-18; full 226 phút; AB2 qua cổng (2/20) |
-| E4 | N vs W/N | 🔄 | An | 2026-11-11 | D-19; quick xong, chờ full |
+| E4 | N vs W/N | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-19; full 174 s; bỏ đối đầu 15×15 |
 | E5 | Random vs heuristic rollout | ⬜ | An | | |
 | E6 | Tác dụng check_tactics | ⬜ | An | | thêm theo D-11 |
 | P6.1 | GUI pygame | ⬜ | An | | |
@@ -49,12 +49,18 @@
 
 - **E1:** giá trị gốc AB = Minimax ở 6/6 thế 3×3 (cả 3 biến thể) và 5/5 thế 15×15 depth 2; nước đi `ab` = Minimax, `ab_order`/`ab_order_tt` giống hệt 3/6 nhưng tối ưu 6/6 (hòa giá trị). Nút gộp 3×3 vs Minimax: −96,13 % (ab), −99,60 % (+ordering), −99,76 % (+TT); bàn trống 549 946 → 20 866 → 1 856 → 990. 15×15 depth 2: 46 825 → 21 612 (−53,85 %) → 1 416 (−96,98 %), nhưng thời gian ordering 0,265 s vs 0,247 s (chậm hơn 7,5 %); depth 3: 553 574 → 48 504 nút (−91,24 %), 5,46 → 1,26 s. `results/tables/e1_{nodes,summary,positions}.csv`.
 
+- **E4:** 3×3 (4 298 thế ≥ 2 nước): max_n ≠ max_wn ở 1,3–4,4 % thế; trong các thế đó tỉ lệ giữ giá trị trò chơi max_n / max_wn = 0,606 / 0,809 (10 iter), 0,948 / 0,928 (100), 1,000 / 0,982 (250), 1 / 1 (1000) → max_n chỉ hơn ở vùng giữa. 15×15 h300 c = 1.4: 0/150 search khác (W/N lớn nhất = 1,0 ở 80–100 %, max_wn phá hòa theo N); c = 0.5: 3/150. Đối đầu 3×3 max_n vs max_wn: score 0,485–0,510, mọi CI chứa 0,5. `results/tables/e4_{roots_summary,roots_examples,match}.csv`, `figures/e4_match.png`.
 - **E3:** 3×3 vs Random win 0,915–0,980, vs Minimax non-loss 0,70–0,77 (100 iter) → 1,00 (≥ 2500) — mọi c chồng CI ở mọi iter. 15×15 vs Greedy: giao cắt — 1000 iter c=0.5 0,62 [0,482; 0,741] vs c=2.0 0,22 [0,128; 0,352] (tách); 5000 iter c=2.0 0,96 [0,865; 0,989], c=1.4 0,92, c=1.0 0,88, c=0.5 0,82 (chồng). AB2: pilot c=2.0 2/20 → qua cổng; tốt nhất c=1.0/5000 0,36 [0,241; 0,499], mọi c chồng. Hình `results/figures/e3_{3x3,greedy,ab2}.png`; bảng `results/tables/e3_{3x3_random,3x3_minimax,greedy,ab2_pilot,ab2}.csv`.
 - **E2:** (b) vét cạn 0 nhánh thua trên 10 seed × 2 vai ở 5000 iter (5674 nhánh); 1000 iter 7/5713 thua; 100 iter 279/6247. (a) 5000 iter 0 thua/100 ván vs Minimax, Random, MCTS. `results/tables/e2_*.csv`.
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-11 — E4 (xong)
+- Full (commit `71344d6`): roots 164 s (3×3 42 s, 15×15 120 s gồm 2 tham chiếu 20 000 iter), match 3×3 10 s, 1 000 ván normal, `git_dirty = 0`. Thêm cột theo yêu cầu An: `max_n_N_tie_rate`, `max_wn_is_1_rate`, `n_wn1_{median,max}`.
+- Kết quả chính: xem "Kết quả thí nghiệm đã có". Điểm khác với diễn giải dự kiến: W/N = 1,0 ở 15×15 không phải "ít nhiễu" — tham chiếu 20 000 iter cho chính các con đó W/N 0,25–0,47 (ghi D-19 + `.md`).
+- spec-reviewer PASS; đã sửa các điểm nhỏ nó nêu (mục Public API/Phụ thuộc, dùng thế `trace` pos 435 trong `.md`, test hằng số D-19 + NaN). 13 hàm test (15 case) trong `tests/test_e4_final_move.py`; full suite xanh (1 xfail chủ ý); ruff sạch.
 
 ### 2026-11-11 — E4 (đang dở: chờ duyệt full)
 - D-19 chốt trước khi chạy (commit `906374d`), bổ sung sau thăm dò theo An duyệt (commit `a6f8cc8`): "tối ưu" = giữ giá trị trò chơi (`e2_never_lose.solve`, không dùng thang `WIN − ply`); 3×3 iter {10, 20, 50, 100, 250, 1000}, ví dụ ở iter 100; 15×15 iter {50, 250, 1000}, thêm c = 0.5 làm độ nhạy; **bỏ đối đầu 15×15**; đối đầu 3×3 iter {10, 20, 50, 100, 250}, 200 ván/điểm, độ đo chính score.

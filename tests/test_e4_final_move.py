@@ -187,3 +187,24 @@ def test_score_ci_constant_and_split():
     assert e4.score_ci(rows[:2], "all") == (0.5, 0.5)
     lo, hi = e4.score_ci(rows, "A=X")
     assert lo < 0.75 < hi
+
+
+def test_d19_constants():
+    assert e4.C == 1.4 and e4.C_15 == (1.4, 0.5)
+    assert e4.ROOT_ITERS_3 == (10, 20, 50, 100, 250, 1000) and e4.EXAMPLE_ITER_3 == 100
+    assert e4.PLIES_15 == tuple(range(6, 25, 2)) and e4.SEEDS_15 == (0, 1, 2, 3, 4)
+    assert e4.ROOT_ITERS_15 == (50, 250, 1000) and e4.REF_ITER_15 == 20000
+    assert (e4.QUICK_STRIDE_3, e4.QUICK_ROOT_ITERS_3) == (15, (10, 100))
+    assert (e4.QUICK_PLIES_15, e4.QUICK_SEEDS_15, e4.QUICK_ROOT_ITERS_15, e4.QUICK_REF_ITER_15) == (
+        (6, 8, 10),
+        (0,),
+        (50, 250),
+        5000,
+    )
+
+
+def test_summary_no_perfect_child_gives_nan():
+    rows = _fake("3x3", e4.C, 0, 10, 2, [(1, 0.5, 2, True), (2, 1, 3, True)])
+    a = next(s for s in e4.summarize_roots(rows) if s["set"] == "all")
+    assert a["max_wn_is_1_rate"] == 0.0
+    assert math.isnan(a["n_wn1_median"]) and math.isnan(a["n_wn1_max"])
