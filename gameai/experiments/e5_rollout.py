@@ -878,10 +878,8 @@ def estimate_full(
     )
     _write(table_dir / "e5quick_estimate.csv", ESTIMATE_COLUMNS, out)
     for r in out:
-        print(
-            f"[estimate] {r['step']}: {r['games']} ván, ~{r['est_wall_minutes']} phút "
-            f"({r.get('workers', '')} worker)"
-        )
+        workers = f" ({r['workers']} worker)" if r.get("workers") else ""
+        print(f"[estimate] {r['step']}: {r['games']} ván, ~{r['est_wall_minutes']} phút{workers}")
     return out
 
 

@@ -6,10 +6,10 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** E5 (D-20) — đang viết script, chưa chạy quick
-- **Việc đang dở:** —
-- **Bước tiếp theo:** `/next-task` E5 (random vs heuristic rollout). Cấu hình heavy: **h300** = `rollout="heavy_kinrow"`, `temperature=300`, không cắt rollout; mọi MCTS 15×15 bật `check_tactics=True` (D-14); báo iteration theo cột `*_search_*` (D-15). Lưu ý từ E4: ở cây nông W/N của h300 lạc quan (11/11 → ~0,42 ở 20 000 iter).
-- **Cảnh báo / blocker:** theo P3.3, vs AB2 MCTS 0,5 s gần 0% (≤ 2/20 ở mọi cấu hình) → E3/E5 15×15 cần đối thủ phân biệt được cấu hình (kiểu `mrand`, D-14); quyết định khi tới task đó (PLAN E3/E5 hiện ghi AB2 — cần sửa lúc đó). (D-11 "Done P3 — thắng ngay" đã được duyệt 2026-11-10.)
+- **Task hiện tại:** E5 (D-20) — quick xong, **chờ An duyệt full**
+- **Việc đang dở:** chạy full E5. Trước full: commit hoặc khôi phục `.claude/settings.json` (đang sửa → `git_dirty = 1`, quick đã bị đánh dấu dirty); An xem cờ tốc độ ở phần time (dưới).
+- **Bước tiếp theo:** `python -m gameai.experiments.e5_rollout all` (iter 4 worker → ab2-pilot → ab2 nếu ≥ 2/20 → 3 phần time 2 worker, máy rảnh). Ước tính ~73 phút thời gian thực (+1,2 phút ab2), xem `gameai/experiments/e5_rollout.md` mục Quick. Sau full: kiểm `e5_validity.csv`, `e5_rates.csv` (cờ > 20 %), viết kết quả vào `.md` + "Kết quả thí nghiệm đã có", spec-reviewer lần 2, E5 → ✅.
+- **Cảnh báo / blocker:** quick có 6/12 dòng cờ tốc độ (`e5quick_rates.csv`): rand lệch bench −21…−28 % (3 dòng; lệch peer ≤ 13 %), h300 lệch peer +29 / −24 / −33 % — tốc độ h300 đổi mạnh theo giai đoạn ván (bench: rand/h300 1,5–1,8 đầu ván, 1,0–1,1 thế 18–24 nước), quick chỉ 2 ván/điểm → chưa tách được tải khỏi giai đoạn ván. (D-11 "Done P3 — thắng ngay" đã được duyệt 2026-11-10.)
 
 ## Bảng trạng thái
 
@@ -33,7 +33,7 @@
 | E2 | 3×3 never lose | ✅ | An | 2026-11-10 | spec-reviewer PASS; full xong; D-16 |
 | E3 | c sweep | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-18; full 226 phút; AB2 qua cổng (2/20) |
 | E4 | N vs W/N | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-19; full 174 s; bỏ đối đầu 15×15 |
-| E5 | Random vs heuristic rollout | 🔄 | An | 2026-11-11 | D-20 |
+| E5 | Random vs heuristic rollout | 🔄 | An | 2026-11-11 | D-20; quick xong, chờ duyệt full (~73 phút) |
 | E6 | Tác dụng check_tactics | ⬜ | An | | thêm theo D-11 |
 | P6.1 | GUI pygame | ⬜ | An | | |
 | P7.1 | Plots/tables | ⬜ | An | | |
@@ -56,6 +56,12 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-11 — E5 (đang dở: chờ duyệt full)
+- D-20 chốt trước khi chạy (commit `07791c1`), gồm 5 điểm sửa của An: seed mref tách riêng (`derive_seed(seed_B, "mref")`); thứ tự iter → time, runinfo ghi CPU + workers, phần time cần máy rảnh; tỉ lệ iteration/giây đo từ benchmark (không ghi "~2×"); bảng paired báo khoảng cặp + độc lập; "Giải thích cho báo cáo" dẫn c10 của P3.3 (không cải thiện nhất quán, LL evaluate −0,566 vs −0,693). Thêm cờ lệch tốc độ > 20 % ở phần time (`e5_rates.csv`). PLAN dòng E5 sửa theo D-20.
+- `experiments/e5_rollout.{py,md}`, `tests/test_e5_rollout.py` (24 case). Full suite xanh (1 xfail chủ ý), ruff sạch.
+- `--quick` 300 s: 44 ván normal, distinct = n, 4 điểm E3 tái dùng được, rand_i1000 vs mref 1/2 (hợp lệ). Bench `results/tables/e5_bench.csv`: rand 3 721, h300 2 840 iter/s (1,31×). `git_dirty = 1` do `.claude/settings.json`. File `e5quick_*` không commit.
+- spec-reviewer: FAIL 1 lỗi (dòng in ở `estimate_full` sau khi sửa, chuỗi bị gọi như hàm — quick đã chạy bằng code trước đó nên không ảnh hưởng) + 2 lệch số trong `.md` → đã sửa, test xanh.
 
 ### 2026-11-11 — E4 (xong)
 - Full (commit `71344d6`): roots 164 s (3×3 42 s, 15×15 120 s gồm 2 tham chiếu 20 000 iter), match 3×3 10 s, 1 000 ván normal, `git_dirty = 0`. Thêm cột theo yêu cầu An: `max_n_N_tie_rate`, `max_wn_is_1_rate`, `n_wn1_{median,max}`.

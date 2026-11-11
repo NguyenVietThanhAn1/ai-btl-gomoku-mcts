@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🔄 script xong, chờ quick/full  ·  **Task:** E5 (D-20)  ·  **Cập nhật:** 2026-11-11
+**Trạng thái:** 🔄 quick xong, chờ duyệt full  ·  **Task:** E5 (D-20)  ·  **Cập nhật:** 2026-11-11
 
 ## Mục đích
 Đề ý 5: thay rollout ngẫu nhiên bằng rollout heuristic, đo mức cải thiện, liên hệ value network. Chỉ 15×15.
@@ -16,7 +16,8 @@ Hai cấu hình MCTS chỉ khác rollout (c = 1.4, `check_tactics=True` theo D-1
 
 Hai trục ngân sách (D-20):
 - **Cùng iteration** (4 worker): **thiên vị h300**, vì mỗi iteration heavy đắt hơn random (tỉ lệ iteration/giây
-  đo bằng benchmark đơn luồng `results/tables/e5_bench.csv` — số ghi ở mục Quick).
+  đo bằng benchmark đơn luồng `results/tables/e5_bench.csv`: rand/h300 = **1,31** theo trung vị, 1,5–1,8 ở đầu ván,
+  1,0–1,1 ở thế 18–24 nước — xem mục Quick).
 - **Cùng thời gian** 0,5 s và 2 s/nước (2 worker, máy rảnh): **so sánh công bằng — kết luận chính dựa trên trục này**.
 
 | Bước (`step`) | Đối thủ | Ngân sách | Ván/điểm |
@@ -133,8 +134,26 @@ h1000c10 19/20, h100 = h100c10 19/20; vs Greedy h300 8/20 → 4/20, h1000 2/20 �
 scale 500) so với −0,693 của dự đoán hằng 0,5. Tức là một hàm giá trị thủ công yếu không thay thế được rollout;
 muốn bỏ rollout như AlphaZero thì hàm giá trị phải được **học** đủ tốt.
 
-## Quick
-_(chưa chạy)_
+## Quick (2026-11-11, commit `07791c1`, không commit file `e5quick_*` — không phải số liệu báo cáo)
+Tổng **300 s** (bench ~25 s; phần iter 4 worker, phần time 2 worker), 44 ván, mọi ván `normal`, `distinct_games` = n
+ở mọi điểm. `git_dirty = 1` ở mọi dòng — **chỉ** do `.claude/settings.json` (cấu hình Claude Code, không phải code);
+cần commit/khôi phục file đó trước full. CPU: 12th Gen Intel Core i9-12900H, 20 luồng logic (nhân P + E).
+- **Tái dùng E3:** cả 4 điểm (h300 vs Greedy 100/1000/5000, h300 vs AB2 5000) qua điều kiện (`ok`).
+- **Kiểm tra hợp lệ:** `rand_i1000` vs mref 1/2, Wilson [0,095; 0,905] ∋ 0,5, distinct 2/2.
+- **Benchmark đơn luồng** (`e5_bench.csv`, không phải số liệu ván): trung vị rand 3 721, h300 2 840 iter/s →
+  rand/h300 = 1,31. Theo thế: 6 nước 3 331–3 465 vs 2 183–2 220 (1,5–1,6×); 12 nước ~3 640 vs ~1 990 (1,8×);
+  18 nước ~3 830 vs ~3 530 (1,1×); 24 nước ~4 230 vs ~4 140 (1,0×).
+- **Iteration thực tế trong ván (phần time):** 0,5 s: rand 1 338–1 536, h300 1 384–1 519 /nước (gần bằng nhau);
+  2 s: rand 5 680–6 244, h300 3 685–4 705.
+- **Cờ tốc độ (`e5quick_rates.csv`, 12 dòng):** 6 dòng có cờ. rand: lệch peer ≤ 13 % (không cờ peer), lệch bench
+  −16…−28 % (3 trên 6 dòng rand có cờ bench) — đều thấp hơn bench một cách đồng đều → khả năng do thế trong ván khác thế benchmark
+  + chạy 2 tiến trình, chưa phải dấu hiệu tải. h300: 1 843–3 038 iter/s, cờ peer ở greedy t0,5 (+29 %), greedy t2
+  (−24 %), mref t2 (−33 %) — tốc độ heavy thay đổi mạnh theo giai đoạn ván (xem benchmark) và quick chỉ 2 ván/điểm,
+  nên chưa tách được tải khỏi giai đoạn ván.
+- **Ước tính full** (`e5quick_estimate.csv`, thời gian thực): h2h-iter 6,7 phút, greedy-iter 3,3 (h300 tái dùng),
+  mref-iter 14,8, ab2-pilot 0,8 (+ ab2 1,2 nếu qua cổng), h2h-time 15,6, greedy-time 12,4, mref-time 19,0 →
+  **tổng ~73 phút** (~74 với ab2), thấp hơn ước tính kế hoạch (~2,4 h) vì h300 rẻ hơn dự kiến và ván ngắn.
+  Quick 1 cặp/điểm → ước tính thô (E3: phần Greedy thực tế gần gấp đôi ước tính quick).
 
 ## Phụ thuộc
 `experiments/common.py` (`run_match`, `summarize`, `read_rows`, `moves_path_for`, `add_runner_args`, `git_info`),
