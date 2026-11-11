@@ -7,8 +7,8 @@
 ## Đang ở đâu (đọc mục này trước tiên)
 
 - **Task hiện tại:** E4 (N vs W/N) 🔄 — D-19 đã chốt
-- **Việc đang dở:** —
-- **Bước tiếp theo:** `/next-task` E4 (N vs W/N). Cấu hình heavy cho E5 (sơ bộ, P3.3): **h300** = `rollout="heavy_kinrow"`, `temperature=300`, không cắt rollout; mọi MCTS 15×15 bật `check_tactics=True` (D-14). Báo iteration ở E3/E5 dùng cột `*_search_iterations_per_move` (D-15): `summarize(rows, read_rows(moves_path_for(path)))`.
+- **Việc đang dở:** E4 — script + test + D-19 xong, `--quick` xong (17 s); **chờ An duyệt full**.
+- **Bước tiếp theo:** chạy full `python -m gameai.experiments.e4_final_move roots` rồi `... match` (ước tính ~1,3 + ~5,5 + ~0,3–1 phút, tổng < 10 phút) → điền "Kết quả full" + ví dụ trace tay vào `e4_final_move.md` → spec-reviewer → ✅. Cấu hình heavy cho E5: **h300** = `rollout="heavy_kinrow"`, `temperature=300`; MCTS 15×15 bật `check_tactics=True` (D-14); iteration báo theo cột `*_search_*` (D-15).
 - **Cảnh báo / blocker:** theo P3.3, vs AB2 MCTS 0,5 s gần 0% (≤ 2/20 ở mọi cấu hình) → E3/E5 15×15 cần đối thủ phân biệt được cấu hình (kiểu `mrand`, D-14); quyết định khi tới task đó (PLAN E3/E5 hiện ghi AB2 — cần sửa lúc đó). (D-11 "Done P3 — thắng ngay" đã được duyệt 2026-11-10.)
 
 ## Bảng trạng thái
@@ -32,7 +32,7 @@
 | E1 | Nodes Minimax vs AB | ✅ | An | 2026-11-10 | full 59 s; D-17; `e1_*.csv` |
 | E2 | 3×3 never lose | ✅ | An | 2026-11-10 | spec-reviewer PASS; full xong; D-16 |
 | E3 | c sweep | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-18; full 226 phút; AB2 qua cổng (2/20) |
-| E4 | N vs W/N | 🔄 | An | 2026-11-11 | D-19 |
+| E4 | N vs W/N | 🔄 | An | 2026-11-11 | D-19; quick xong, chờ full |
 | E5 | Random vs heuristic rollout | ⬜ | An | | |
 | E6 | Tác dụng check_tactics | ⬜ | An | | thêm theo D-11 |
 | P6.1 | GUI pygame | ⬜ | An | | |
@@ -55,6 +55,12 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-11 — E4 (đang dở: chờ duyệt full)
+- D-19 chốt trước khi chạy (commit `906374d`), bổ sung sau thăm dò theo An duyệt (commit `a6f8cc8`): "tối ưu" = giữ giá trị trò chơi (`e2_never_lose.solve`, không dùng thang `WIN − ply`); 3×3 iter {10, 20, 50, 100, 250, 1000}, ví dụ ở iter 100; 15×15 iter {50, 250, 1000}, thêm c = 0.5 làm độ nhạy; **bỏ đối đầu 15×15**; đối đầu 3×3 iter {10, 20, 50, 100, 250}, 200 ván/điểm, độ đo chính score.
+- Thăm dò (không ghi vào results): 15×15 max_n = max_wn ở 0/30 thế (c = 1.4, iter 50–1000; cả rollout random, c = 2.0); chẩn đoán = cơ chế thật, không phải bug (mọi con N = 1 → hai luật phá hòa chọn cùng con 1/1; W/N bão hòa ở 1,0; UCT dồn lượt thăm vào con hoàn hảo). 3×3: khi hai tiêu chí khác nhau, max_wn **không** tệ hơn max_n. Chi tiết: D-19.
+- `experiments/e4_final_move.{py,md}`, `tests/test_e4_final_move.py` (13 test). Full suite xanh (1 xfail chủ ý), ruff sạch.
+- `--quick` 16,9 s: mọi ván normal, 0 lỗi, `git_dirty = 0`. Ước tính full: roots 3×3 ~1,3 phút, roots 15×15 ~5,5 phút (gồm tham chiếu 20 000 iter, cận trên 6 thế), match 3×3 ~0,3 phút tuần tự (ước tính có thể thấp do overhead tiến trình). File `e4quick_*` không commit.
 
 ### 2026-11-11 — E3 (full xong)
 - Full nền (commit `544ece9`, 4 worker): 8 800 ván, mọi ván normal, 0 lỗi, `git_dirty = 0`. Thời gian thực 226,3 phút: 3×3 16,7, Greedy 78,6 (ước tính quick 41 — thấp), pilot 8,3, AB2 122,7 (gồm ~29 phút máy dừng giữa 2 ván ở c=1.0/2500; iteration budget nên kết quả không đổi). Pilot c=2.0 2/20 → qua cổng D-18 → chạy AB2 full không hỏi lại (An đã duyệt trước).
