@@ -32,7 +32,7 @@ h300 vs Greedy (6 iter) và h300 vs AB2 (5000) **tái dùng E3** nếu thỏa đ
 ## Cách chạy
 ```
 python -m gameai.experiments.e5_rollout all --quick    # bench + mọi bước 1 cặp/điểm + bảng + hình + ước tính
-python -m gameai.experiments.e5_rollout all            # full: iter → ab2-pilot → ab2 (nếu qua cổng) → time
+python -m gameai.experiments.e5_rollout all            # full: bench → iter → ab2-pilot → ab2 (qua cổng) → time
 python -m gameai.experiments.e5_rollout h2h-iter       # từng bước, resume được
 python -m gameai.experiments.e5_rollout ab2 [--force]  # sau ab2-pilot
 python -m gameai.experiments.e5_rollout tables         # dựng lại bảng + hình từ raw
@@ -50,8 +50,9 @@ Cờ chung `--workers` (4, chỉ cho phần iteration; phần time cố định 
   `all_points(quick)`, `raw_path(pt, quick)`.
 - `e3_reusable(path, spec_a, spec_b, n_pairs, game, base_seed, diff_empty) -> (ok, reason)`; `git_diff_empty(commit)`.
 - `run_point`, `run_step`, `run_pilot`, `run_ab2` (dùng `gate_passes` của E3).
-- `bench(seconds=1.0, plies=(6, 12, 18, 24), seeds=(0, 1, 2), path)`; `bench_rates(rows) -> {rollout: trung vị iter/s}`.
-- `paired_diff(rows_h300, rows_rand)`, `check_validity(summary_all)`, `rate_rows(time_tables, bench)`,
+- `bench(seconds=1.0, plies=(4, 8, 12, 16, 20, 24, 28), seeds=(0, 1, 2), path)`; `bench_rates(rows) -> {rollout: trung
+  vị iter/s}`; `bench_phase_rates(rows) -> {(rollout, phase): trung vị}`; `phase_of(stones)`.
+- `paired_diff(rows_h300, rows_rand)`, `check_validity(summary_all)`, `rate_rows(time_tables, bench_rows, time_moves)`,
   `build_tables(quick, …)`, `estimate_full(…)`, `make_figures(quick, …)`, `fnum`.
 
 ## File
@@ -64,9 +65,10 @@ Cờ chung `--workers` (4, chỉ cho phần iteration; phần time cố định 
   - `e5_paired.csv` — mỗi (đối thủ, ngân sách): `n` (số game_id chung), `mean_h300, mean_rand, diff`, khoảng **cặp**
     `paired_lo/hi`, khoảng **độc lập** `indep_lo/hi`, `sd_diff`.
   - `e5_validity.csv` — `rand_i1000` vs `mref`: Wilson win rate có chứa 0,5 (`valid`), `distinct_games`.
-  - `e5_rates.csv` — phần time: iter/s thực tế mỗi điểm × mỗi bên chạy theo thời gian (`search_iterations_per_move /
-    time_limit`), `bench_iter_per_s`, `dev_bench`, `peer_median` (trung vị cùng policy ở các điểm time khác),
-    `dev_peer`, `flag_bench`, `flag_peer` (lệch > 20 %).
+  - `e5_rates.csv` — phần time, mỗi điểm × mỗi bên chạy theo thời gian × nhóm giai đoạn ván (`phase` ∈ 0-9, 10-19,
+    >=20 theo ply): `method` (`phase` / `mixed`), `n_moves`, `iterations`, `agent_time`, `rate_iter_per_s`
+    (Σ iterations / Σ agent_time), `bench_iter_per_s` (trung vị benchmark cùng rollout + nhóm), `dev_bench`, `flag`
+    (lệch > 20 %), `load_indicator` (1 = rand).
   - `e5_bench.csv` — benchmark đơn luồng (không phải số liệu ván đấu): `rollout, plies, seed, iterations, agent_time, iter_per_s`.
 - Hình: `results/figures/e5_iter.png` (3 panel: vs Greedy, vs mref, đối đầu — x log iteration, 1 đường/rollout, Wilson)
   và `e5_time.png` (hàng trên x = thời gian/nước; hàng dưới x = iteration thực tế/nước, panel đối đầu = cột
@@ -86,9 +88,11 @@ Cờ chung `--workers` (4, chỉ cho phần iteration; phần time cố định 
   Không thỏa → điểm đó chạy vào file `e5_*`.
 - **So sánh cặp:** rand và h300 vs cùng đối thủ có cùng `game_id` → cùng seed đối thủ và cùng lượt. Nhưng cây MCTS
   khác nhau nên ván diễn ra khác nhau; vì vậy khoảng cặp **có thể không hẹp hơn** khoảng độc lập — bảng báo cả hai.
-- **Kiểm tra tải (phần time):** iter/s thực tế phụ thuộc giai đoạn ván (bàn đầy → rollout random ngắn hơn) nên lệch
-  so với benchmark (thế cố định) không chỉ do tải; lệch so với cùng policy ở điểm time khác (`flag_peer`) là dấu
-  hiệu tải/E-core rõ hơn. Có cờ → báo nhóm trước khi dùng số liệu.
+- **Kiểm tra tải (phần time, luật sửa sau quick):** tốc độ phụ thuộc mạnh vào giai đoạn ván (h300 đầu ván chậm hơn
+  rand 1,5–1,8×, cuối ván gần bằng), nên so **theo nhóm giai đoạn** ply 0–9 / 10–19 / ≥ 20 với benchmark cùng nhóm
+  (`method = phase`, dùng `iterations` + `agent_time` từng nước trong `*_moves`). Không có dữ liệu từng nước →
+  `method = mixed` (trộn giai đoạn). rand là **chỉ báo tải**; cờ chỉ ở h300 có thể do thế cờ khác nhau trong nhóm.
+  Cờ chỉ để báo cáo, **không** loại dữ liệu.
 - **Ước tính** (`estimate_full`): giây/ván = `a_time_sum + b_time_sum` (arena đo); điểm có trong quick dùng trung bình
   đo được, điểm iter khác fit a + b·iter theo (bước, rollout) bằng `e3_c_sweep.fit_cost`; thời gian thực = tuần tự /
   {4 worker: 3,5; 2 worker: 1,9} + 2 s khởi động pool/điểm. Quick chỉ 1 cặp/điểm → ước tính thô.
@@ -145,7 +149,7 @@ cần commit/khôi phục file đó trước full. CPU: 12th Gen Intel Core i9-1
   18 nước ~3 830 vs ~3 530 (1,1×); 24 nước ~4 230 vs ~4 140 (1,0×).
 - **Iteration thực tế trong ván (phần time):** 0,5 s: rand 1 338–1 536, h300 1 384–1 519 /nước (gần bằng nhau);
   2 s: rand 5 680–6 244, h300 3 685–4 705.
-- **Cờ tốc độ (`e5quick_rates.csv`, 12 dòng):** 6 dòng có cờ. rand: lệch peer ≤ 13 % (không cờ peer), lệch bench
+- **Cờ tốc độ (luật cũ, trước khi sửa; `e5quick_rates.csv` lúc đó có 12 dòng):** 6 dòng có cờ. rand: lệch peer ≤ 13 % (không cờ peer), lệch bench
   −16…−28 % (3 trên 6 dòng rand có cờ bench) — đều thấp hơn bench một cách đồng đều → khả năng do thế trong ván khác thế benchmark
   + chạy 2 tiến trình, chưa phải dấu hiệu tải. h300: 1 843–3 038 iter/s, cờ peer ở greedy t0,5 (+29 %), greedy t2
   (−24 %), mref t2 (−33 %) — tốc độ heavy thay đổi mạnh theo giai đoạn ván (xem benchmark) và quick chỉ 2 ván/điểm,
@@ -161,12 +165,12 @@ cần commit/khôi phục file đó trước full. CPU: 12th Gen Intel Core i9-1
 `agents/registry.py`, `agents/mcts.py`, `arena.py` (`derive_seed`), matplotlib (Agg), `git`.
 
 ## Test
-`tests/test_e5_rollout.py` (24 case): spec rand/h300 chỉ khác rollout, tactics bật; spec time không có ngân sách
+`tests/test_e5_rollout.py` (26 case): spec rand/h300 chỉ khác rollout, tactics bật; spec time không có ngân sách
 iteration; spec h300 = spec E3 (cả trong raw E3); phần time 2 worker; lưới + quick ⊂ full + quick có điểm
 `rand_i1000` vs mref; đường dẫn raw duy nhất; chỉ h300 iter Greedy/AB2 có ứng viên E3; `MRefAgent` qua registry chơi
 giống `MCTSAgent(seed=derive_seed(seed, "mref"))`; `e3_reusable` (ok, code đổi, thiếu ván, spec/dirty/base_seed/game
-lệch, bỏ qua label, file thật E3 hiện dùng được); `paired_diff` dữ liệu tay; `check_validity`; cổng AB2; `rate_rows`
-(cờ bench/peer); `bench` nhỏ; `build_tables` + `make_figures` end-to-end; `run_point` ghi runinfo; `estimate_full`.
+lệch, bỏ qua label, file thật E3 hiện dùng được); `paired_diff` dữ liệu tay; `check_validity`; cổng AB2; `phase_of` + `bench_phase_rates`; `rate_rows`
+(theo nhóm giai đoạn: bỏ tactic/0 iteration, ngưỡng > 20 %, `load_indicator`; nhánh `mixed` khi thiếu moves); `bench` nhỏ; `build_tables` + `make_figures` end-to-end; `run_point` ghi runinfo; `estimate_full`.
 Chạy: `python -m pytest tests/test_e5_rollout.py -q`.
 
 ## Hạn chế / TODO

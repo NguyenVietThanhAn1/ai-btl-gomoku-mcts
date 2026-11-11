@@ -230,37 +230,90 @@ def test_ab2_gate_reuses_d18_rule() -> None:
     assert not e5.gate_passes(1) and e5.gate_passes(2)
 
 
-def test_rate_rows_flags() -> None:
-    def row(part: str, t: float, roll: str, a: float, b: float = math.nan) -> dict:
-        return {
-            "split": "all",
-            "budget_type": "time",
-            "budget": t,
-            "rollout": roll,
-            "a_search_iterations_per_move": a,
-            "b_search_iterations_per_move": b,
-        }
+def _bench(rate: dict[tuple[str, int], float]) -> list[dict]:
+    return [{"rollout": r, "plies": p, "iter_per_s": v} for (r, p), v in rate.items()]
 
-    tables = {
-        "h2h": [row("h2h", 0.5, "h300", 500, 1000)],
-        "greedy": [
-            row("greedy", 0.5, "rand", 1000),
-            row("greedy", 2.0, "rand", 2000 * 1.5),
-            row("greedy", 0.5, "h300", 500),
-        ],
-        "mref": [row("mref", 2.0, "h300", 2000), {**row("mref", 2.0, "rand", 1), "split": "A=X"}],
+
+def test_phase_of_and_bench_phase_rates() -> None:
+    assert [e5.phase_of(x) for x in (0, 9, 10, 19, 20, 200)] == [
+        "0-9",
+        "0-9",
+        "10-19",
+        "10-19",
+        ">=20",
+        ">=20",
+    ]
+    b = e5.bench_phase_rates(
+        _bench({("rand", 4): 1000, ("rand", 8): 3000, ("rand", 12): 5000, ("h300", 24): 700})
+    )
+    assert b == {("rand", "0-9"): 2000, ("rand", "10-19"): 5000, ("h300", ">=20"): 700}
+
+
+def _mv(side: str, ply: int, it: int, t: float, tactic: str = "0") -> dict[str, str]:
+    return {
+        "side": side,
+        "ply": str(ply),
+        "iterations": str(it),
+        "agent_time": str(t),
+        "tactic": tactic,
     }
-    out = e5.rate_rows(tables, {"rand": 2000.0, "h300": 1000.0})
-    assert len(out) == 6  # h2h hai bên + 3 greedy + 1 mref (bỏ dòng không phải "all")
-    rand = [r for r in out if r["rollout"] == "rand"]
-    assert {r["rate_iter_per_s"] for r in rand} == {2000.0, 1500.0}
-    fast = next(r for r in rand if r["rate_iter_per_s"] == 1500.0)
-    assert fast["dev_bench"] == -0.25 and fast["flag_bench"] == 1
-    assert fast["peer_median"] == 2000.0 and fast["flag_peer"] == 1
-    ok = next(r for r in out if r["part"] == "h2h" and r["side"] == "B")
-    assert ok["flag_bench"] == 0 and ok["dev_bench"] == 0.0
-    h = [r for r in out if r["rollout"] == "h300"]
-    assert all(r["flag_peer"] == 0 for r in h)
+
+
+def test_rate_rows_by_phase_flags() -> None:
+    bench = _bench(
+        {
+            ("rand", 4): 2000,
+            ("rand", 12): 2000,
+            ("rand", 24): 2000,
+            ("h300", 4): 1000,
+            ("h300", 12): 2000,
+            ("h300", 24): 4000,
+        }
+    )
+    row = {
+        "split": "all",
+        "budget_type": "time",
+        "budget": 0.5,
+        "rollout": "h300",
+        "a_search_iterations_per_move": 1,
+        "b_search_iterations_per_move": 1,
+    }
+    moves = [
+        _mv("A", 1, 500, 0.5),  # h300 0–9: 1000 it/s = bench
+        _mv("A", 3, 999, 0.5, tactic="2"),  # chặn ngay → bỏ
+        _mv("A", 11, 700, 0.5),  # h300 10–19: 1400 vs 2000 → −30 % → cờ
+        _mv("B", 0, 1000, 0.5),  # rand 0–9: 2000 = bench
+        _mv("B", 20, 800, 0.5),  # rand ≥20: 1600 vs 2000 → −20 % (không > 20 %) → không cờ
+        _mv("B", 22, 0, 0.0),  # 0 iteration → bỏ
+    ]
+    out = e5.rate_rows(
+        {"h2h": [row, {**row, "split": "A=X"}]}, bench, {("h2h", 0.5, "h300"): moves}
+    )
+    got = {(r["side"], r["phase"]): r for r in out}
+    assert set(got) == {("A", "0-9"), ("A", "10-19"), ("B", "0-9"), ("B", ">=20")}
+    assert all(r["method"] == "phase" for r in out)
+    assert got[("A", "0-9")]["n_moves"] == 1 and got[("A", "0-9")]["flag"] == 0
+    assert got[("A", "10-19")]["dev_bench"] == -0.3 and got[("A", "10-19")]["flag"] == 1
+    assert got[("B", ">=20")]["dev_bench"] == -0.2 and got[("B", ">=20")]["flag"] == 0
+    assert got[("B", "0-9")]["load_indicator"] == 1 and got[("A", "0-9")]["load_indicator"] == 0
+
+
+def test_rate_rows_mixed_fallback_without_moves() -> None:
+    bench = _bench({("rand", 4): 2000, ("rand", 24): 2000})
+    row = {
+        "split": "all",
+        "budget_type": "time",
+        "budget": 2.0,
+        "rollout": "rand",
+        "a_search_iterations_per_move": 3000,
+        "a_search_moves": 7,
+    }
+    out = e5.rate_rows({"greedy": [row]}, bench)
+    assert len(out) == 1
+    r = out[0]
+    assert r["method"] == "mixed" and "trộn" in r["phase"]
+    assert r["rate_iter_per_s"] == 1500.0 and r["dev_bench"] == -0.25 and r["flag"] == 1
+    assert r["n_moves"] == 7
 
 
 # ---------------------------------------------------------------- bench, bảng, hình, ước tính

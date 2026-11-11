@@ -69,7 +69,9 @@ WORKERS_TIME = 2  # D-20: phần time chạy 2 worker
 SPEEDUP = {1: 1.0, 2: 1.9, 4: 3.5}  # ước tính thô số worker → tăng tốc thời gian thực
 POOL_OVERHEAD_S = 2.0  # khởi động pool mỗi điểm
 FLAG_THRESHOLD = 0.20  # D-20: lệch tốc độ > 20 % → đánh dấu
-BENCH_PLIES = (6, 12, 18, 24)
+BENCH_PLIES = (4, 8, 12, 16, 20, 24, 28)  # ≥ 2 thế cho mỗi nhóm giai đoạn ván
+# Nhóm giai đoạn ván theo số quân trên bàn trước nước đi (= ply của *_moves.csv, D-20).
+PHASES = (("0-9", 0, 9), ("10-19", 10, 19), (">=20", 20, None))
 BENCH_SEEDS = (0, 1, 2)
 BENCH_SECONDS = 1.0
 # Code ảnh hưởng tới kết quả ván: tái dùng E3 chỉ khi các đường dẫn này không đổi (D-20).
@@ -548,14 +550,16 @@ RATE_COLUMNS = [
     "budget",
     "side",
     "rollout",
-    "search_iterations_per_move",
+    "phase",
+    "method",
+    "n_moves",
+    "iterations",
+    "agent_time",
     "rate_iter_per_s",
     "bench_iter_per_s",
     "dev_bench",
-    "peer_median",
-    "dev_peer",
-    "flag_bench",
-    "flag_peer",
+    "flag",
+    "load_indicator",
 ]
 
 
@@ -667,49 +671,91 @@ def check_validity(summary_all: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def phase_of(stones: int) -> str:
+    """Nhóm giai đoạn ván của một thế có `stones` quân (0–9, 10–19, ≥ 20)."""
+    for name, lo, hi in PHASES:
+        if stones >= lo and (hi is None or stones <= hi):
+            return name
+    raise ValueError(stones)
+
+
+def bench_phase_rates(rows: list[dict[str, Any]]) -> dict[tuple[str, str], float]:
+    """Trung vị iter/s của benchmark theo (rollout, nhóm giai đoạn) — nhóm theo số quân của thế."""
+    groups: dict[tuple[str, str], list[float]] = {}
+    for x in rows:
+        key = (x["rollout"], phase_of(int(x["plies"])))
+        groups.setdefault(key, []).append(float(x["iter_per_s"]))
+    return {k: statistics.median(v) for k, v in groups.items()}
+
+
+def _flag(rate: float, bench: float) -> tuple[float, Any]:
+    if not (rate == rate and bench == bench and bench > 0):
+        return math.nan, ""
+    dev = round(rate / bench - 1, 3)
+    return dev, int(abs(dev) > FLAG_THRESHOLD)
+
+
 def rate_rows(
-    time_tables: dict[str, list[dict[str, Any]]], bench: dict[str, float]
+    time_tables: dict[str, list[dict[str, Any]]],
+    bench_rows: list[dict[str, Any]],
+    time_moves: dict[tuple[str, float, str], list[dict[str, str]]] | None = None,
 ) -> list[dict[str, Any]]:
-    """Tốc độ iter/s thực tế ở mỗi điểm time × mỗi bên MCTS chạy theo thời gian; so với benchmark
-    đơn
-    luồng và với trung vị của cùng policy ở các điểm time khác (lệch > 20 % → cờ)."""
+    """Kiểm tra tải phần time (D-20): tốc độ iter/s thực tế của mỗi bên MCTS chạy theo thời gian.
+
+    - Có `*_moves` (iteration + agent_time từng nước) → `method = "phase"`: gom nước có search (bỏ
+      tactic 1/2 và nước 0 iteration) theo nhóm giai đoạn ván (ply 0–9, 10–19, ≥ 20), tốc độ =
+      Σ iterations / Σ agent_time, so với trung vị benchmark cùng rollout + cùng nhóm.
+    - Không có → `method = "mixed"`: `search_iterations_per_move / time_limit` so với trung vị
+      benchmark mọi thế (trộn giai đoạn ván — lệch một phần do giai đoạn, không chỉ do tải).
+    Lệch > 20 % → `flag = 1`. `load_indicator = 1` cho rand (chỉ báo tải: tốc độ rand ít phụ thuộc
+    giai đoạn hơn h300). Cờ chỉ để báo cáo, không loại dữ liệu.
+    """
+    phase_bench = bench_phase_rates(bench_rows) if bench_rows else {}
+    all_bench = bench_rates(bench_rows) if bench_rows else {}
+    time_moves = time_moves or {}
     out: list[dict[str, Any]] = []
     for part, rows in time_tables.items():
         for r in rows:
             if r["split"] != "all" or r["budget_type"] != "time":
                 continue
-            sides = [("a", r["rollout"])] + ([("b", "rand")] if part == "h2h" else [])
+            t = float(r["budget"])
+            sides = [("A", r["rollout"])] + ([("B", "rand")] if part == "h2h" else [])
+            moves = time_moves.get((part, t, r["rollout"]))
             for side, roll in sides:
-                it = fnum(r[f"{side}_search_iterations_per_move"])
-                t = float(r["budget"])
-                out.append(
-                    {
-                        "part": part,
-                        "budget": t,
-                        "side": side.upper(),
-                        "rollout": roll,
-                        "search_iterations_per_move": round(it, 1),
-                        "rate_iter_per_s": round(it / t, 1),
-                    }
-                )
-    for i, row in enumerate(out):
-        b = bench.get(row["rollout"], math.nan)
-        row["bench_iter_per_s"] = b
-        rate = row["rate_iter_per_s"]
-        row["dev_bench"] = round(rate / b - 1, 3) if b == b and rate == rate else math.nan
-        peers = [
-            x["rate_iter_per_s"]
-            for j, x in enumerate(out)
-            if j != i
-            and x["rollout"] == row["rollout"]
-            and x["rate_iter_per_s"] == x["rate_iter_per_s"]
-        ]
-        pm = statistics.median(peers) if peers else math.nan
-        row["peer_median"] = pm
-        row["dev_peer"] = round(rate / pm - 1, 3) if pm == pm and rate == rate else math.nan
-        db, dp = row["dev_bench"], row["dev_peer"]
-        row["flag_bench"] = int(abs(db) > FLAG_THRESHOLD) if db == db else ""
-        row["flag_peer"] = int(abs(dp) > FLAG_THRESHOLD) if dp == dp else ""
+                base = {"part": part, "budget": t, "side": side, "rollout": roll,
+                        "load_indicator": int(roll == "rand")}  # fmt: skip
+                if moves:
+                    acc: dict[str, list[float]] = {name: [0, 0.0, 0.0] for name, _, _ in PHASES}
+                    for m in moves:
+                        if m["side"] != side or m["tactic"] in ("1", "2"):
+                            continue
+                        it, at = fnum(m["iterations"]), fnum(m["agent_time"])
+                        if not (it == it and at == at) or it <= 0 or at <= 0:
+                            continue
+                        a = acc[phase_of(int(m["ply"]))]
+                        a[0] += 1
+                        a[1] += it
+                        a[2] += at
+                    for name, _, _ in PHASES:
+                        n, it, at = acc[name]
+                        if n == 0:
+                            continue
+                        rate = it / at
+                        b = phase_bench.get((roll, name), math.nan)
+                        dev, flag = _flag(rate, b)
+                        out.append({**base, "phase": name, "method": "phase", "n_moves": int(n),
+                                    "iterations": int(it), "agent_time": round(at, 3),
+                                    "rate_iter_per_s": round(rate, 1), "bench_iter_per_s": b,
+                                    "dev_bench": dev, "flag": flag})  # fmt: skip
+                else:
+                    it = fnum(r[f"{side.lower()}_search_iterations_per_move"])
+                    rate = it / t
+                    b = all_bench.get(roll, math.nan)
+                    dev, flag = _flag(rate, b)
+                    out.append({**base, "phase": "all (trộn giai đoạn)", "method": "mixed",
+                                "n_moves": r.get(f"{side.lower()}_search_moves", ""),
+                                "rate_iter_per_s": round(rate, 1) if rate == rate else math.nan,
+                                "bench_iter_per_s": b, "dev_bench": dev, "flag": flag})  # fmt: skip
     return out
 
 
@@ -723,12 +769,15 @@ def build_tables(
     p = prefix(quick)
     tables: dict[str, list[dict[str, Any]]] = {"h2h": [], "greedy": [], "mref": [], "ab2": []}
     rows_by_key: dict[tuple, list[dict[str, str]]] = {}
+    time_moves: dict[tuple[str, float, str], list[dict[str, str]]] = {}
     for pt in all_points(quick):
         got = point_rows(pt, quick, raw_dir, reuse_check)
         if got is None:
             continue
         source, path, rows, moves = got
         rows_by_key[pt.key] = rows
+        if pt.budget_type == "time":
+            time_moves[(pt.part, float(pt.budget), pt.rollout)] = moves
         rel = path.relative_to(ROOT).as_posix() if path.is_relative_to(ROOT) else str(path)
         for s in summarize(rows, moves):
             tables[pt.part].append(
@@ -769,8 +818,8 @@ def build_tables(
     ]
     _write(table_dir / f"{p}validity.csv", VALIDITY_COLUMNS, validity)
     bench_path = table_dir / "e5_bench.csv"
-    br = bench_rates(read_rows(bench_path)) if bench_path.exists() else {}
-    rates = rate_rows({k: tables[k] for k in ("h2h", "greedy", "mref")}, br)
+    bench_rows = read_rows(bench_path) if bench_path.exists() else []
+    rates = rate_rows({k: tables[k] for k in ("h2h", "greedy", "mref")}, bench_rows, time_moves)
     _write(table_dir / f"{p}rates.csv", RATE_COLUMNS, rates)
     for v in validity:
         print(
@@ -780,11 +829,11 @@ def build_tables(
             f"valid={v['valid']}"
         )
     for r in rates:
-        if r["flag_peer"] == 1 or r["flag_bench"] == 1:
+        if r["flag"] == 1:
             print(
-                f"[rates] CỜ: {r['part']} t={r['budget']} {r['rollout']} "
-                f"{r['rate_iter_per_s']} it/s "
-                f"(lệch peer {r['dev_peer']}, lệch bench {r['dev_bench']})"
+                f"[rates] CỜ: {r['part']} t={r['budget']} {r['side']}={r['rollout']} "
+                f"pha {r['phase']}: {r['rate_iter_per_s']} it/s, bench {r['bench_iter_per_s']}, "
+                f"lệch {r['dev_bench']} ({r['method']})"
             )
     return {**tables, "paired": paired, "validity": validity, "rates": rates}
 
@@ -1108,7 +1157,7 @@ def main() -> None:
     args = ap.parse_args()
     q, w, allow = args.quick, args.workers, args.allow_code_change
     t0 = time.perf_counter()
-    if args.step == "bench" or (args.step == "all" and q):
+    if args.step in ("bench", "all"):  # full: bench ở đầu, khi máy rảnh
         bench()
     if args.step == "all":
         for s in ITER_STEPS:  # D-20: mọi phần iteration trước
