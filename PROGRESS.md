@@ -6,10 +6,10 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** E5 (D-20) — quick xong, **chờ An duyệt full**
-- **Việc đang dở:** chạy full E5. Trước full: commit hoặc khôi phục `.claude/settings.json` (đang sửa → `git_dirty = 1`, quick đã bị đánh dấu dirty); An xem cờ tốc độ ở phần time (dưới).
-- **Bước tiếp theo:** `python -m gameai.experiments.e5_rollout all` (iter 4 worker → ab2-pilot → ab2 nếu ≥ 2/20 → 3 phần time 2 worker, máy rảnh). Ước tính ~73 phút thời gian thực (+1,2 phút ab2), xem `gameai/experiments/e5_rollout.md` mục Quick. Sau full: kiểm `e5_validity.csv`, `e5_rates.csv` (cờ > 20 %), viết kết quả vào `.md` + "Kết quả thí nghiệm đã có", spec-reviewer lần 2, E5 → ✅.
-- **Cảnh báo / blocker:** quick có 6/12 dòng cờ tốc độ (`e5quick_rates.csv`): rand lệch bench −21…−28 % (3 dòng; lệch peer ≤ 13 %), h300 lệch peer +29 / −24 / −33 % — tốc độ h300 đổi mạnh theo giai đoạn ván (bench: rand/h300 1,5–1,8 đầu ván, 1,0–1,1 thế 18–24 nước), quick chỉ 2 ván/điểm → chưa tách được tải khỏi giai đoạn ván. (D-11 "Done P3 — thắng ngay" đã được duyệt 2026-11-10.)
+- **Task hiện tại:** chưa chọn (E1–E5 ✅; P4.3 hoãn, gộp với P6)
+- **Việc đang dở:** —
+- **Bước tiếp theo:** `/next-task` E6 (tác dụng `check_tactics`: bật vs tắt, rollout random, cùng iteration; (a) chặn đúng trên thế có four, (b) vs Greedy và AB2, (c) thời gian/nước). Lưu ý từ E5: vs AB2 rollout random ở 5000 iter vẫn 0/20 → (b) vs AB2 gần như chắc ở sàn, cần chốt đối thủ/cổng trong DECISIONS trước khi chạy (như D-20).
+- **Cảnh báo / blocker:** —
 
 ## Bảng trạng thái
 
@@ -33,7 +33,7 @@
 | E2 | 3×3 never lose | ✅ | An | 2026-11-10 | spec-reviewer PASS; full xong; D-16 |
 | E3 | c sweep | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-18; full 226 phút; AB2 qua cổng (2/20) |
 | E4 | N vs W/N | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-19; full 174 s; bỏ đối đầu 15×15 |
-| E5 | Random vs heuristic rollout | 🔄 | An | 2026-11-11 | D-20; quick xong, chờ duyệt full (~73 phút) |
+| E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ⬜ | An | | thêm theo D-11 |
 | P6.1 | GUI pygame | ⬜ | An | | |
 | P7.1 | Plots/tables | ⬜ | An | | |
@@ -49,6 +49,7 @@
 
 - **E1:** giá trị gốc AB = Minimax ở 6/6 thế 3×3 (cả 3 biến thể) và 5/5 thế 15×15 depth 2; nước đi `ab` = Minimax, `ab_order`/`ab_order_tt` giống hệt 3/6 nhưng tối ưu 6/6 (hòa giá trị). Nút gộp 3×3 vs Minimax: −96,13 % (ab), −99,60 % (+ordering), −99,76 % (+TT); bàn trống 549 946 → 20 866 → 1 856 → 990. 15×15 depth 2: 46 825 → 21 612 (−53,85 %) → 1 416 (−96,98 %), nhưng thời gian ordering 0,265 s vs 0,247 s (chậm hơn 7,5 %); depth 3: 553 574 → 48 504 nút (−91,24 %), 5,46 → 1,26 s. `results/tables/e1_{nodes,summary,positions}.csv`.
 
+- **E5:** 15×15, c = 1.4 + tactics. **Cùng thời gian (công bằng):** đối đầu h300 vs rand 0,90 [0,786; 0,957] (0,5 s; iteration thực tế 1 322 / 1 398) và 1,00 [0,929; 1] (2 s; 4 006 / 5 680); vs Greedy h300 0,62 / rand 0,00 (0,5 s), 0,86 / 0,10 (2 s); vs mref 0,98 / 0,50 (0,5 s), 1,00 / 0,92 (2 s). **Cùng iteration:** đối đầu 0,96 / 0,90 / 0,98 (250 / 1000 / 5000); vs Greedy rand ≤ 0,08 ở mọi iter, h300 0,48 (1000) → 0,92 (5000, E3); vs mref rand 0,20 / 0,50 / 0,88, h300 0,74 / 0,90 / 1,00. Paired (h300 − rand) vs Greedy 0,5 s +0,62 [0,484; 0,756], 2 s +0,76; vs mref 0,5 s +0,48, 2 s +0,08 [0,004; 0,156]. AB2: rand_i5000 0/20 → không qua cổng (h300 E3 0,22). mref hợp lệ (25/50). Benchmark rand/h300 = 1,50× iter/s. Cờ tốc độ 15/33 (không loại dữ liệu). `results/tables/e5_*.csv`, `figures/e5_{iter,time}.png`.
 - **E4:** 3×3 (4 298 thế ≥ 2 nước): max_n ≠ max_wn ở 1,3–4,4 % thế; trong các thế đó tỉ lệ giữ giá trị trò chơi max_n / max_wn = 0,606 / 0,809 (10 iter), 0,948 / 0,928 (100), 1,000 / 0,982 (250), 1 / 1 (1000) → max_n chỉ hơn ở vùng giữa. 15×15 h300 c = 1.4: 0/150 search khác (W/N lớn nhất = 1,0 ở 80–100 %, max_wn phá hòa theo N); c = 0.5: 3/150. Đối đầu 3×3 max_n vs max_wn: score 0,485–0,510, mọi CI chứa 0,5. `results/tables/e4_{roots_summary,roots_examples,match}.csv`, `figures/e4_match.png`.
 - **E3:** 3×3 vs Random win 0,915–0,980, vs Minimax non-loss 0,70–0,77 (100 iter) → 1,00 (≥ 2500) — mọi c chồng CI ở mọi iter. 15×15 vs Greedy: giao cắt — 1000 iter c=0.5 0,62 [0,482; 0,741] vs c=2.0 0,22 [0,128; 0,352] (tách); 5000 iter c=2.0 0,96 [0,865; 0,989], c=1.4 0,92, c=1.0 0,88, c=0.5 0,82 (chồng). AB2: pilot c=2.0 2/20 → qua cổng; tốt nhất c=1.0/5000 0,36 [0,241; 0,499], mọi c chồng. Hình `results/figures/e3_{3x3,greedy,ab2}.png`; bảng `results/tables/e3_{3x3_random,3x3_minimax,greedy,ab2_pilot,ab2}.csv`.
 - **E2:** (b) vét cạn 0 nhánh thua trên 10 seed × 2 vai ở 5000 iter (5674 nhánh); 1000 iter 7/5713 thua; 100 iter 279/6247. (a) 5000 iter 0 thua/100 ván vs Minimax, Random, MCTS. `results/tables/e2_*.csv`.
@@ -56,6 +57,11 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-11 — E5 (xong)
+- Trước full (An duyệt): commit riêng `.claude/settings.json` (`50e4099`); D-20 sửa luật cờ tốc độ theo nhóm giai đoạn ván ply 0–9 / 10–19 / ≥ 20 so với benchmark cùng nhóm (`method = phase`; dự phòng `mixed` ghi rõ trộn giai đoạn), rand là chỉ báo tải, cờ không loại dữ liệu; benchmark 7 thế chạy ở đầu full (commit `ec3b8d5`, 26 test E5).
+- Full `ec3b8d5`, `git_dirty = 0`: 4 733 s (bench ~46 s, iteration + pilot ~33 phút, time ~45 phút), 1 270 ván normal, distinct = n. 7 điểm h300 tái dùng E3. Pilot AB2 rand 0/20 → dừng. Kết quả chính: "Kết quả thí nghiệm đã có" + `e5_rollout.md`.
+- Cờ tốc độ 15/33: h300 nhóm 10–19 nhanh hơn benchmark +25…+56 % ở mọi điểm (thế benchmark là playout ngẫu nhiên, ít đe dọa); rand chậm hơn đều −7…−27 % ở mọi điểm → không thấy tải ở riêng điểm nào.
 
 ### 2026-11-11 — E5 (đang dở: chờ duyệt full)
 - D-20 chốt trước khi chạy (commit `07791c1`), gồm 5 điểm sửa của An: seed mref tách riêng (`derive_seed(seed_B, "mref")`); thứ tự iter → time, runinfo ghi CPU + workers, phần time cần máy rảnh; tỉ lệ iteration/giây đo từ benchmark (không ghi "~2×"); bảng paired báo khoảng cặp + độc lập; "Giải thích cho báo cáo" dẫn c10 của P3.3 (không cải thiện nhất quán, LL evaluate −0,566 vs −0,693). Thêm cờ lệch tốc độ > 20 % ở phần time (`e5_rates.csv`). PLAN dòng E5 sửa theo D-20.

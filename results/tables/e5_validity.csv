@@ -1,0 +1,2 @@
+label_a,label_b,n,wins,win_rate,win_lo,win_hi,contains_half,distinct_games,valid
+rand_i1000,mref,50,25,0.5,0.36644286412332855,0.6335571358766714,1,50,1

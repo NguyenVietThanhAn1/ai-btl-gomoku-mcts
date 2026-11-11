@@ -1,0 +1,34 @@
+step,part,label_a,label_b,budget_type,budget,source,workers,n_pairs,cpu,logical_cpus,started,finished,wall_s,git_commit,git_dirty,note
+h2h-iter,h2h,h300_i250,rand_i250,iter,250,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:44:15,2026-11-11T12:45:21,66.8,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+h2h-iter,h2h,h300_i1000,rand_i1000,iter,1000,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:45:21,2026-11-11T12:47:43,141.8,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+h2h-iter,h2h,h300_i5000,rand_i5000,iter,5000,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:47:43,2026-11-11T12:53:40,356.4,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+greedy-iter,greedy,rand_i100,greedy,iter,100,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:53:40,2026-11-11T12:53:44,4.0,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+greedy-iter,greedy,h300_i100,greedy,iter,100,e3,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:53:44,2026-11-11T12:53:44,0.5,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,ok (e3_greedy_c1.4_i100.csv)
+greedy-iter,greedy,rand_i250,greedy,iter,250,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:53:44,2026-11-11T12:53:52,7.3,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+greedy-iter,greedy,h300_i250,greedy,iter,250,e3,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:53:52,2026-11-11T12:53:52,0.5,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,ok (e3_greedy_c1.4_i250.csv)
+greedy-iter,greedy,rand_i500,greedy,iter,500,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:53:52,2026-11-11T12:54:06,14.3,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+greedy-iter,greedy,h300_i500,greedy,iter,500,e3,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:54:06,2026-11-11T12:54:07,0.5,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,ok (e3_greedy_c1.4_i500.csv)
+greedy-iter,greedy,rand_i1000,greedy,iter,1000,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:54:07,2026-11-11T12:54:32,24.9,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+greedy-iter,greedy,h300_i1000,greedy,iter,1000,e3,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:54:32,2026-11-11T12:54:32,0.4,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,ok (e3_greedy_c1.4_i1000.csv)
+greedy-iter,greedy,rand_i2500,greedy,iter,2500,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:54:32,2026-11-11T12:55:35,62.5,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+greedy-iter,greedy,h300_i2500,greedy,iter,2500,e3,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:55:35,2026-11-11T12:55:35,0.5,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,ok (e3_greedy_c1.4_i2500.csv)
+greedy-iter,greedy,rand_i5000,greedy,iter,5000,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:55:35,2026-11-11T12:57:46,130.7,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+greedy-iter,greedy,h300_i5000,greedy,iter,5000,e3,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:57:46,2026-11-11T12:57:46,0.5,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,ok (e3_greedy_c1.4_i5000.csv)
+mref-iter,mref,rand_i250,mref,iter,250,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T12:57:46,2026-11-11T13:00:10,143.4,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+mref-iter,mref,h300_i250,mref,iter,250,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:00:10,2026-11-11T13:02:05,115.7,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+mref-iter,mref,rand_i1000,mref,iter,1000,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:02:05,2026-11-11T13:04:39,153.5,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+mref-iter,mref,h300_i1000,mref,iter,1000,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:04:39,2026-11-11T13:07:12,153.3,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+mref-iter,mref,rand_i5000,mref,iter,5000,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:07:12,2026-11-11T13:11:48,276.3,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+mref-iter,mref,h300_i5000,mref,iter,5000,e5,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:11:48,2026-11-11T13:16:12,263.9,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+ab2-pilot,ab2,rand_i5000,ab2,iter,5000,e5,4,10,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:16:12,2026-11-11T13:17:10,58.0,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+ab2-pilot,ab2,h300_i5000,ab2,iter,5000,e3,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:17:10,2026-11-11T13:17:11,0.5,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,ok (e3_ab2_c1.4_i5000.csv)
+h2h-time,h2h,h300_t0.5,rand_t0.5,time,0.5,e5,2,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:17:12,2026-11-11T13:21:19,246.3,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+h2h-time,h2h,h300_t2.0,rand_t2.0,time,2.0,e5,2,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:21:19,2026-11-11T13:29:28,489.3,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+greedy-time,greedy,rand_t0.5,greedy,time,0.5,e5,2,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:29:28,2026-11-11T13:30:24,56.3,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+greedy-time,greedy,h300_t0.5,greedy,time,0.5,e5,2,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:30:24,2026-11-11T13:31:44,80.3,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+greedy-time,greedy,rand_t2.0,greedy,time,2.0,e5,2,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:31:44,2026-11-11T13:35:40,235.3,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+greedy-time,greedy,h300_t2.0,greedy,time,2.0,e5,2,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:35:40,2026-11-11T13:41:54,374.2,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+mref-time,mref,rand_t0.5,mref,time,0.5,e5,2,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:41:54,2026-11-11T13:46:21,266.9,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+mref-time,mref,h300_t0.5,mref,time,0.5,e5,2,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:46:21,2026-11-11T13:50:20,239.1,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+mref-time,mref,rand_t2.0,mref,time,2.0,e5,2,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:50:20,2026-11-11T13:58:00,460.2,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,
+mref-time,mref,h300_t2.0,mref,time,2.0,e5,2,25,12th Gen Intel(R) Core(TM) i9-12900H,20,2026-11-11T13:58:00,2026-11-11T14:02:22,262.2,ec3b8d5ccaefcccce0beaec202d28c7474e60bc6,0,

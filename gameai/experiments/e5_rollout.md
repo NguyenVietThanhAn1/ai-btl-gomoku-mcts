@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🔄 quick xong, chờ duyệt full  ·  **Task:** E5 (D-20)  ·  **Cập nhật:** 2026-11-11
+**Trạng thái:** ✅ full xong  ·  **Task:** E5 (D-20)  ·  **Cập nhật:** 2026-11-11
 
 ## Mục đích
 Đề ý 5: thay rollout ngẫu nhiên bằng rollout heuristic, đo mức cải thiện, liên hệ value network. Chỉ 15×15.
@@ -16,8 +16,8 @@ Hai cấu hình MCTS chỉ khác rollout (c = 1.4, `check_tactics=True` theo D-1
 
 Hai trục ngân sách (D-20):
 - **Cùng iteration** (4 worker): **thiên vị h300**, vì mỗi iteration heavy đắt hơn random (tỉ lệ iteration/giây
-  đo bằng benchmark đơn luồng `results/tables/e5_bench.csv`: rand/h300 = **1,31** theo trung vị, 1,5–1,8 ở đầu ván,
-  1,0–1,1 ở thế 18–24 nước — xem mục Quick).
+  đo bằng benchmark đơn luồng `results/tables/e5_bench.csv` (bản full, 7 thế): rand/h300 = **1,50** theo trung vị,
+  1,3–1,8 ở thế 4–16 quân, 0,97–1,0 ở thế 20–28 quân — xem mục Kết quả full).
 - **Cùng thời gian** 0,5 s và 2 s/nước (2 worker, máy rảnh): **so sánh công bằng — kết luận chính dựa trên trục này**.
 
 | Bước (`step`) | Đối thủ | Ngân sách | Ván/điểm |
@@ -137,6 +137,79 @@ h1000c10 19/20, h100 = h100c10 19/20; vs Greedy h300 8/20 → 4/20, h1000 2/20 �
 `evaluate` qua sigmoid chỉ dự đoán được một phần kết quả rollout: log-likelihood trung bình −0,566/thế (T = 300,
 scale 500) so với −0,693 của dự đoán hằng 0,5. Tức là một hàm giá trị thủ công yếu không thay thế được rollout;
 muốn bỏ rollout như AlphaZero thì hàm giá trị phải được **học** đủ tốt.
+
+## Kết quả full (2026-11-11, commit `ec3b8d5`)
+Thời gian thực **4 733 s ≈ 79 phút** (~12:43 → 14:02): bench ~46 s, phần iteration (4 worker) + pilot AB2 ~33 phút
+(12:44 → 13:17), phần time (2 worker) ~45 phút (13:17 → 14:02). 1 270 ván mới, mọi ván `normal`, 0 lỗi agent, `git_dirty = 0`, cùng commit;
+`distinct_games` = n ở mọi điểm, không có hòa (trừ h300 vs AB2 của E3: 2 hòa). CPU i9-12900H, 20 luồng logic
+(`results/raw/e5_runinfo.csv`). 7 điểm h300 lấy từ E3 (`source = e3`, qua điều kiện tái dùng).
+Bảng: `results/tables/e5_{h2h,greedy,mref,ab2,paired,validity,rates,bench}.csv`; hình `results/figures/e5_{iter,time}.png`.
+Win rate [Wilson 95 %], 50 ván/điểm (dòng `all`).
+
+**Benchmark đơn luồng** (`e5_bench.csv`, 1 s/thế, 3 seed, trung vị iter/s rand / h300): 4 quân 3 079 / 1 718 (1,79×),
+8: 3 227 / 2 409 (1,34×), 12: 3 468 / 2 000 (1,73×), 16: 3 606 / 2 196 (1,64×), 20: 4 022 / 4 153 (0,97×),
+24: 4 072 / 4 169 (0,98×), 28: 4 321 / 4 332 (1,00×); chung 3 606 / 2 409 = **1,50×**.
+
+**Đối đầu trực tiếp h300 (A) vs rand (B)** — tỉ lệ thắng của h300:
+
+| Ngân sách | h300 thắng | iteration/nước thực tế h300 / rand |
+|---|---|---|
+| 250 iter | 48/50 = 0,96 [0,865; 0,989] | 250 / 250 |
+| 1000 iter | 45/50 = 0,90 [0,786; 0,957] | 1000 / 1000 |
+| 5000 iter | 49/50 = 0,98 [0,895; 0,996] | 5000 / 5000 |
+| **0,5 s** | **45/50 = 0,90** [0,786; 0,957] | 1 322 / 1 398 |
+| **2 s** | **50/50 = 1,00** [0,929; 1,000] | 4 006 / 5 680 |
+
+**vs Greedy** (h300 iter từ E3):
+
+| Ngân sách | rand | h300 | iteration thực tế rand / h300 |
+|---|---|---|---|
+| 100 / 250 / 500 iter | 0 / 0 / 0 | 0,04 / 0,02 / 0,18 | — |
+| 1000 iter | 0,02 [0,004; 0,105] | 0,48 [0,348; 0,615] | — |
+| 2500 iter | 0,00 [0; 0,071] | 0,90 [0,786; 0,957] | — |
+| 5000 iter | 0,08 [0,032; 0,188] | 0,92 [0,812; 0,968] | — |
+| **0,5 s** | **0,00** [0; 0,071] | **0,62** [0,482; 0,741] | 1 457 / 1 206 |
+| **2 s** | **0,10** [0,043; 0,214] | **0,86** [0,738; 0,930] | 5 831 / 4 331 |
+
+**vs mref** (MCTS random 1000 iter):
+
+| Ngân sách | rand | h300 | iteration thực tế rand / h300 |
+|---|---|---|---|
+| 250 iter | 0,20 [0,112; 0,330] | 0,74 [0,604; 0,841] | — |
+| 1000 iter | 0,50 [0,366; 0,634] | 0,90 [0,786; 0,957] | — |
+| 5000 iter | 0,88 [0,762; 0,944] | 1,00 [0,929; 1,000] | — |
+| **0,5 s** | **0,50** [0,366; 0,634] | **0,98** [0,895; 0,996] | 1 399 / 1 305 |
+| **2 s** | **0,92** [0,812; 0,968] | **1,00** [0,929; 1,000] | 5 531 / 3 829 |
+
+**Kiểm tra hợp lệ mref:** `rand_i1000` vs mref 25/50, Wilson [0,366; 0,634] ∋ 0,5, distinct 50/50 → `valid = 1`.
+
+**AB2 (cổng D-20):** `rand_i5000` pilot **0/20** = 0,00 [0; 0,161] → **không qua cổng**, không chạy thêm; ghi làm bằng
+chứng floor. h300 5000 iter (E3): 11/50 = 0,22 [0,128; 0,352].
+
+**So sánh cặp** (`e5_paired.csv`, d = kết quả h300 − kết quả rand theo game_id, 50 cặp):
+vs Greedy 1000 iter +0,46 (cặp [0,320; 0,600], độc lập [0,315; 0,605]); 2500 +0,90 [0,816; 0,984]; 5000 +0,84
+(cặp [0,723; 0,957], độc lập [0,733; 0,947]); **0,5 s +0,62** [0,484; 0,756]; **2 s +0,76** (cặp [0,628; 0,892],
+độc lập [0,632; 0,888]); 100–250 iter chứa 0. vs mref: 250 iter +0,54 [0,370; 0,710]; 1000 +0,40 [0,242; 0,558];
+5000 +0,12 [0,029; 0,211]; **0,5 s +0,48** [0,340; 0,620]; **2 s +0,08** [0,004; 0,156]. AB2 (20 cặp chung): +0,15
+[−0,011; 0,311]. Khoảng cặp và độc lập gần như trùng (đúng như dự kiến: chỉ chung seed đối thủ + lượt).
+
+**Cờ tốc độ phần time** (`e5_rates.csv`, luật theo giai đoạn ván; 33 dòng, **15 cờ**, chỉ báo cáo, không loại dữ liệu):
+- h300 nhóm 10–19 quân: **nhanh hơn** benchmark ở **cả 6** điểm (cờ): +45…+56 % ở 5 điểm, +25 % ở greedy 2 s. Hệ thống, không theo điểm: thế
+  benchmark 12/16 quân là playout ngẫu nhiên, ít đe dọa → rollout heavy dài; trong ván thật ở 10–19 quân đã có đe
+  dọa → rollout heavy kết thúc sớm. Đây là khác biệt thế cờ, không phải tải.
+- h300 khác: 0–9 quân greedy 2 s −24 %; ≥ 20 quân h2h 0,5 s −24 %, mref 0,5 s −30 % (cờ).
+- **rand (chỉ báo tải):** luôn chậm hơn benchmark, −7…−27 %, tăng theo giai đoạn ván (0–9: −9…−18 %, 10–19: −7…−23 %,
+  ≥ 20: −24…−27 %); 6 dòng cờ: h2h 0,5 s (10–19 −20,4 %, ≥ 20 −26,6 %), h2h 2 s ≥ 20 (−27,3 %, chỉ 2 nước), mref
+  0,5 s (10–19 −23,1 %, ≥ 20 −23,7 %), mref 2 s ≥ 20 (−25,6 %). Độ lệch rand tương tự giữa 0,5 s và 2 s và giữa các
+  phần → giống một độ lệch đều (2 tiến trình chạy song song + thế ván thật khác thế benchmark) hơn là tải ở riêng
+  một điểm; không loại trừ được việc mọi điểm time đều chậm đều ~10–25 % so với đơn luồng.
+
+**Đọc kết quả.** Ở **cùng thời gian** (so sánh công bằng), h300 hơn rand rõ ở cả ba đối thủ: đối đầu 0,90 (0,5 s) và
+1,00 (2 s); vs Greedy 0,62 so với 0,00 và 0,86 so với 0,10; vs mref 0,98 so với 0,50 (0,5 s). Ở 0,5 s hai bên có
+số iteration gần bằng nhau (~1 300–1 450), nên lợi thế đến từ chất lượng ước lượng của rollout chứ không từ số
+lượt. Ở 2 s rand có nhiều iteration hơn ~1,3–1,5× mà vẫn thua. Khoảng cách chỉ hẹp lại khi đối thủ yếu và ngân sách
+lớn (vs mref 2 s: 0,92 so với 1,00 — gần trần). Rollout random gần như không thắng được Greedy ở mọi ngân sách thử
+(≤ 0,10), còn vs AB2 ở 5000 iter là 0/20 so với 0,22 của h300.
 
 ## Quick (2026-11-11, commit `07791c1`, không commit file `e5quick_*` — không phải số liệu báo cáo)
 Tổng **300 s** (bench ~25 s; phần iter 4 worker, phần time 2 worker), 44 ván, mọi ván `normal`, `distinct_games` = n

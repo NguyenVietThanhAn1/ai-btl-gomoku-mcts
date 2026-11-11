@@ -1,0 +1,58 @@
+[bench] C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\tables\e5_bench.csv
+[bench] rand: trung vị 3606 iter/s
+[bench] h300: trung vị 2409 iter/s
+[bench] rand/h300 = 1.50
+[h2h-iter] h300_i250 vs rand_i250: W/D/L 48/0/2 (n=50, distinct=50), 66.8 s
+[h2h-iter] h300_i1000 vs rand_i1000: W/D/L 45/0/5 (n=50, distinct=50), 141.8 s
+[h2h-iter] h300_i5000 vs rand_i5000: W/D/L 49/0/1 (n=50, distinct=50), 356.4 s
+[greedy-iter] rand_i100 vs greedy: W/D/L 0/0/50 (n=50, distinct=50), 4.0 s
+[greedy-iter] h300_i100 vs greedy: tái dùng E3: ok (e3_greedy_c1.4_i100.csv), 0.5 s
+[greedy-iter] rand_i250 vs greedy: W/D/L 0/0/50 (n=50, distinct=50), 7.3 s
+[greedy-iter] h300_i250 vs greedy: tái dùng E3: ok (e3_greedy_c1.4_i250.csv), 0.5 s
+[greedy-iter] rand_i500 vs greedy: W/D/L 0/0/50 (n=50, distinct=50), 14.3 s
+[greedy-iter] h300_i500 vs greedy: tái dùng E3: ok (e3_greedy_c1.4_i500.csv), 0.5 s
+[greedy-iter] rand_i1000 vs greedy: W/D/L 1/0/49 (n=50, distinct=50), 24.9 s
+[greedy-iter] h300_i1000 vs greedy: tái dùng E3: ok (e3_greedy_c1.4_i1000.csv), 0.4 s
+[greedy-iter] rand_i2500 vs greedy: W/D/L 0/0/50 (n=50, distinct=50), 62.5 s
+[greedy-iter] h300_i2500 vs greedy: tái dùng E3: ok (e3_greedy_c1.4_i2500.csv), 0.5 s
+[greedy-iter] rand_i5000 vs greedy: W/D/L 4/0/46 (n=50, distinct=50), 130.7 s
+[greedy-iter] h300_i5000 vs greedy: tái dùng E3: ok (e3_greedy_c1.4_i5000.csv), 0.5 s
+[mref-iter] rand_i250 vs mref: W/D/L 10/0/40 (n=50, distinct=50), 143.4 s
+[mref-iter] h300_i250 vs mref: W/D/L 37/0/13 (n=50, distinct=50), 115.7 s
+[mref-iter] rand_i1000 vs mref: W/D/L 25/0/25 (n=50, distinct=50), 153.5 s
+[mref-iter] h300_i1000 vs mref: W/D/L 45/0/5 (n=50, distinct=50), 153.3 s
+[mref-iter] rand_i5000 vs mref: W/D/L 44/0/6 (n=50, distinct=50), 276.3 s
+[mref-iter] h300_i5000 vs mref: W/D/L 50/0/0 (n=50, distinct=50), 263.9 s
+[ab2-pilot] rand_i5000 vs ab2: W/D/L 0/0/20 (n=20, distinct=20), 58.0 s
+[ab2-pilot] h300_i5000 vs ab2: tái dùng E3: ok (e3_ab2_c1.4_i5000.csv), 0.5 s
+[validity] rand_i1000 vs mref: win 25/50 [0.366; 0.634], distinct 50, valid=1
+[ab2-pilot] rand_i5000 thắng 0/20 — KHÔNG qua → floor, dừng AB2
+[h2h-time] h300_t0.5 vs rand_t0.5: W/D/L 45/0/5 (n=50, distinct=50), 246.3 s
+[h2h-time] h300_t2.0 vs rand_t2.0: W/D/L 50/0/0 (n=50, distinct=50), 489.3 s
+[greedy-time] rand_t0.5 vs greedy: W/D/L 0/0/50 (n=50, distinct=50), 56.3 s
+[greedy-time] h300_t0.5 vs greedy: W/D/L 31/0/19 (n=50, distinct=50), 80.3 s
+[greedy-time] rand_t2.0 vs greedy: W/D/L 5/0/45 (n=50, distinct=50), 235.3 s
+[greedy-time] h300_t2.0 vs greedy: W/D/L 43/0/7 (n=50, distinct=50), 374.2 s
+[mref-time] rand_t0.5 vs mref: W/D/L 25/0/25 (n=50, distinct=50), 266.9 s
+[mref-time] h300_t0.5 vs mref: W/D/L 49/0/1 (n=50, distinct=50), 239.1 s
+[mref-time] rand_t2.0 vs mref: W/D/L 46/0/4 (n=50, distinct=50), 460.2 s
+[mref-time] h300_t2.0 vs mref: W/D/L 50/0/0 (n=50, distinct=50), 262.2 s
+[validity] rand_i1000 vs mref: win 25/50 [0.366; 0.634], distinct 50, valid=1
+[rates] CỜ: h2h t=0.5 A=h300 pha 10-19: 3042.4 it/s, bench 2080.3, lệch 0.462 (phase)
+[rates] CỜ: h2h t=0.5 A=h300 pha >=20: 3209.6 it/s, bench 4228.6, lệch -0.241 (phase)
+[rates] CỜ: h2h t=0.5 B=rand pha 10-19: 2792.6 it/s, bench 3506.35, lệch -0.204 (phase)
+[rates] CỜ: h2h t=0.5 B=rand pha >=20: 3006.0 it/s, bench 4092.8, lệch -0.266 (phase)
+[rates] CỜ: h2h t=2.0 A=h300 pha 10-19: 3043.3 it/s, bench 2080.3, lệch 0.463 (phase)
+[rates] CỜ: h2h t=2.0 B=rand pha >=20: 2975.2 it/s, bench 4092.8, lệch -0.273 (phase)
+[rates] CỜ: greedy t=0.5 A=h300 pha 10-19: 3011.8 it/s, bench 2080.3, lệch 0.448 (phase)
+[rates] CỜ: greedy t=2.0 A=h300 pha 0-9: 1549.3 it/s, bench 2048.7, lệch -0.244 (phase)
+[rates] CỜ: greedy t=2.0 A=h300 pha 10-19: 2590.2 it/s, bench 2080.3, lệch 0.245 (phase)
+[rates] CỜ: mref t=0.5 A=h300 pha 10-19: 3081.0 it/s, bench 2080.3, lệch 0.481 (phase)
+[rates] CỜ: mref t=0.5 A=h300 pha >=20: 2944.9 it/s, bench 4228.6, lệch -0.304 (phase)
+[rates] CỜ: mref t=0.5 A=rand pha 10-19: 2697.0 it/s, bench 3506.35, lệch -0.231 (phase)
+[rates] CỜ: mref t=0.5 A=rand pha >=20: 3121.8 it/s, bench 4092.8, lệch -0.237 (phase)
+[rates] CỜ: mref t=2.0 A=h300 pha 10-19: 3253.5 it/s, bench 2080.3, lệch 0.564 (phase)
+[rates] CỜ: mref t=2.0 A=rand pha >=20: 3045.2 it/s, bench 4092.8, lệch -0.256 (phase)
+[plot] C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\figures\e5_iter.png
+[plot] C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\figures\e5_time.png
+tổng 4732.7 s
