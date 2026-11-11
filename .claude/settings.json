@@ -35,5 +35,9 @@
       "PowerShell(Remove-Item * -Recurse *)",
       "PowerShell(git reset --hard *)"
     ]
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
   }
 }
