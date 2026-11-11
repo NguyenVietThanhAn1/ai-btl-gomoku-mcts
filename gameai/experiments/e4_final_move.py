@@ -80,7 +80,8 @@ SUMMARY_ROOT_COLUMNS = ["board", "c", "set", "iterations", "n_positions", "n_ski
                         "differ_opt_max_n", "differ_opt_max_wn", "differ_opt_max_lcb",
                         "lcb_eq_max_n", "max_n_child_N_median", "max_wn_child_N_median",
                         "max_wn_child_N_max", "children_median", "max_n_wn_is_1",
-                        "max_n_tied_median"]  # fmt: skip
+                        "max_n_tied_median", "max_n_N_tie_rate", "max_wn_is_1_rate",
+                        "n_wn1_median", "n_wn1_max"]  # fmt: skip
 EXAMPLE_COLUMNS = ["board", "example", *ROOT_COLUMNS[2:], "ref_iterations", "ref_W", "ref_N",
                    "ref_wn"]  # fmt: skip
 MATCH_COLUMNS = ["board", "iterations", *SUMMARY_COLUMNS, "score_lo", "score_hi"]
@@ -331,6 +332,12 @@ def _summary_row(board: str, c: float, name: str, it: int, sel: list[list[dict[s
     n_wn = [int(p[1]["N"]) for p in picks]
     # chẩn đoán (D-19): con max_n có W/N = 1? bao nhiêu con hòa (N, W) với nó?
     wn1 = [float(p[0]["W"]) == float(p[0]["N"]) for p in picks]
+    # ≥ 2 con cùng N lớn nhất (max_n phải phá hòa theo W / thứ tự mở rộng)
+    n_tie = [sum(int(r["N"]) == int(p[0]["N"]) for r in v) >= 2
+             for p, v in zip(picks, sel, strict=True)]  # fmt: skip
+    # W/N lớn nhất = 1,0? số con đạt 1,0 (chỉ tính trên các search đó)
+    perfect = [sum(float(r["W"]) == float(r["N"]) for r in v) for v in sel]
+    n_wn1 = [k for k in perfect if k > 0]
     tied = [sum((float(r["N"]), float(r["W"])) == (float(p[0]["N"]), float(p[0]["W"])) for r in v)
             for p, v in zip(picks, sel, strict=True)]  # fmt: skip
     return {
@@ -345,6 +352,9 @@ def _summary_row(board: str, c: float, name: str, it: int, sel: list[list[dict[s
         "max_wn_child_N_median": _median(n_wn), "max_wn_child_N_max": max(n_wn, default=math.nan),
         "children_median": _median([len(v) for v in sel]),
         "max_n_wn_is_1": _rate(sum(wn1), len(wn1)), "max_n_tied_median": _median(tied),
+        "max_n_N_tie_rate": _rate(sum(n_tie), len(n_tie)),
+        "max_wn_is_1_rate": _rate(len(n_wn1), len(sel)),
+        "n_wn1_median": _median(n_wn1), "n_wn1_max": max(n_wn1, default=math.nan),
     }  # fmt: skip
 
 

@@ -124,6 +124,9 @@ def test_summary_and_examples_rule():
     assert a["differ_opt_max_n"] == 1.0 and math.isclose(a["differ_opt_max_wn"], 1 / 3)
     assert summ["has_bad"]["n_positions"] == 2  # thế 0 và 3 có nước không tối ưu
     assert a["max_n_wn_is_1"] == 0.0 and a["max_n_tied_median"] == 1
+    assert a["max_n_N_tie_rate"] == 0.0
+    # thế 0, 2, 3 có con W/N = 1 (1/1 hoặc 2/2), mỗi thế 1 con
+    assert a["max_wn_is_1_rate"] == 0.75 and (a["n_wn1_median"], a["n_wn1_max"]) == (1, 1)
 
 
 def test_examples_15_per_c_and_skip_tactic():
@@ -137,6 +140,8 @@ def test_examples_15_per_c_and_skip_tactic():
     s14 = next(s for s in summ if s["c"] == 1.4)
     assert (s14["n_skipped_tactic"], s14["n_positions"], s14["n_differ"]) == (1, 1, 0)
     assert s14["max_n_wn_is_1"] == 1.0 and s14["max_n_tied_median"] == 2
+    assert s14["max_n_N_tie_rate"] == 1.0 and s14["max_wn_is_1_rate"] == 1.0
+    assert (s14["n_wn1_median"], s14["n_wn1_max"]) == (2, 2)
     ex = e4.example_rows([], rows)
     assert {r["example"] for r in ex} == {"sensitivity"}
 

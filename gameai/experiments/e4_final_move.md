@@ -49,7 +49,9 @@ Cờ chung `--workers` (4), `--allow-code-change`. Quick: 3×3 mỗi thế thứ
   `has_bad` = thế có ≥ 1 nước không tối ưu): `n_positions, n_skipped_tactic, n_differ, differ_rate,
   opt_max_{n,wn,lcb}` (mọi thế), **`differ_opt_max_{n,wn,lcb}` (chỉ số chính: trong các thế max_n ≠ max_wn)**,
   `lcb_eq_max_n`, `max_n_child_N_median`, `max_wn_child_N_{median,max}`, chẩn đoán `children_median`,
-  `max_n_wn_is_1`, `max_n_tied_median`. Giá trị tối ưu chỉ có ở 3×3.
+  `max_n_wn_is_1`, `max_n_tied_median`, `max_n_N_tie_rate` (% search có ≥ 2 con cùng N lớn nhất),
+  `max_wn_is_1_rate` (% search có W/N lớn nhất = 1,0), `n_wn1_median` / `n_wn1_max` (số con có W/N = 1,0,
+  chỉ trên các search đó). Giá trị tối ưu chỉ có ở 3×3.
 - `results/tables/e4_roots_examples.csv`: 3×3 (iter 100, max_n ≠ max_wn và max_wn không tối ưu) 3 thế đầu
   (`rule`) + thế ít ô trống nhất (`trace`), mọi con; 15×15 mỗi c 3 search đầu có max_n ≠ max_wn (`rule` /
   `sensitivity`), top-5 theo N + con max_wn/max_lcb, cột `ref_*` = tham chiếu 20 000 iter.
