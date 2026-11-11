@@ -6,7 +6,7 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** chưa chọn (E1–E4 ✅; P4.3 hoãn, gộp với P6)
+- **Task hiện tại:** E5 (D-20) — đang viết script, chưa chạy quick
 - **Việc đang dở:** —
 - **Bước tiếp theo:** `/next-task` E5 (random vs heuristic rollout). Cấu hình heavy: **h300** = `rollout="heavy_kinrow"`, `temperature=300`, không cắt rollout; mọi MCTS 15×15 bật `check_tactics=True` (D-14); báo iteration theo cột `*_search_*` (D-15). Lưu ý từ E4: ở cây nông W/N của h300 lạc quan (11/11 → ~0,42 ở 20 000 iter).
 - **Cảnh báo / blocker:** theo P3.3, vs AB2 MCTS 0,5 s gần 0% (≤ 2/20 ở mọi cấu hình) → E3/E5 15×15 cần đối thủ phân biệt được cấu hình (kiểu `mrand`, D-14); quyết định khi tới task đó (PLAN E3/E5 hiện ghi AB2 — cần sửa lúc đó). (D-11 "Done P3 — thắng ngay" đã được duyệt 2026-11-10.)
@@ -33,7 +33,7 @@
 | E2 | 3×3 never lose | ✅ | An | 2026-11-10 | spec-reviewer PASS; full xong; D-16 |
 | E3 | c sweep | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-18; full 226 phút; AB2 qua cổng (2/20) |
 | E4 | N vs W/N | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-19; full 174 s; bỏ đối đầu 15×15 |
-| E5 | Random vs heuristic rollout | ⬜ | An | | |
+| E5 | Random vs heuristic rollout | 🔄 | An | 2026-11-11 | D-20 |
 | E6 | Tác dụng check_tactics | ⬜ | An | | thêm theo D-11 |
 | P6.1 | GUI pygame | ⬜ | An | | |
 | P7.1 | Plots/tables | ⬜ | An | | |
