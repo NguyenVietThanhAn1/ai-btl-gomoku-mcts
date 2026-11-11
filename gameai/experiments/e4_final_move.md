@@ -98,7 +98,15 @@ Tập `has_bad` (3 191 thế có ≥ 1 nước không tối ưu): thế khác 11
 0,333 vs 0,676 (10), 0,491 vs 0,564 (20), 0,600 vs 0,640 (50), 0,688 vs 0,562 (100), 1,000 vs 0,714 (250).
 Trên mọi thế, max_n và max_wn tối ưu gần bằng nhau (0,878/0,886 ở 10 iter → 0,998/0,998 ở 1000). Số con có
 W/N = 1 (trên các search có): trung vị 1. Ở 1000 iter, 112 thế khác nhau đều nằm ngoài `has_bad`, tức là thế
-mà mọi nước cùng giá trị — chọn nước nào cũng như nhau.
+mà mọi nước cùng giá trị — chọn nước nào cũng như nhau. **Ở iter cao, "khác nhau" là khác giữa các nước tối ưu
+ngang nhau (cả hai tiêu chí 1,000 ở 1000 iter): khác ≠ sai.**
+
+*Bình nguyên từ iter ≥ 100* (kiểm offline từ `e4_roots_3x3.csv`, đếm nước thắng ngay bằng play/undo): 2 216/4 298
+thế (0,516) có nước thắng ngay (1 808 thế đúng 1 nước, 408 thế ≥ 2 nước). Cột "W/N lớn nhất = 1" = 0,530
+(2 276 thế ở iter 100–1000) **gồm cả 2 216 thế đó** + 60 thế khác (thắng chắc dù chưa thắng ngay) → bình nguyên
+0,530 chủ yếu do thế có nước thắng ngay. Cột "max_n bị hòa N" ≈ 0,125 (533–541 thế) **chỉ giải thích được một
+phần**: trong 536 thế bị hòa ở 1000 iter có 214 thế ≥ 2 nước thắng ngay, 112 thế đúng 1 nước, 210 thế không có
+nước thắng ngay (iter 100: 178 / 109 / 246); nguyên nhân của phần còn lại chưa kiểm.
 
 **15×15 (h300 + tactics), 10 thế × 5 seed, 0 search bị tactic đi tắt.**
 
@@ -119,6 +127,8 @@ mà mọi nước cùng giá trị — chọn nước nào cũng như nhau.
 (20), 0,500 [0,449; 0,551] (50), 0,508 [0,466; 0,549] (100), 0,492 [0,460; 0,525] (250) — mọi khoảng chứa 0,5.
 W/D/L của max_n: 89/26/85, 76/42/82, 54/92/54, 37/129/34, 21/155/24. Chênh lệch giữa A=X và A=O (vd. 100 iter:
 score 0,660 vs 0,355) là lợi thế đi trước, không phải do tiêu chí. `distinct_games` 199 → 153.
+Win rate của max_n giảm theo iter (0,445 → 0,105) vì **hòa tăng** (26 → 155/200 ván) khi cả hai bên mạnh lên;
+score ≈ 0,5 ở mọi iter → ở thiết lập này tiêu chí chọn nước cuối **không ảnh hưởng sức đánh**.
 
 ## Giải thích cho báo cáo
 **1. Lý thuyết: vì sao chọn N lớn nhất.** Hết ngân sách, MCTS phải chọn một con của gốc. W/N là ước lượng tỉ lệ
@@ -172,6 +182,13 @@ Trace: N của ba con dẫn đầu chỉ chênh 1–2 lượt, W/N chênh < 0,01
 **max_lcb** (cận dưới Wilson lớn nhất) phạt con N nhỏ tường minh: trùng max_n ở 96,7–99,0 % thế 3×3; trong
 các thế max_n ≠ max_wn, tỉ lệ tối ưu 0,777 (10 iter), 0,788 (20), 0,800 (50), 0,948 (100), 0,982 (250) — không
 vượt tiêu chí tốt hơn ở mức iter nào.
+
+**Kết luận.** W/N của một nước vừa **nhiễu** (phương sai cỡ p(1−p)/N, lớn khi N nhỏ) vừa **lệch lạc quan**
+khi cây còn nông (vd. 11/11 = 1,000 ở 250 iter → 90/213 = 0,423 ở 20 000 iter). Chọn theo N chỉ cần UCT xếp đúng
+**thứ tự** các nước — không cần giá trị chính xác — nên bền hơn. Ưu thế của max_n chỉ lộ ở vùng giữa (3×3 từ
+iter 100: 0,948 / 1,000 so với 0,928 / 0,982 trong các thế khác nhau); ở iter ≲ số con max_n chỉ là phá hòa
+(max_wn tốt hơn), ở iter lớn hai tiêu chí khác nhau chỉ giữa các nước ngang giá trị, và trong đối đầu không đo
+được khác biệt (score 0,485–0,510).
 
 **Ghi chú phương pháp cho báo cáo.** Ví dụ 3×3 lấy ở iter 100 — đổi từ 250 sau thăm dò vì ở 250 chỉ 2 thế
 thỏa luật (D-19). "Tối ưu" = giữ giá trị thắng/hòa/thua (không chiết khấu độ sâu). Thế 15×15 sinh bằng playout
