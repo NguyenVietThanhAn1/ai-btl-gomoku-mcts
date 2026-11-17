@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P8 (cờ tướng, bắt buộc), branch `xiangqi`; P8.0 ✅
-- **Việc đang dở:** —
-- **Bước tiếp theo:** P8.1 luật + perft (`games/xiangqi.py`), theo D-22 + PLAN P8.1. Thứ tự: P8.1 → P8.2 → P8.3 → P6 → P8.4 → P7.
+- **Task hiện tại:** P7.1 (plots/bảng báo cáo k-in-row + kiểm chứng cơ chế E6), branch `master` (D-26)
+- **Việc đang dở:** P7.1 đang làm
+- **Bước tiếp theo:** xong P7.1 → P6.1 (khung GUI + k-in-row) → P8.1 (tạo lại branch `xiangqi`). Thứ tự: D-26.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -35,8 +35,9 @@
 | E4 | N vs W/N | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-19; full 174 s; bỏ đối đầu 15×15 |
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
-| P6.1 | GUI pygame (k-in-row + cờ tướng) | ⬜ | An | | làm sau P8.3 (D-22) |
-| P7.1 | Plots/tables | ⬜ | An | | |
+| P6.1 | GUI: khung + view k-in-row | ⬜ | An | | sau P7.1 (D-26) |
+| P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
+| P7.1 | Plots/tables | 🔄 | An | 2026-11-17 | D-26 |
 | P7.2 | report.md | ⬜ | An | | |
 | P7.3 | report.docx | ⬜ | An | | |
 | P7.4 | Video demo (script + quay) | ⬜ | An | | |

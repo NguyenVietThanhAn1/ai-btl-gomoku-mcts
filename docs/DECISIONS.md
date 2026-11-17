@@ -207,3 +207,8 @@
   - **TT + lặp thế (graph history interaction):** `key()` không chứa lịch sử, nhưng kết quả của một thế phụ thuộc lịch sử (lặp lần 3 → hòa). Giá trị lưu trong TT của AB vì vậy có thể sai khi cùng thế đạt tới qua lịch sử khác (một bên là hòa do lặp, bên kia không). Không sửa, chỉ ghi nhận.
 - **Nguồn perft:** chessprogramming.org "Chinese Chess Perft Results" (thế khởi đầu: Duhamel & Pham; thế 2–11: Korzh & Pham); khởi đầu 44 / 1 920 / 79 666 / 3 290 240. Ghi URL + ngày truy cập vào `xiangqi.md` ở P8.1.
 - **Quyết định sẽ ghi sau:** D-23 (P8.2) AlphaBeta `time_limit` + iterative deepening (`None` → đường code cũ, không thêm khóa stats; bỏ độ sâu đang dở, luôn xong depth 1, nước tốt nhất độ sâu trước lên đầu ở gốc, `depth_reached` ghi cả vào `max_depth`); D-24 (P8.3) nguồn nhãn hiệu chỉnh `scale` (báo tỉ lệ ván phân thắng thua của AB depth 1 tự đấu; < ~30 % → đổi sang AB depth 2 hoặc nhãn theo chênh lệch vật chất sau L nước) + bật/tắt `check_tactics`; D-25 (P8.4) thiết kế E7 (mục tiêu 50 ván/điểm cho (c), (d); quá đắt → ≥ 20 kèm lý do).
+
+### D-26 (2026-11-17) — Đổi thứ tự: làm nốt k-in-row trước cờ tướng; tách P6
+- **Thứ tự mới** (An quyết): `P8.0 → P7.1 → P6.1 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4 → P7.2–P7.4`. Lý do: khép phần k-in-row (bảng/hình báo cáo, GUI k-in-row) khi còn nhớ chi tiết, trước khối việc lớn cờ tướng.
+- **Tách P6:** P6.1 = khung GUI + lớp view theo game + view k-in-row (gộp ✂ P4.3); P6.2 = view cờ tướng, sau P8.3.
+- **Git:** `xiangqi` fast-forward vào `master` (`faf5577`); P7.1 / P6.1 làm trên `master`; tới P8.1 tạo lại branch `xiangqi` từ master. Tag `kinrow-final` giữ nguyên; golden k-in-row vẫn là điều kiện mọi sửa agent.
