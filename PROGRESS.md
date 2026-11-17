@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P6.3 ✅ — mốc "k-in-row hoàn chỉnh" (thí nghiệm E1–E6 + GUI MoveMind): `feat/P6.3` → `develop` → `master` (merge `--no-ff`, đã push).
-- **Việc đang dở:** —
-- **Bước tiếp theo:** P8.1 (luật cờ tướng + perft) trên `feat/P8.1` tạo từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI cho báo cáo/video: `report/figures/gui/`.
+- **Task hiện tại:** P7.2 🔄 (`feat/P7.2`) — báo cáo `report/report.md`. Thứ tự mới D-30: xong Bài 1 (P7.2 → P7.3 → P7.4) trước cờ tướng.
+- **Việc đang dở:** P7.2 — xem session log mới nhất.
+- **Bước tiếp theo:** P7.2 → P7.3 (docx) → P7.4 (video) → P8.1 (luật cờ tướng + perft, `feat/P8.1` từ `develop`). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -39,7 +39,7 @@
 | P6.3 | GUI: game chơi được hoàn chỉnh | ✅ | An | 2026-11-17 | D-29; spec-reviewer PASS; An chơi thử bằng chuột OK |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
-| P7.2 | report.md | ⬜ | An | | |
+| P7.2 | report.md | 🔄 | An | 2026-11-18 | D-30 |
 | P7.3 | report.docx | ⬜ | An | | |
 | P7.4 | Video demo (script + quay) | ⬜ | An | | |
 | P8.0 | Xiangqi design D-22 + golden k-in-row | ✅ | An | 2026-11-17 | tag `kinrow-final`, branch `xiangqi`; golden 12 ván / 123 nước |
