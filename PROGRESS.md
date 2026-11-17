@@ -7,8 +7,8 @@
 ## Đang ở đâu (đọc mục này trước tiên)
 
 - **Task hiện tại:** P6.3 🔄 trên branch `feat/P6.3` (từ `develop` sau khi merge `feat/P6.1`, chưa push)
-- **Việc đang dở:** phiên 2/3 — widgets, scene manager, Home/Setup/Demo/Help, PlayScene (panel, modal, xem lại), nhãn tọa độ, sửa `pygame_app`.
-- **Bước tiếp theo:** hết phiên 2 → gửi An ảnh chụp headless các màn (Home, Setup, Play, modal, xem lại), chờ duyệt rồi mới sang phiên 3. Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
+- **Việc đang dở:** phiên 2/3 xong (UI + test), **chờ An duyệt ảnh chụp headless** các màn trước khi sang phiên 3.
+- **Bước tiếp theo:** An duyệt ảnh → phiên 3: hoàn thiện giao diện theo góp ý, autoplay mọi chế độ × bàn × loại AI, `.md` hoàn chỉnh (✅), spec-reviewer, PROGRESS, commit `P6.3: ...` (không push, không merge); An chơi thử bằng chuột trên cửa sổ thật. Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -36,7 +36,7 @@
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
 | P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; chờ An chơi thử bằng tay |
-| P6.3 | GUI: game chơi được hoàn chỉnh | 🔄 | An | 2026-11-17 | D-29; phiên 1/3 |
+| P6.3 | GUI: game chơi được hoàn chỉnh | 🔄 | An | 2026-11-17 | D-29; phiên 2/3 xong, chờ duyệt ảnh |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ⬜ | An | | |
@@ -63,6 +63,14 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-17 — P6.3 phiên 2/3 (UI, chờ duyệt ảnh)
+- Mới: `gui/widgets.py` (theme tối kiểu chess.com; Button, Toggle, SegmentedControl, Stepper, Modal, ScrollList theo cột), `gui/scene.py` (Scene, SceneManager), `gui/scenes.py` (Home, Setup, Demo, Help), `gui/play_scene.py` (AppState chuyển từ pygame_app; thẻ 2 người chơi, lịch sử, Đi lại / Ván mới / Đầu hàng / Menu, Phân tích + W/N, modal kết thúc, xem lại), `.md` mỗi file.
+- Sửa: `pygame_app.py` = chủ SceneManager (không `--preset` → Home; có → vào thẳng ván; API `App.ctrl/view/state/handle_key/handle_click` giữ cho test P6.1 + `p63_gui_timing`); `view.py` hook `preview` / `draw_ghost` / `winning_cells` (có mặc định, không phá P6.2); `kinrow_view.py` nhãn tọa độ (a–c / A–O, hàng 1.. từ trên — khớp lịch sử; 3×3 `move_label` đổi `B2` → `b2`), quân mờ khi hover, nước cuối nền vàng; `presets.find_level` / `source_of`.
+- 4 chỉnh của An đều có: undo khóa khi AI nghĩ (nút disabled), nhãn tọa độ, Esc theo màn, Setup AI vs AI có độ trễ + nút "X/O đầu hàng" ở 2 người, không có Đầu hàng ở AI vs AI (thay bằng Tạm dừng / Tiếp tục).
+- Lỗi tìm được: `get_font` cache `Font` qua `pygame.quit()` → access violation ở test sau `run()`; sửa bằng xóa cache qua `pygame.register_quit` (đăng ký lại mỗi chu kỳ init vì pygame bỏ danh sách sau mỗi lần quit).
+- Test: `tests/test_gui_scenes.py` 15 test (chuyển màn bằng click, Setup → AgentSpec + nguồn, Demo giữ spec, nút ván, undo khóa khi AI nghĩ, modal kết thúc / Bạn thắng / Bạn thua / đường thắng / Chơi lại, xem lại không đổi ván thật, quân mờ, widget, `run`). Full suite xanh (1 xfail chủ ý), golden xanh, ruff sạch. CLI headless: preset 3 (50 iter) và 3×3 `--swap` autoplay hết ván; không preset → Home.
+- Ảnh headless (scratchpad, không commit): Home, Setup người vs AI / AI vs AI, ván 15×15 có Phân tích + W/N + quân mờ, modal 3×3, xem lại, 2 người 15×15 đường thắng.
 
 ### 2026-11-17 — P6.3 phiên 1/3 (xong) — đo lại thời gian
 - An: chuyển script đo vào repo → `gameai/experiments/p63_gui_timing.{py,md}` (+ `tests/test_p63_gui_timing.py`), CSV `results/tables/p63_gui_{timing,runinfo}.csv` + `p63_bench.csv`, cột `note` = minh họa GUI; dừng nếu không AC. `git branch -u origin/develop develop`.

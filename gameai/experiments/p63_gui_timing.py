@@ -91,13 +91,9 @@ def run_bench(quick: bool, table_dir: Path = TABLE_DIR) -> float:
 
 def play_gui_game(preset: Preset, seed: int, surface: pygame.Surface) -> list[MoveInfo]:
     """Một ván qua `App` (vẽ mỗi frame, 30 fps); người = nước ngẫu nhiên có seed."""
-    from gameai.gui.pygame_app import BOARD_RECT, App, AppState, autoplay_move
-    from gameai.gui.view import make_view
+    from gameai.gui.pygame_app import App, AppState, autoplay_move
 
-    app = App(AppState("3x3_human_mcts", seed=seed), surface=surface)
-    app.ctrl.new_game(preset, seed)
-    app.ctrl.delay = 0.0
-    app.view = make_view(preset.game, BOARD_RECT)
+    app = App(AppState(None, seed, delay=0.0, base=preset), surface=surface)
     rng = random.Random(seed)
     clock = pygame.time.Clock()
     t0 = time.monotonic()

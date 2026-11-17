@@ -89,6 +89,20 @@ def level_for(board: int, ai_kind: str, level: str) -> Level:
     return DIFFICULTY[(board, ai_kind, level)]
 
 
+def find_level(spec: AgentSpec | None, board: int) -> tuple[str, Level] | None:
+    """Tra ngược trong DIFFICULTY: (mức, Level) của `spec` trên bàn `board`; None nếu không có."""
+    for (b, _kind, level), lv in DIFFICULTY.items():
+        if b == board and lv.spec == spec:
+            return level, lv
+    return None
+
+
+def source_of(spec: AgentSpec | None, board: int) -> str | None:
+    """Nhãn nguồn của spec: "cấu hình E3" / cấu hình riêng / None (người hoặc spec lạ)."""
+    found = find_level(spec, board)
+    return None if found is None else found[1].source_text
+
+
 def swap_sides(preset: Preset) -> Preset:
     """Đổi bên: ai cầm X thì cầm O và ngược lại."""
     return replace(preset, x=preset.o, o=preset.x)

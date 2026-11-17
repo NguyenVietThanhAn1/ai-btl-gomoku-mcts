@@ -1,4 +1,4 @@
-"""View k-in-row cho GUI: 1 click = 1 nước; overlay N, W/N của gốc MCTS."""
+"""View k-in-row cho GUI: 1 click = 1 nước; nhãn tọa độ, quân mờ khi hover, overlay N, W/N."""
 
 from __future__ import annotations
 
@@ -21,6 +21,10 @@ WIN = (40, 170, 60)
 HEAT = (255, 120, 0)
 CHOSEN = (160, 0, 200)
 TEXT_DARK = (20, 20, 20)
+LAST_FILL = (247, 236, 91, 120)  # tô nước cuối (nền vàng mờ)
+LABEL = (200, 196, 188)
+LABEL_MARGIN = 24  # px dành cho nhãn cột (dưới) và hàng (trái)
+GHOST_ALPHA = 110
 
 DIRECTIONS = ((0, 1), (1, 0), (1, 1), (1, -1))
 
@@ -49,11 +53,12 @@ class KInRowView(GameView):
     def __init__(self, n: int, k: int, rect: pygame.Rect) -> None:
         super().__init__(rect)
         self.n, self.k = n, k
-        self.cell = min(self.rect.w, self.rect.h) // n
+        avail_w, avail_h = self.rect.w - LABEL_MARGIN, self.rect.h - LABEL_MARGIN
+        self.cell = min(avail_w, avail_h) // n
         side = self.cell * n
         self.origin = (
-            self.rect.x + (self.rect.w - side) // 2,
-            self.rect.y + (self.rect.h - side) // 2,
+            self.rect.x + LABEL_MARGIN + (avail_w - side) // 2,
+            self.rect.y + (avail_h - side) // 2,
         )
 
     # ------------------------------------------------------------ hình học
@@ -71,9 +76,22 @@ class KInRowView(GameView):
         assert isinstance(game, KInRow)
         return move if game.board[move] == 0 else None
 
+    def preview(self, pos: tuple[int, int], game: Game) -> Move | None:
+        return self.hit_test(pos, game)  # k-in-row: hit_test không có trạng thái
+
+    def col_label(self, c: int) -> str:
+        """Cột: a–c khi bàn nhỏ (n ≤ 5), A–O khi bàn lớn."""
+        return chr(ord("a" if self.n <= 5 else "A") + c)
+
     def move_label(self, move: Move) -> str:
         r, c = divmod(int(move), self.n)
-        return f"{chr(ord('A') + c)}{r + 1}"
+        return f"{self.col_label(c)}{r + 1}"
+
+    def winning_cells(self, game: Game, last: MoveInfo | None) -> list[Move]:
+        assert isinstance(game, KInRow)
+        if last is None or game.winner() in (None, 0):
+            return []
+        return winning_line(game.board, self.n, self.k, int(last.move))
 
     # ------------------------------------------------------------ vẽ
     def draw(self, surf: pygame.Surface, game: Game, last: MoveInfo | None,
@@ -85,6 +103,11 @@ class KInRowView(GameView):
         stats = overlay_info.root_stats if (opts.show and overlay_info is not None) else []
         if stats:
             self._draw_heat(surf, stats)
+        if last is not None:
+            layer = pygame.Surface(self.cell_rect(last.move).size, pygame.SRCALPHA)
+            layer.fill(LAST_FILL)
+            surf.blit(layer, self.cell_rect(last.move))
+        self._draw_labels(surf)
         for i in range(self.n + 1):
             off = i * self.cell
             pygame.draw.line(surf, GRID, (self.origin[0] + off, self.origin[1]),
@@ -95,13 +118,32 @@ class KInRowView(GameView):
             if v:
                 self._draw_piece(surf, m, v)
         if last is not None:
-            pygame.draw.rect(surf, LAST, self.cell_rect(last.move), width=3)
-            for m in winning_line(game.board, self.n, self.k, int(last.move)):
-                pygame.draw.rect(surf, WIN, self.cell_rect(m).inflate(-4, -4), width=4)
+            pygame.draw.rect(surf, LAST, self.cell_rect(last.move), width=2)
+        for m in self.winning_cells(game, last):
+            pygame.draw.rect(surf, WIN, self.cell_rect(m).inflate(-4, -4), width=4)
         if stats:
             self._draw_numbers(surf, stats, overlay_info.move, opts.show_wn)
         for m in self.highlights(game):
             pygame.draw.rect(surf, WIN, self.cell_rect(m), width=2)
+
+    def _draw_labels(self, surf: pygame.Surface) -> None:
+        font = get_font(15 if self.n > 5 else 20, bold=True)
+        side = self.cell * self.n
+        for i in range(self.n):
+            mid = i * self.cell + self.cell // 2
+            img = font.render(self.col_label(i), True, LABEL)
+            below = self.origin[1] + side + LABEL_MARGIN // 2
+            surf.blit(img, img.get_rect(center=(self.origin[0] + mid, below)))
+            img = font.render(str(i + 1), True, LABEL)
+            surf.blit(img, img.get_rect(center=(self.origin[0] - LABEL_MARGIN // 2,
+                                                self.origin[1] + mid)))  # fmt: skip
+
+    def draw_ghost(self, surf: pygame.Surface, move: Move, player: int) -> None:
+        rc = self.cell_rect(int(move))
+        layer = pygame.Surface(surf.get_size(), pygame.SRCALPHA)
+        self._draw_piece(layer, int(move), 1 if player == 1 else 2)
+        layer.set_alpha(GHOST_ALPHA)
+        surf.blit(layer, rc, area=rc)
 
     def _draw_piece(self, surf: pygame.Surface, m: int, v: int) -> None:
         rc = self.cell_rect(m)

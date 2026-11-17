@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P6.1 (D-28)  ·  **Cập nhật:** 2026-11-17
+**Trạng thái:** ✅ ổn định  ·  **Task:** P6.1 (D-28), P6.3 (D-29)  ·  **Cập nhật:** 2026-11-17
 
 ## Mục đích
 Lớp view chung cho mọi game trong GUI (vẽ bàn + chuyển click thành nước đi), registry view theo
@@ -21,6 +21,10 @@ class GameView(ABC):
     def reset_input(self) -> None                           # xóa chọn dở; mặc định không làm gì
     def highlights(self, game) -> list[Move]                # ô cần tô do input; mặc định []
     def move_label(self, move) -> str                       # abstract
+    # P6.3 — hook có mặc định (view cờ tướng không bắt buộc cài):
+    def preview(self, pos, game) -> Move | None             # nước nếu click ở pos (hover); KHÔNG đổi trạng thái input; mặc định None
+    def draw_ghost(self, surf, move, player) -> None        # quân mờ; mặc định không vẽ
+    def winning_cells(self, game, last) -> list[Move]       # đường thắng; mặc định []
 
 VIEWS: dict[str, Callable[[GameSpec, Rect], GameView]]
 def register_view(kind, factory) -> None
@@ -37,6 +41,8 @@ def make_view(spec: GameSpec, rect) -> GameView             # KeyError nếu kin
   thái, trả None, `highlights` trả các nước hợp lệ; click 2 vào ô đích → trả `Move`; click chỗ khác → đổi /
   bỏ chọn. App gọi `reset_input()` khi ván mới hoặc không phải lượt người. Controller không phải đổi.
 - `make_view` import `gui/kinrow_view.py` để đăng ký; view mới gọi `register_view(kind, factory)` khi import.
+- Font cache (`lru_cache`) bị xóa khi `pygame.quit()` (đăng ký lại `register_quit` mỗi chu kỳ init vì pygame bỏ
+  danh sách sau mỗi lần quit) — font cũ sau quit gây access violation.
 - Font: tương đương `SysFont("segoeui,arial")` nhưng viết tường minh — `pygame.font.match_font` theo thứ tự `FONT_NAMES = ("segoeui", "arial")` rồi `Font(path)`; không tìm thấy → `Font(None)` (mặc định). Đúng dấu tiếng Việt trên Windows.
 
 ## Test

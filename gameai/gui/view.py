@@ -16,11 +16,31 @@ from gameai.gui.controller import MoveInfo
 FONT_NAMES = ("segoeui", "arial")  # có dấu tiếng Việt trên Windows; không có → font mặc định pygame
 
 
-@lru_cache(maxsize=64)
 def get_font(size: int, bold: bool = False) -> pygame.font.Font:
-    """Font hỗ trợ tiếng Việt: SysFont ưu tiên Segoe UI, rồi Arial, cuối cùng font mặc định."""
+    """Font hỗ trợ tiếng Việt: SysFont ưu tiên Segoe UI, rồi Arial, cuối cùng font mặc định.
+
+    Có cache; cache bị xóa khi `pygame.quit()` (font cũ không dùng được nữa → access violation).
+    """
+    global _quit_hook
     if not pygame.font.get_init():
         pygame.font.init()
+    if not _quit_hook:  # pygame bỏ danh sách register_quit sau mỗi lần quit → đăng ký lại
+        pygame.register_quit(_on_quit)
+        _quit_hook = True
+    return _load_font(size, bold)
+
+
+_quit_hook = False
+
+
+def _on_quit() -> None:
+    global _quit_hook
+    _load_font.cache_clear()
+    _quit_hook = False
+
+
+@lru_cache(maxsize=64)
+def _load_font(size: int, bold: bool) -> pygame.font.Font:
     for name in FONT_NAMES:
         path = pygame.font.match_font(name, bold=bold)
         if path:
@@ -68,6 +88,18 @@ class GameView(ABC):
     @abstractmethod
     def move_label(self, move: Move) -> str:
         """Tên nước đi để hiện trên panel."""
+
+    # ---- P6.3: hook có mặc định (view cờ tướng không bắt buộc cài)
+    def preview(self, pos: tuple[int, int], game: Game) -> Move | None:
+        """Nước sẽ đi nếu click ở `pos` (để vẽ quân mờ khi hover). Không đổi trạng thái input."""
+        return None
+
+    def draw_ghost(self, surf: pygame.Surface, move: Move, player: int) -> None:  # noqa: B027
+        """Vẽ quân mờ của `player` tại `move` (mặc định: không vẽ)."""
+
+    def winning_cells(self, game: Game, last: MoveInfo | None) -> list[Move]:
+        """Các ô của đường thắng (tính từ bàn + nước cuối); [] nếu không có."""
+        return []
 
 
 ViewFactory = Callable[[GameSpec, pygame.Rect], GameView]

@@ -210,7 +210,7 @@ def test_hit_test_3x3_and_15x15():
     assert v.hit_test((ox + 3 * cell, oy), ctrl.game) is None
     ctrl.submit_human_move(4)
     assert v.hit_test((ox + cell + 5, oy + cell + 5), ctrl.game) is None  # ô đã có quân
-    assert v.move_label(4) == "B2"
+    assert v.move_label(4) == "b2"
 
     g15 = GameController(Preset("t", "t", GAME15, None, None)).game
     v15 = KInRowView(15, 5, pygame.Rect(20, 20, 680, 680))

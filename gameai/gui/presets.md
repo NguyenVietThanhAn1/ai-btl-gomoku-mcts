@@ -33,6 +33,8 @@ LEVELS = ("easy", "medium", "hard"); LEVEL_NAMES = {...: "Dễ"/"Vừa"/"Khó"};
     source_text: str   # "cấu hình E3" / OWN_CONFIG ("cấu hình riêng của chế độ chơi, không có trong thí nghiệm")
 DIFFICULTY: dict[(board 3|15, kind, level), Level]
 def level_for(board, kind, level) -> Level   # KeyError nếu không có
+def find_level(spec, board) -> (level, Level) | None   # tra ngược (thẻ người chơi)
+def source_of(spec, board) -> str | None             # source_text của spec, None nếu không có trong bảng
 AB3_D1, AB3_D2, AB15_D1                     # 3 spec riêng (chỉ tham số có sẵn của AlphaBetaAgent)
 ```
 
