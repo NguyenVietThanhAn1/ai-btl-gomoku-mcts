@@ -265,3 +265,66 @@ def test_human_think_time_with_fake_clock():
     assert ctrl.submit_human_move(0)
     assert [m.time for m in ctrl.history] == [pytest.approx(2.5), pytest.approx(0.75)]
     assert ctrl.side_time(P1) == pytest.approx(2.5) and all(m.time > 0 for m in ctrl.history)
+
+
+# ---------------------------------------------------------------- 3c
+def test_hover_hides_overlay_label_of_that_cell():
+    import gameai.gui.kinrow_view as kv
+    from gameai.experiments import e2_never_lose
+
+    app = play(
+        Preset("t", "t", GAME3, None, e2_never_lose.mcts_spec(200)), OverlayOpts(True, False)
+    )
+    app.handle_click(app.view.cell_rect(4).center)
+    app.ctrl.run_until_idle(30)
+    app.tick()
+    ranked = kv.top_k(app.ctrl.last.root_stats)
+    target = next(m for _, m, _, _ in ranked if app.ctrl.game.board[int(m)] == 0)
+    rank = next(r for r, m, _, _ in ranked if m == target)
+    drawn: list[str] = []
+    orig = kv.draw_text
+
+    def spy(surf, text, *a, **k):
+        drawn.append(text)
+        return orig(surf, text, *a, **k)
+
+    kv.draw_text = spy
+    try:
+        motion(app, app.view.cell_rect(int(target)).center)
+        app.tick()
+        assert app.view.hover_move == target and f"#{rank}" not in drawn
+        drawn.clear()
+        motion(app, (1270, 710))
+        app.tick()
+        assert app.view.hover_move is None and f"#{rank}" in drawn
+    finally:
+        kv.draw_text = orig
+
+
+def test_displayed_config_numbers_come_from_spec():
+    import math
+
+    from gameai.experiments import e2_never_lose, e3_c_sweep
+    from gameai.gui.presets import DIFFICULTY, MCTS_DEFAULTS, PRESETS, side_label
+    from gameai.gui.scenes import DemoScene
+
+    assert MCTS_DEFAULTS["c"] == pytest.approx(math.sqrt(2))  # lấy từ MCTSAgent, không gõ tay
+    for lv in DIFFICULTY.values():
+        spec, label = lv.spec, side_label(lv.spec)
+        if spec.kind == "mcts":
+            c = spec.params.get("c", MCTS_DEFAULTS["c"])
+            assert f"{spec.params['iterations']} iter" in label and f"c={c:.3g}" in label
+            if spec.params.get("rollout") == "heavy_kinrow":
+                assert f"h{spec.params['temperature']:g}" in label
+        else:
+            depth = spec.params.get("depth")
+            assert ("đầy đủ" if depth is None else f"depth {depth}") in label
+    assert "c=1.41" in side_label(e2_never_lose.mcts_spec(1000))  # E2: c mặc định √2
+    assert "c=1.4," in side_label(e3_c_sweep.mcts_spec(15, 1.4, 5000))  # E3: c = 1.4 trong spec
+    for p in PRESETS.values():
+        for spec in (p.x, p.o):
+            if spec is not None and spec.kind == "mcts":
+                assert str(spec.params["iterations"]) in p.title
+            if spec is not None and spec.kind == "alphabeta":
+                assert f"d{spec.params['depth']}" in p.title
+    assert [DemoScene.sources(k) for k in PRESETS] == ["E2", "E3", "E3 · E3/E5"]

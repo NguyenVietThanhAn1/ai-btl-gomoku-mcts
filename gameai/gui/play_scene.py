@@ -504,13 +504,16 @@ class PlayScene(Scene):
         surf.fill(t.bg)
         game, last = self.displayed()
         overlay_info = last if (last is not None and last.by_ai) else None
-        self.view.draw(surf, game, last, overlay_info, self.state.overlay)
         c = self.ctrl
+        ghost = None
         if (self.review is None and not self.modal.open and c.is_human_turn() and not c.thinking
                 and self.view.rect.collidepoint(self.mouse)):  # fmt: skip
-            move = self.view.preview(self.mouse, game)
-            if move is not None:
-                self.view.draw_ghost(surf, move, game.current_player())
+            ghost = self.view.preview(self.mouse, game)
+        if hasattr(self.view, "hover_move"):
+            self.view.hover_move = ghost  # ô đang hover: ẩn nhãn overlay để thấy quân mờ
+        self.view.draw(surf, game, last, overlay_info, self.state.overlay)
+        if ghost is not None:
+            self.view.draw_ghost(surf, ghost, game.current_player())
         self._draw_card(surf, P2, CARD_TOP)
         self._draw_card(surf, P1, CARD_BOTTOM)
         self._draw_status(surf)

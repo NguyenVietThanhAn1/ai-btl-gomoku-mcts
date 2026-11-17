@@ -61,6 +61,7 @@ class KInRowView(GameView):
         )
         self.win_progress = 1.0  # 0→1: đường thắng vẽ dần (animation ở scene)
         self.anim_move: tuple[int, float, int] | None = None  # (ô, scale, alpha) quân đang đặt
+        self.hover_move: int | None = None  # ô người đang hover (quân mờ): ẩn nhãn overlay ô đó
         self._static: tuple[str, pygame.Surface] | None = None
 
     # ------------------------------------------------------------ hình học
@@ -270,6 +271,8 @@ class KInRowView(GameView):
         step = size + 1
         for rank, move, n, wn in ranked:
             rc = self.cell_rect(int(move))
+            if self.hover_move is not None and int(move) == int(self.hover_move):
+                continue  # đang vẽ quân mờ ở ô này; nhãn hiện lại khi rời chuột
             if game.board[int(move)]:  # ô đã có quân (thường #1 = nước AI vừa đi): chỉ badge ở góc
                 badge = pygame.Rect(0, 0, 26 if self.stones else 44, 16 if self.stones else 26)
                 badge.topright = (rc.right - 1, rc.top + 1)

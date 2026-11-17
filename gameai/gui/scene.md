@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🔄 đang làm  ·  **Task:** P6.3 (D-29)  ·  **Cập nhật:** 2026-11-17
+**Trạng thái:** ✅ ổn định  ·  **Task:** P6.3 (D-29)  ·  **Cập nhật:** 2026-11-17
 
 ## Mục đích
 Chia GUI thành các màn (`Scene`) và chuyển màn bằng tên. Không chứa logic ván.

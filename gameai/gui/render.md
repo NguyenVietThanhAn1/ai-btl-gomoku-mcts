@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🔄 đang làm (3a)  ·  **Task:** P6.3 phiên 3 (D-29)  ·  **Cập nhật:** 2026-11-17
+**Trạng thái:** ✅ ổn định  ·  **Task:** P6.3 phiên 3 (D-29)  ·  **Cập nhật:** 2026-11-17
 
 ## Mục đích
 Mọi hình tròn / bo góc / quân / vạch / bóng của GUI: vẽ ở **4×** (`SS`) lên Surface SRCALPHA rồi `smoothscale` →
@@ -28,6 +28,9 @@ scaled(sprite, factor); faded(sprite, alpha)      # tween kích thước / độ
 cache_sizes() -> dict[str, int]; clear_caches()
 ```
 
+## Phụ thuộc
+- Dùng: pygame, numpy (`surfarray`), `gui/view.py` (`get_font`, cho `text`). Được dùng bởi mọi module vẽ GUI.
+
 ## Thiết kế & quyết định (D-29 + chỉnh của An)
 - Mọi cache là `lru_cache(maxsize=…)`; khóa chỉ gồm kích thước chuẩn + màu token (hữu hạn) → không phình theo frame.
   Tween kích thước → `scaled`, tween màu → `tint(mask)`, mờ → `faded`: không thêm entry.
@@ -38,3 +41,6 @@ cache_sizes() -> dict[str, int]; clear_caches()
 ## Test
 - `tests/test_gui_style.py`: mép mềm (alpha trung gian), cache trả cùng object, quân có highlight, quit → cache rỗng →
   init → vẽ lại không crash; 40 frame Play có hover → kích thước cache không đổi.
+
+## Hạn chế / TODO
+- Sprite lớn (bóng bàn, mặt nạ card) tốn bộ nhớ tạm khi tạo lần đầu (vẽ 4×); chỉ một lần nhờ cache.

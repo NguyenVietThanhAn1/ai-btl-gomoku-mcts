@@ -18,7 +18,14 @@ from gameai.gui.game_config import (
     build_preset,
 )
 from gameai.gui.play_scene import AppState
-from gameai.gui.presets import LEVEL_NAMES, LEVELS, PRESET_ORDER, PRESETS, side_label
+from gameai.gui.presets import (
+    LEVEL_NAMES,
+    LEVELS,
+    PRESET_ORDER,
+    PRESETS,
+    find_level,
+    side_label,
+)
 from gameai.gui.scene import Scene
 from gameai.gui.view import OverlayOpts
 from gameai.gui.widgets import (
@@ -373,7 +380,15 @@ class DemoScene(Scene):
     """3 preset P6.1 giữ nguyên spec thí nghiệm (D-28); nhãn "Cấu hình thí nghiệm" hiện rõ."""
 
     name = "demo"
-    SOURCES = {"3x3_human_mcts": "E2", "15_human_h300": "E3", "15_h300_vs_ab2": "E3"}
+
+    @staticmethod
+    def sources(key: str) -> str:
+        """Nguồn thí nghiệm của các bên AI, tra ngược từ spec (không gõ tay): 'E2', 'E3 · E3/E5'."""
+        p = PRESETS[key]
+        n = int(p.game.params.get("n", 15))
+        found = [find_level(spec, n) for spec in (p.x, p.o) if spec is not None]
+        tags = [f[1].source for f in found if f is not None and f[1].source]
+        return " · ".join(dict.fromkeys(tags))
 
     def on_enter(self, **_: Any) -> None:
         m = self.manager
@@ -437,7 +452,7 @@ class DemoScene(Scene):
                 t.muted,
                 max_width=r.w - 400,
             )
-            badge = f"CẤU HÌNH THÍ NGHIỆM · {self.SOURCES.get(key, '')}"
+            badge = f"CẤU HÌNH THÍ NGHIỆM · {self.sources(key)}"
             img = render.text(badge, CAPTION, "bold", t.accent_ink)
             pill = pygame.Rect(0, 0, img.get_width() + 28, 30)
             pill.midright = (r.right - space(3), r.centery)

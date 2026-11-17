@@ -7,8 +7,8 @@
 ## Đang ở đâu (đọc mục này trước tiên)
 
 - **Task hiện tại:** P6.3 🔄 trên branch `feat/P6.3` (từ `develop` sau khi merge `feat/P6.1`, chưa push)
-- **Việc đang dở:** phiên 3b xong — **chờ An duyệt ảnh** `report/figures/gui/*.png` (theme tối).
-- **Bước tiếp theo:** An duyệt → 3c: autoplay mọi chế độ × bàn × AI, `.md` hoàn chỉnh (✅), spec-reviewer, PROGRESS, commit `P6.3: ...` (không push, không merge); An chơi thử bằng chuột trên cửa sổ thật. Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27).
+- **Việc đang dở:** P6.3 xong code + test (3c, spec-reviewer PASS) — **chờ An chơi thử bằng chuột** trên cửa sổ thật (`python -m gameai.gui.pygame_app`).
+- **Bước tiếp theo:** An chơi thử → góp ý (nếu có) → đánh dấu P6.3 ✅ và merge `feat/P6.3` → `develop` khi An cho phép (D-27). Sau P6.3: P8.1 trên `feat/P8.1` từ `develop`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -36,7 +36,7 @@
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
 | P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; chờ An chơi thử bằng tay |
-| P6.3 | GUI: game chơi được hoàn chỉnh | 🔄 | An | 2026-11-17 | D-29; 3b xong, chờ duyệt ảnh |
+| P6.3 | GUI: game chơi được hoàn chỉnh | 🔄 | An | 2026-11-17 | D-29; 3c xong, spec-reviewer PASS; chờ An chơi thử bằng chuột |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ⬜ | An | | |
@@ -63,6 +63,12 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-17 — P6.3 phiên 3c (hoàn tất, chờ An chơi thử)
+- An duyệt ảnh 3b + 2 điểm: (1) hover ô có nhãn overlay → ẩn nhãn ô đó khi vẽ quân mờ (`KInRowView.hover_move`); (2) mọi số cấu hình hiển thị lấy từ `AgentSpec` — phát hiện và bỏ 3 chỗ gõ tay: "h300" cố định + `c` mặc định 1.41 trong `side_label` (nay: `rollout_tag` từ `temperature`, c từ mặc định `MCTSAgent` qua `inspect` = √2 → "1.41", E3 "1.4"), tiêu đề 3 preset (nay `preset_title`), nguồn Demo "E2/E3" (nay `DemoScene.sources` tra ngược `find_level` → "E2", "E3", "E3 · E3/E5").
+- Test: +2 trong `tests/test_gui_polish.py` (ẩn/hiện nhãn khi hover; số trong nhãn/tiêu đề = spec). Full suite xanh (1 xfail chủ ý), golden xanh, ruff sạch.
+- Autoplay headless (animation bật, vẽ mỗi frame, mức Vừa): 18 tổ hợp = 2 bàn × {người vs MCTS/AB × 2 bên, AI vs AI 4 cặp MCTS/AB, 2 người} → **18/18 hết ván, 0 lỗi**, modal kết thúc mở; 3×3 AI vs AI hòa cả 4 cặp; 15×15 dài nhất 26 nước AI vs AI (13 s).
+- spec-reviewer: **PASS** (không lỗi chặn); đã bù góp ý doc (Phụ thuộc / Hạn chế cho anim, icons, brand, render; `logo_surface`). Ảnh `report/figures/gui/*.png` chụp lại.
 
 ### 2026-11-17 — P6.3 phiên 3b (theme tối hoàn thiện, animation, đo lại; chờ duyệt ảnh)
 - An chọn theme **tối**; 4 chỉnh thêm (overlay badge trên ô có quân, overlay 3×3 nhạt, Đen/Trắng + ●/○ ở 15×15, bảng Phân tích đủ lề) — ghi D-29.

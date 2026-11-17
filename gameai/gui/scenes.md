@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🔄 đang làm  ·  **Task:** P6.3 (D-29)  ·  **Cập nhật:** 2026-11-17
+**Trạng thái:** ✅ ổn định  ·  **Task:** P6.3 (D-29)  ·  **Cập nhật:** 2026-11-17
 
 ## Mục đích
 Các màn Home, Setup (chọn chế độ), Demo thí nghiệm, Hướng dẫn.
@@ -21,6 +21,7 @@ class SetupScene(Scene):  name = "setup"
     def ai_lines(self) -> list[str] # "AI: Khó = MCTS h300 5000 iter, c=1.4, tactics — cấu hình E3"
     def on_start(self)              # → play với AppState(base=build_preset(cfg), config=cfg, Phân tích tắt)
 class DemoScene(Scene):   name = "demo";  buttons: {preset_key: Button}   # → play với AppState(preset_key)
+    sources(key) -> str     # "E2" / "E3" / "E3 · E3/E5": tra ngược từ spec các bên AI (find_level), không gõ tay
 class HelpScene(Scene):   name = "help"
 def level_line(cfg, choice) -> str
 ```

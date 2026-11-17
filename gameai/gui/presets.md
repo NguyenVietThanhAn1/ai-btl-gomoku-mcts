@@ -33,7 +33,11 @@ LEVELS = ("easy", "medium", "hard"); LEVEL_NAMES = {...: "Dễ"/"Vừa"/"Khó"};
     source_text: str   # "cấu hình E3" / OWN_CONFIG ("cấu hình riêng của chế độ chơi, không có trong thí nghiệm")
 DIFFICULTY: dict[(board 3|15, kind, level), Level]
 def level_for(board, kind, level) -> Level   # KeyError nếu không có
-def find_level(spec, board) -> (level, Level) | None   # tra ngược (thẻ người chơi)
+def find_level(spec, board) -> (level, Level) | None   # tra ngược (thẻ người chơi, nhãn Demo)
+MCTS_DEFAULTS: dict    # mặc định thật của MCTSAgent qua inspect (c = √2, iterations = 1000, …) — không gõ tay
+def mcts_param(spec, name); def rollout_tag(spec) -> "random"|"h300"|"heavy"; def budget_text(spec)
+def short_label(spec) -> str                       # "người", "MCTS h300 5000", "Alpha-Beta d2"
+def preset_title(game, x, o) -> str               # tiêu đề preset suy từ spec (PRESETS dùng hàm này)
 def source_of(spec, board) -> str | None             # source_text của spec, None nếu không có trong bảng
 AB3_D1, AB3_D2, AB15_D1                     # 3 spec riêng (chỉ tham số có sẵn của AlphaBetaAgent)
 ```
@@ -44,6 +48,9 @@ AB3_D1, AB3_D2, AB15_D1                     # 3 spec riêng (chỉ tham số có
 | 3×3 | AB | depth 1 + `evaluate` — riêng | depth 2 + `evaluate` — riêng | `e1.VARIANTS_3["ab_order_tt"]` — E1 |
 | 15×15 | MCTS | `e3.mcts_spec(15, 1.4, 250)` — E3 | `e3.mcts_spec(15, 1.4, 1000)` — E3 | `e3.mcts_spec(15, 1.4, 5000)` — E3 |
 | 15×15 | AB | depth 1 + eval + delta + ordering — riêng | `e3.AB2` — E3/E5 | `e1.variants_15(3)["ab_order"]` — E1 |
+
+- **Mọi số hiển thị (c, iter, depth, T) suy từ `AgentSpec`** (thiếu tham số → mặc định của `MCTSAgent`): E2 hiện
+  c=1.41 (= √2 mặc định), E3 c=1.4 (trong spec); tiêu đề 3 preset sinh bằng `preset_title` (P6.3 3c, test kiểm).
 
 | key | Bàn | X | O | delay |
 |---|---|---|---|---|

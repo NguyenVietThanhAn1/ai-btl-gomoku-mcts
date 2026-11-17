@@ -28,6 +28,7 @@ class KInRowView(GameView):
     def draw_last_marker(surf, move, theme=None)     # một màu last_move: vòng quanh quân 15×15, khung bo 3×3
     win_progress: float                             # 0→1, đường thắng vẽ dần (scene điều khiển)
     anim_move: (ô, scale, alpha) | None             # quân đang đặt (scene điều khiển)
+    hover_move: int | None                          # ô đang hover (quân mờ): ẩn nhãn overlay ô đó, hiện lại khi rời
     stones: bool; side_name(p) -> "Đen"/"Trắng" (15×15) | "X"/"O" (3×3); side_symbol(p) -> "●"/"○" | "X"/"O"
 def winning_line(board, n, k, move) -> list[int]      # ô thẳng hàng ≥ k qua move (chỉ đọc board)
 def top_k(stats, k=8) -> [(hạng, move, N, W/N)]      # overlay: K nước N lớn nhất, màu đậm theo hạng
