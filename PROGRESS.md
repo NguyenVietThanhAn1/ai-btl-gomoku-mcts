@@ -7,7 +7,7 @@
 ## Đang ở đâu (đọc mục này trước tiên)
 
 - **Task hiện tại:** P7.2 🔄 (`feat/P7.2`) — báo cáo `report/report.md`. Thứ tự mới D-30: xong Bài 1 (P7.2 → P7.3 → P7.4) trước cờ tướng.
-- **Việc đang dở:** P7.2 — xem session log mới nhất.
+- **Việc đang dở:** P7.2 — xong Bước 0, Bước 1, `report_check`, đợt (a) (mục 1–4 + phụ lục + tài liệu tham khảo). **Chờ An duyệt đợt (a)** rồi mới viết đợt (b) mục 5, đợt (c) mục 6 + Tóm tắt.
 - **Bước tiếp theo:** P7.2 → P7.3 (docx) → P7.4 (video) → P8.1 (luật cờ tướng + perft, `feat/P8.1` từ `develop`). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
@@ -63,6 +63,14 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-18 — P7.2 đợt (a) (dừng chờ An duyệt)
+- An chốt thứ tự D-30 (Bài 1 trước cờ tướng); PLAN §4/P8/P7.2 + PROGRESS sửa; branch `feat/P7.2` từ `develop`. An duyệt plan + 6 chỉnh (src-table so byte, neo theo heading không theo dòng, A(s) = mọi ô trống / candidate là tỉa nhánh ở mục 3, ví dụ E4 15×15 có tham chiếu, tương thích pandoc không crossref, GUI timing đúng file D-29 + ghi bật/tắt animation; thêm Silver 2017).
+- Bước 1: `e5_time.png` hết tràn tiêu đề (`e5_rollout.make_figures`, tên ngắn); `summary_kinrow.md` mỗi bảng có `### Bảng …` riêng, thêm W/D/L E3 (3×3 vs Random/Minimax, 15×15 vs Greedy/AB2) và ví dụ E4 15×15 (thế 3, 250 iter, c = 0.5, tham chiếu 20 000 iter); `plots --check` **25/25 CSV giống byte**. `p72_env.py` → `results/tables/p72_env.csv` (Python 3.13.14, thư viện, OS; ghi lúc viết báo cáo).
+- `report_check.py` (+`.md`, 9 test): `src:` CSV (lọc 1 hàng, định dạng VN theo số chữ số của token) / `src: summary#heading`, `src-table:` so byte, `const: D-xx`, `example: file.md` (ví dụ tính tay, đếm riêng), bỏ khối ```, số trần (thập phân / ≥ 100 / %), ảnh tồn tại, caption Hình n./Bảng n. liên tiếp, Tóm tắt ≤ 200 từ.
+- `report/report.md` đợt (a): Tóm tắt (placeholder), 1 Giới thiệu (RQ1–RQ6 ↔ đề ý 1–5 + E6), 2 Phát biểu bài toán, 3.0 tập ứng viên (tỉa nhánh xấp xỉ), 3.1–3.3, 3.4 placeholder, 4 Thiết lập (Bảng 1), Phụ lục A/B (ảnh GUI, thời gian p63anim bật / p63 tắt animation), 10 tài liệu tham khảo. `report_check` 0 lỗi (15 số có nguồn, 14 dòng const, 2 dòng ví dụ tay); ~5 000 từ. Full pytest xanh (1 xfail chủ ý), ruff sạch.
+- Ghi chú: pandoc **chưa cài** trên máy (cần cho P7.3). Ví dụ E4 15×15: ô 97 và 202 cùng tham chiếu 90/213 — đã kiểm raw, là hai dòng khác nhau trùng số, không phải lỗi tra cứu.
+- Tiếp theo (sau khi An duyệt): đợt (b) mục 5 (bảng `src-table` từ summary, hình `../results/figures/`), đợt (c) mục 6 + Tóm tắt, spec-reviewer.
 
 ### 2026-11-17 — P6.3 xong, mốc k-in-row hoàn chỉnh
 - An chơi thử GUI bằng chuột trên cửa sổ thật: ổn → P6.3 ✅.
