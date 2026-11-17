@@ -1,0 +1,1252 @@
+[
+ {
+  "case": "3x3_ab_order_tt_vs_mcts1000",
+  "game_id": "0-AX",
+  "winner": 0,
+  "termination": "normal",
+  "opening": [],
+  "moves": [
+   4,
+   0,
+   2,
+   6,
+   3,
+   5,
+   7,
+   1,
+   8
+  ],
+  "keys": [
+   "9fa9963e7488c46c",
+   "52f108baad923a4f",
+   "fa93141edcddbe29",
+   "fc56c02cec425957",
+   "cf60115de48b5a1a",
+   "149f1a3937428b38",
+   "d3167174447bee5c",
+   "ab0a867ed4a2489d",
+   "d44eb0ef8e5318a2"
+  ],
+  "stats": [
+   {
+    "cutoffs": 395,
+    "iterations": 0,
+    "nodes": 990,
+    "tt_hits": 155,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 5,
+    "nodes": 999,
+    "rollout_plies": 2887,
+    "tactic": 0,
+    "value": 0.30446927374301674
+   },
+   {
+    "cutoffs": 80,
+    "iterations": 0,
+    "nodes": 179,
+    "tt_hits": 16,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 6,
+    "nodes": 327,
+    "rollout_plies": 407,
+    "tactic": 0,
+    "value": 0.4573820395738204
+   },
+   {
+    "cutoffs": 10,
+    "iterations": 0,
+    "nodes": 28,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 4,
+    "nodes": 50,
+    "rollout_plies": 43,
+    "tactic": 0,
+    "value": 0.4699386503067485
+   },
+   {
+    "cutoffs": 3,
+    "iterations": 0,
+    "nodes": 12,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 2,
+    "nodes": 5,
+    "rollout_plies": 2,
+    "tactic": 0,
+    "value": 0.5
+   },
+   {
+    "cutoffs": 0,
+    "iterations": 0,
+    "nodes": 2,
+    "tt_hits": 0,
+    "value": 0
+   }
+  ]
+ },
+ {
+  "case": "3x3_ab_order_tt_vs_mcts1000",
+  "game_id": "0-BX",
+  "winner": 0,
+  "termination": "normal",
+  "opening": [],
+  "moves": [
+   4,
+   0,
+   3,
+   5,
+   1,
+   7,
+   6,
+   2,
+   8
+  ],
+  "keys": [
+   "9fa9963e7488c46c",
+   "52f108baad923a4f",
+   "2ca2b9fe945f5dca",
+   "9474e3d7726ed490",
+   "e0fc9c232ee4c7ec",
+   "79314b7de5cf8dbe",
+   "d4e4e4d0d1851b9e",
+   "b67d0b491c016f81",
+   "799c36c87ee0c592"
+  ],
+  "stats": [
+   {
+    "iterations": 1000,
+    "max_depth": 5,
+    "nodes": 1001,
+    "rollout_plies": 4232,
+    "tactic": 0,
+    "value": 0.7258883248730964
+   },
+   {
+    "cutoffs": 145,
+    "iterations": 0,
+    "nodes": 328,
+    "tt_hits": 34,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 6,
+    "nodes": 797,
+    "rollout_plies": 1582,
+    "tactic": 0,
+    "value": 0.8020408163265306
+   },
+   {
+    "cutoffs": 26,
+    "iterations": 0,
+    "nodes": 64,
+    "tt_hits": 4,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 5,
+    "nodes": 234,
+    "rollout_plies": 227,
+    "tactic": 0,
+    "value": 0.6757575757575758
+   },
+   {
+    "cutoffs": 6,
+    "iterations": 0,
+    "nodes": 19,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 3,
+    "nodes": 16,
+    "rollout_plies": 12,
+    "tactic": 0,
+    "value": 0.5353260869565217
+   },
+   {
+    "cutoffs": 1,
+    "iterations": 0,
+    "nodes": 5,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 1,
+    "nodes": 2,
+    "rollout_plies": 0,
+    "tactic": 0,
+    "value": 0.5
+   }
+  ]
+ },
+ {
+  "case": "3x3_ab_order_tt_vs_mcts1000",
+  "game_id": "1-AX",
+  "winner": 0,
+  "termination": "normal",
+  "opening": [],
+  "moves": [
+   4,
+   8,
+   2,
+   6,
+   7,
+   1,
+   3,
+   5,
+   0
+  ],
+  "keys": [
+   "9fa9963e7488c46c",
+   "4aed6c4940291ded",
+   "7727a1d2fbd33ad6",
+   "f96140df4bf8e815",
+   "174d58975ed00268",
+   "183d7badbb37143d",
+   "9d9c2bfff7fa8fc6",
+   "47fd7f1c963b3eb3",
+   "2c58388ee9db1cd3"
+  ],
+  "stats": [
+   {
+    "cutoffs": 395,
+    "iterations": 0,
+    "nodes": 990,
+    "tt_hits": 155,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 5,
+    "nodes": 999,
+    "rollout_plies": 2824,
+    "tactic": 0,
+    "value": 0.3157894736842105
+   },
+   {
+    "cutoffs": 80,
+    "iterations": 0,
+    "nodes": 180,
+    "tt_hits": 15,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 6,
+    "nodes": 334,
+    "rollout_plies": 442,
+    "tactic": 0,
+    "value": 0.45826893353941267
+   },
+   {
+    "cutoffs": 10,
+    "iterations": 0,
+    "nodes": 28,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 4,
+    "nodes": 50,
+    "rollout_plies": 41,
+    "tactic": 0,
+    "value": 0.47174447174447176
+   },
+   {
+    "cutoffs": 3,
+    "iterations": 0,
+    "nodes": 12,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 2,
+    "nodes": 5,
+    "rollout_plies": 2,
+    "tactic": 0,
+    "value": 0.5
+   },
+   {
+    "cutoffs": 0,
+    "iterations": 0,
+    "nodes": 2,
+    "tt_hits": 0,
+    "value": 0
+   }
+  ]
+ },
+ {
+  "case": "3x3_ab_order_tt_vs_mcts1000",
+  "game_id": "1-BX",
+  "winner": 0,
+  "termination": "normal",
+  "opening": [],
+  "moves": [
+   4,
+   0,
+   1,
+   7,
+   3,
+   5,
+   6,
+   2,
+   8
+  ],
+  "keys": [
+   "9fa9963e7488c46c",
+   "52f108baad923a4f",
+   "ccb9a53c24105e68",
+   "f0facc0486778199",
+   "8040f8b8a7d4f3a4",
+   "79314b7de5cf8dbe",
+   "d4e4e4d0d1851b9e",
+   "b67d0b491c016f81",
+   "799c36c87ee0c592"
+  ],
+  "stats": [
+   {
+    "iterations": 1000,
+    "max_depth": 5,
+    "nodes": 1001,
+    "rollout_plies": 4191,
+    "tactic": 0,
+    "value": 0.7874493927125507
+   },
+   {
+    "cutoffs": 145,
+    "iterations": 0,
+    "nodes": 328,
+    "tt_hits": 34,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 6,
+    "nodes": 827,
+    "rollout_plies": 1648,
+    "tactic": 0,
+    "value": 0.7952380952380952
+   },
+   {
+    "cutoffs": 26,
+    "iterations": 0,
+    "nodes": 64,
+    "tt_hits": 4,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 5,
+    "nodes": 232,
+    "rollout_plies": 221,
+    "tactic": 0,
+    "value": 0.6731927710843374
+   },
+   {
+    "cutoffs": 6,
+    "iterations": 0,
+    "nodes": 19,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 3,
+    "nodes": 16,
+    "rollout_plies": 12,
+    "tactic": 0,
+    "value": 0.5362903225806451
+   },
+   {
+    "cutoffs": 1,
+    "iterations": 0,
+    "nodes": 5,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 1000,
+    "max_depth": 1,
+    "nodes": 2,
+    "rollout_plies": 0,
+    "tactic": 0,
+    "value": 0.5
+   }
+  ]
+ },
+ {
+  "case": "3x3_ab_plain_vs_random",
+  "game_id": "0-AX",
+  "winner": 1,
+  "termination": "normal",
+  "opening": [],
+  "moves": [
+   1,
+   8,
+   2,
+   0,
+   4,
+   3,
+   6
+  ],
+  "keys": [
+   "fe05dc09d114575e",
+   "7bb64a5e9a7a1ca1",
+   "d6b0b014e211ace1",
+   "0aff8d39d0a63077",
+   "25e3b9075db423b1",
+   "d5962cf42fde04c7",
+   "076d3567d2324514"
+  ],
+  "stats": [
+   {
+    "cutoffs": 8149,
+    "iterations": 0,
+    "nodes": 21763,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 0,
+    "nodes": 0
+   },
+   {
+    "cutoffs": 229,
+    "iterations": 0,
+    "nodes": 751,
+    "tt_hits": 0,
+    "value": 999999999995
+   },
+   {
+    "iterations": 0,
+    "nodes": 0
+   },
+   {
+    "cutoffs": 24,
+    "iterations": 0,
+    "nodes": 78,
+    "tt_hits": 0,
+    "value": 999999999997
+   },
+   {
+    "iterations": 0,
+    "nodes": 0
+   },
+   {
+    "cutoffs": 1,
+    "iterations": 0,
+    "nodes": 5,
+    "tt_hits": 0,
+    "value": 999999999999
+   }
+  ]
+ },
+ {
+  "case": "3x3_ab_plain_vs_random",
+  "game_id": "0-BX",
+  "winner": 0,
+  "termination": "normal",
+  "opening": [],
+  "moves": [
+   7,
+   6,
+   0,
+   1,
+   2,
+   8,
+   4,
+   5,
+   3
+  ],
+  "keys": [
+   "d02eb250ad56ec92",
+   "ec22380c31741ca1",
+   "754f480e471607f1",
+   "e27dc66203127cf8",
+   "0275dd2a6909b671",
+   "df8aefbf719b766d",
+   "97250ae35f1842d3",
+   "580cc7b60173230c",
+   "2c58388ee9db1cd3"
+  ],
+  "stats": [
+   {
+    "iterations": 0,
+    "nodes": 0
+   },
+   {
+    "cutoffs": 1179,
+    "iterations": 0,
+    "nodes": 2927,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 0,
+    "nodes": 0
+   },
+   {
+    "cutoffs": 109,
+    "iterations": 0,
+    "nodes": 311,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 0,
+    "nodes": 0
+   },
+   {
+    "cutoffs": 12,
+    "iterations": 0,
+    "nodes": 31,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 0,
+    "nodes": 0
+   },
+   {
+    "cutoffs": 1,
+    "iterations": 0,
+    "nodes": 5,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 0,
+    "nodes": 0
+   }
+  ]
+ },
+ {
+  "case": "15x15_ab2_vs_h300_tactics",
+  "game_id": "0-AX",
+  "winner": 1,
+  "termination": "normal",
+  "opening": [],
+  "moves": [
+   112,
+   142,
+   110,
+   114,
+   128,
+   98,
+   96,
+   130,
+   80,
+   146,
+   144
+  ],
+  "keys": [
+   "096eae7cb45d1bbf",
+   "d31581879b543ac4",
+   "dded0f4f789fb21b",
+   "ba99b47ff5d866a2",
+   "99716e5e58fd322d",
+   "6e747e1e04b7a170",
+   "0a39e007a3385913",
+   "4ed198e9b569339f",
+   "cb1ace504d5ca451",
+   "ed3a62fe747f8444",
+   "45db0e311ed6823f"
+  ],
+  "stats": [
+   {
+    "cutoffs": 0,
+    "iterations": 0,
+    "nodes": 26,
+    "tt_hits": 0,
+    "value": 0
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 4934,
+    "tactic": 0,
+    "value": 0.6923076923076923
+   },
+   {
+    "cutoffs": 31,
+    "iterations": 0,
+    "nodes": 144,
+    "tt_hits": 0,
+    "value": -9
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 4586,
+    "tactic": 0,
+    "value": 0.6923076923076923
+   },
+   {
+    "cutoffs": 49,
+    "iterations": 0,
+    "nodes": 207,
+    "tt_hits": 0,
+    "value": -25
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 3670,
+    "tactic": 0,
+    "value": 0.6363636363636364
+   },
+   {
+    "cutoffs": 54,
+    "iterations": 0,
+    "nodes": 166,
+    "tt_hits": 0,
+    "value": 24
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 1459,
+    "tactic": 0,
+    "value": 0.8823529411764706
+   },
+   {
+    "cutoffs": 60,
+    "iterations": 0,
+    "nodes": 190,
+    "tt_hits": 0,
+    "value": 48
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 529,
+    "tactic": 0,
+    "value": 0.9166666666666666
+   },
+   {
+    "cutoffs": 71,
+    "iterations": 0,
+    "nodes": 145,
+    "tt_hits": 0,
+    "value": 999999999999
+   }
+  ]
+ },
+ {
+  "case": "15x15_ab2_vs_h300_tactics",
+  "game_id": "0-BX",
+  "winner": -1,
+  "termination": "normal",
+  "opening": [],
+  "moves": [
+   112,
+   140,
+   83,
+   139,
+   99,
+   141,
+   131,
+   115,
+   138,
+   125,
+   97,
+   155,
+   82,
+   110,
+   142,
+   170
+  ],
+  "keys": [
+   "096eae7cb45d1bbf",
+   "c935408d62eb49d3",
+   "e1c1615077eafcca",
+   "6482161401e63042",
+   "9695a5d597c2f0ff",
+   "cf95a624af7ee660",
+   "e8b9034b23dd5f79",
+   "918d4909cb204cf3",
+   "cd2181a11c794c9e",
+   "76bf9ad44e4abb78",
+   "de799c0179f6d7e6",
+   "d430d8756930d1d9",
+   "d5ae43cf0fbaa168",
+   "73ae69551363e590",
+   "8f2000f4cd6e5c05",
+   "fc74da315ef028b0"
+  ],
+  "stats": [
+   {
+    "iterations": 0,
+    "max_depth": 0,
+    "nodes": 0,
+    "rollout_plies": 0,
+    "tactic": 2,
+    "value": NaN
+   },
+   {
+    "cutoffs": 23,
+    "iterations": 0,
+    "nodes": 87,
+    "tt_hits": 0,
+    "value": -52
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 4764,
+    "tactic": 0,
+    "value": 0.8461538461538461
+   },
+   {
+    "cutoffs": 49,
+    "iterations": 0,
+    "nodes": 208,
+    "tt_hits": 0,
+    "value": -44
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 3969,
+    "tactic": 0,
+    "value": 0.7777777777777778
+   },
+   {
+    "cutoffs": 59,
+    "iterations": 0,
+    "nodes": 181,
+    "tt_hits": 0,
+    "value": -36
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 1478,
+    "tactic": 0,
+    "value": 0.875
+   },
+   {
+    "cutoffs": 73,
+    "iterations": 0,
+    "nodes": 301,
+    "tt_hits": 0,
+    "value": 57
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 1579,
+    "tactic": 0,
+    "value": 0.5
+   },
+   {
+    "cutoffs": 77,
+    "iterations": 0,
+    "nodes": 317,
+    "tt_hits": 0,
+    "value": 40
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 3437,
+    "tactic": 0,
+    "value": 0.8333333333333334
+   },
+   {
+    "cutoffs": 77,
+    "iterations": 0,
+    "nodes": 403,
+    "tt_hits": 0,
+    "value": 93
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 1331,
+    "tactic": 0,
+    "value": 0.8571428571428571
+   },
+   {
+    "cutoffs": 83,
+    "iterations": 0,
+    "nodes": 256,
+    "tt_hits": 0,
+    "value": 21
+   },
+   {
+    "iterations": 300,
+    "max_depth": 2,
+    "nodes": 301,
+    "rollout_plies": 550,
+    "tactic": 0,
+    "value": 0.9090909090909091
+   },
+   {
+    "cutoffs": 83,
+    "iterations": 0,
+    "nodes": 169,
+    "tt_hits": 0,
+    "value": 999999999999
+   }
+  ]
+ },
+ {
+  "case": "15x15_mcts_rand_cut_vs_greedy",
+  "game_id": "0-AX",
+  "winner": -1,
+  "termination": "normal",
+  "opening": [],
+  "moves": [
+   112,
+   126,
+   114,
+   111,
+   144,
+   96,
+   65,
+   81,
+   129,
+   66
+  ],
+  "keys": [
+   "096eae7cb45d1bbf",
+   "1b8429847d452c50",
+   "ab8471a1d2a843dc",
+   "4c74b5ff0d4be21e",
+   "b113119e6ceafec7",
+   "1afc272649303331",
+   "04b06bd962242b5c",
+   "97b7bb011099f03c",
+   "9844ad96135a6cc0",
+   "53f2e6e9724089d6"
+  ],
+  "stats": [
+   {
+    "iterations": 0,
+    "max_depth": 0,
+    "nodes": 0,
+    "rollout_plies": 0,
+    "tactic": 2,
+    "value": NaN
+   },
+   {
+    "iterations": 0,
+    "nodes": 24,
+    "value": 20
+   },
+   {
+    "iterations": 200,
+    "max_depth": 2,
+    "nodes": 201,
+    "rollout_plies": 2000,
+    "tactic": 0,
+    "value": 0.6176148045961999
+   },
+   {
+    "iterations": 0,
+    "nodes": 41,
+    "value": 70
+   },
+   {
+    "iterations": 200,
+    "max_depth": 2,
+    "nodes": 201,
+    "rollout_plies": 2000,
+    "tactic": 0,
+    "value": 0.6633547144911943
+   },
+   {
+    "iterations": 0,
+    "nodes": 48,
+    "value": 313
+   },
+   {
+    "iterations": 200,
+    "max_depth": 2,
+    "nodes": 201,
+    "rollout_plies": 2000,
+    "tactic": 0,
+    "value": 0.6385164057612147
+   },
+   {
+    "iterations": 0,
+    "nodes": 64,
+    "value": 1915
+   },
+   {
+    "iterations": 200,
+    "max_depth": 2,
+    "nodes": 201,
+    "rollout_plies": 1837,
+    "tactic": 0,
+    "value": 0.25902973535707446
+   },
+   {
+    "iterations": 0,
+    "nodes": 63,
+    "value": 1000000
+   }
+  ]
+ },
+ {
+  "case": "15x15_mcts_rand_cut_vs_greedy",
+  "game_id": "0-BX",
+  "winner": 1,
+  "termination": "normal",
+  "opening": [],
+  "moves": [
+   112,
+   97,
+   113,
+   114,
+   110,
+   131,
+   109,
+   111,
+   108,
+   69,
+   107,
+   106,
+   83,
+   95,
+   98,
+   127,
+   128,
+   143,
+   68
+  ],
+  "keys": [
+   "096eae7cb45d1bbf",
+   "254f9f51fd9e334e",
+   "c633a3c997cfddfd",
+   "3a46c72ea650576f",
+   "ebc244093a14dfc6",
+   "dbe903648c8f7ef3",
+   "7612eda46efcb2e8",
+   "532e553a70ea08d2",
+   "d8c538342358403e",
+   "f5ce4cee1f0bd7ba",
+   "f311aa93d5a3843c",
+   "e9a7d678e69cd5df",
+   "457e97e93eef056c",
+   "e2208bf1a9a07470",
+   "0635065d5ec4ea9f",
+   "8beac0a481f11dc9",
+   "48a1ec15a0b48a51",
+   "809a068be8f39be6",
+   "010cca46fd63e902"
+  ],
+  "stats": [
+   {
+    "iterations": 0,
+    "nodes": 1,
+    "value": 20
+   },
+   {
+    "iterations": 200,
+    "max_depth": 2,
+    "nodes": 201,
+    "rollout_plies": 2000,
+    "tactic": 0,
+    "value": 0.5568251963100813
+   },
+   {
+    "iterations": 0,
+    "nodes": 28,
+    "value": 52
+   },
+   {
+    "iterations": 200,
+    "max_depth": 2,
+    "nodes": 201,
+    "rollout_plies": 1995,
+    "tactic": 0,
+    "value": 0.5357210366704742
+   },
+   {
+    "iterations": 0,
+    "nodes": 36,
+    "value": 116
+   },
+   {
+    "iterations": 200,
+    "max_depth": 2,
+    "nodes": 201,
+    "rollout_plies": 2000,
+    "tactic": 0,
+    "value": 0.5358801135058142
+   },
+   {
+    "iterations": 0,
+    "nodes": 57,
+    "value": 1024
+   },
+   {
+    "iterations": 0,
+    "max_depth": 0,
+    "nodes": 0,
+    "rollout_plies": 0,
+    "tactic": 2,
+    "value": NaN
+   },
+   {
+    "iterations": 0,
+    "nodes": 60,
+    "value": 112
+   },
+   {
+    "iterations": 200,
+    "max_depth": 2,
+    "nodes": 201,
+    "rollout_plies": 1994,
+    "tactic": 0,
+    "value": 0.7248321001445595
+   },
+   {
+    "iterations": 0,
+    "nodes": 75,
+    "value": 1001
+   },
+   {
+    "iterations": 0,
+    "max_depth": 0,
+    "nodes": 0,
+    "rollout_plies": 0,
+    "tactic": 2,
+    "value": NaN
+   },
+   {
+    "iterations": 0,
+    "nodes": 78,
+    "value": 260
+   },
+   {
+    "iterations": 200,
+    "max_depth": 2,
+    "nodes": 201,
+    "rollout_plies": 1998,
+    "tactic": 0,
+    "value": 0.7045006632172316
+   },
+   {
+    "iterations": 0,
+    "nodes": 79,
+    "value": 353
+   },
+   {
+    "iterations": 200,
+    "max_depth": 2,
+    "nodes": 201,
+    "rollout_plies": 1986,
+    "tactic": 0,
+    "value": 0.7832982827148134
+   },
+   {
+    "iterations": 0,
+    "nodes": 81,
+    "value": 1956
+   },
+   {
+    "iterations": 200,
+    "max_depth": 2,
+    "nodes": 201,
+    "rollout_plies": 1894,
+    "tactic": 0,
+    "value": 0.8914520368541439
+   },
+   {
+    "iterations": 0,
+    "nodes": 84,
+    "value": 1000000
+   }
+  ]
+ },
+ {
+  "case": "15x15_ab2_tt_vs_greedy_opening",
+  "game_id": "3-AX",
+  "winner": 1,
+  "termination": "normal",
+  "opening": [
+   112,
+   142,
+   113,
+   174
+  ],
+  "moves": [
+   114,
+   158,
+   115,
+   116,
+   111
+  ],
+  "keys": [
+   "e62fe94142f50531",
+   "47be99cda8717432",
+   "4d55efe81a757e57",
+   "cc45dd3ab00c6670",
+   "06e64968034275df"
+  ],
+  "stats": [
+   {
+    "cutoffs": 49,
+    "iterations": 0,
+    "nodes": 210,
+    "tt_hits": 0,
+    "value": 3
+   },
+   {
+    "iterations": 0,
+    "nodes": 54,
+    "value": 303
+   },
+   {
+    "cutoffs": 52,
+    "iterations": 0,
+    "nodes": 223,
+    "tt_hits": 0,
+    "value": 3
+   },
+   {
+    "iterations": 0,
+    "nodes": 58,
+    "value": 101140
+   },
+   {
+    "cutoffs": 61,
+    "iterations": 0,
+    "nodes": 124,
+    "tt_hits": 0,
+    "value": 999999999999
+   }
+  ]
+ },
+ {
+  "case": "15x15_ab2_tt_vs_greedy_opening",
+  "game_id": "3-BX",
+  "winner": -1,
+  "termination": "normal",
+  "opening": [
+   112,
+   142,
+   113,
+   174
+  ],
+  "moves": [
+   114,
+   111,
+   115,
+   116,
+   99,
+   158,
+   129,
+   126,
+   110,
+   190
+  ],
+  "keys": [
+   "e62fe94142f50531",
+   "8f3c64fe2edf96df",
+   "058f29b255b8d6a1",
+   "cc90fbab4cb4c68f",
+   "4aacbccd13333896",
+   "154e456b923302c7",
+   "c9f395d1cad80542",
+   "81a3f6c22e2c420e",
+   "ca1fd08a111a9be7",
+   "4d0083d78ed5d702"
+  ],
+  "stats": [
+   {
+    "iterations": 0,
+    "nodes": 51,
+    "value": 295
+   },
+   {
+    "cutoffs": 51,
+    "iterations": 0,
+    "nodes": 276,
+    "tt_hits": 0,
+    "value": -1094
+   },
+   {
+    "iterations": 0,
+    "nodes": 58,
+    "value": 1015
+   },
+   {
+    "cutoffs": 61,
+    "iterations": 0,
+    "nodes": 190,
+    "tt_hits": 0,
+    "value": -86
+   },
+   {
+    "iterations": 0,
+    "nodes": 66,
+    "value": 116
+   },
+   {
+    "cutoffs": 69,
+    "iterations": 0,
+    "nodes": 210,
+    "tt_hits": 0,
+    "value": -117
+   },
+   {
+    "iterations": 0,
+    "nodes": 70,
+    "value": 350
+   },
+   {
+    "cutoffs": 68,
+    "iterations": 0,
+    "nodes": 209,
+    "tt_hits": 0,
+    "value": -91
+   },
+   {
+    "iterations": 0,
+    "nodes": 69,
+    "value": 101124
+   },
+   {
+    "cutoffs": 72,
+    "iterations": 0,
+    "nodes": 146,
+    "tt_hits": 0,
+    "value": 999999999999
+   }
+  ]
+ }
+]

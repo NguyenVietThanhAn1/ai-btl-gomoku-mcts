@@ -40,7 +40,7 @@ btl/
 ├── gameai/
 │   ├── core/        game.py            # interface Game + kiểu Move/Player
 │   ├── games/       kinrow.py          # KInRow(n,k): 3x3 và 15x15
-│   │                xiangqi/           # (P8) cờ tướng
+│   │                xiangqi.py         # (P8) cờ tướng (D-22)
 │   ├── heuristics/  kinrow_eval.py     # hàm lượng giá pattern (open-3, open-4, ...)
 │   ├── agents/      base.py random_agent.py greedy.py minimax.py alphabeta.py mcts.py rollout.py
 │   ├── arena.py                        # chơi 1 ván / 1 match, đổi lượt, seed
@@ -136,8 +136,10 @@ c / rollout / final_move chồng lên nhau, không phân biệt được. Bắt 
 
 Ghi chú hiệu năng 15×15: nếu 5000 iter quá chậm, giảm số ván ở mức iteration cao hoặc dùng time budget — **ghi rõ vào báo cáo**, không âm thầm đổi thiết lập.
 
-### P6 — GUI pygame
-- **P6.1** `gui/pygame_app.py`: chọn bàn 3×3/15×15, chọn AI (alphabeta/mcts + tham số), người vs AI, AI vs AI; hiện nước cuối, thông báo thắng/hòa; AI chạy không treo cửa sổ (thread hoặc chia nhỏ iteration). Phục vụ quay video: chế độ AI vs AI có độ trễ chỉnh được giữa các nước; tùy chọn bật overlay hiện N (và W/N) của các nước ứng viên ở gốc MCTS.
+### P6 — GUI pygame (làm sau P8.3, cho **cả k-in-row và cờ tướng**; gộp ✂ P4.3 CLI)
+- **P6.1** `gui/pygame_app.py` (một lớp view cho mỗi game; cờ tướng: bấm quân → tô sáng nước hợp lệ → bấm ô đích; báo chiếu /
+  chiếu bí / hòa). Cờ tướng chơi được là **lõi**; ✂ overlay N/W/N cho cờ tướng. Done khi: chơi hết 1 ván mỗi chế độ × mỗi trò không lỗi.
+  K-in-row: chọn bàn 3×3/15×15, chọn AI (alphabeta/mcts + tham số), người vs AI, AI vs AI; hiện nước cuối, thông báo thắng/hòa; AI chạy không treo cửa sổ (thread hoặc chia nhỏ iteration). Phục vụ quay video: chế độ AI vs AI có độ trễ chỉnh được giữa các nước; tùy chọn bật overlay hiện N (và W/N) của các nước ứng viên ở gốc MCTS.
   Done khi: chơi hết 1 ván mỗi chế độ không lỗi.
 
 ### P7 — Báo cáo & video demo
@@ -146,16 +148,55 @@ Ghi chú hiệu năng 15×15: nếu 5000 iter quá chậm, giảm số ván ở 
 - **P7.3** Convert sang `report.docx`, kiểm tra hình/bảng hiển thị đúng.
 - **P7.4** Video demo (3–5 phút): `report/video_script.md` gồm kịch bản từng cảnh + lệnh chạy chính xác. Cảnh gợi ý: (1) 3×3 người vs MCTS — MCTS không thua; (2) 15×15 người vs MCTS với overlay N; (3) 15×15 MCTS vs Alpha-Beta (AI vs AI); (4) đồ thị E3/E5 và kết luận; (5) cờ tướng nếu xong P8. Quay bằng OBS hoặc Xbox Game Bar (Win+Alt+R).
 
-### P8 — (*) Cờ tướng (sau khi P1–P7 xong)
-- **P8.1** `games/xiangqi/`: biểu diễn bàn 9×10, sinh nước 7 loại quân (tướng, sĩ, tượng, xe, pháo, mã — cản chân, tốt — qua sông), **lộ mặt tướng**, chiếu, hết nước = thua; giới hạn số nước → hòa.
-  Done khi: perft từ thế khởi đầu khớp giá trị chuẩn (đối chiếu nguồn, ghi nguồn vào `xiangqi.md`) + test từng loại quân.
-- **P8.2** Lượng giá: vật chất + bảng vị trí. Alpha-beta (move ordering: ăn quân trước).
-- **P8.3** MCTS cho cờ tướng: rollout ngẫu nhiên gần như vô dụng → rollout giới hạn độ sâu + cắt bằng hàm lượng giá (đúng tinh thần value network). Ghi nhận xét này vào báo cáo 3.4.
-- **P8.4** Thí nghiệm nhỏ: alpha-beta vs random, MCTS vs alpha-beta; GUI cờ tướng nếu còn thời gian.
+### P8 — (*) Cờ tướng — **bắt buộc** (đề: điều kiện điểm > 9)
+Làm trên branch `xiangqi`; số liệu k-in-row khóa ở tag `kinrow-final` (`aa8e3d5`). **Thứ tự:** `P8.0 → P8.1 → P8.2 → P8.3 → P6 → P8.4 → P7`
+(P6 chỉ phụ thuộc P8.1, kéo sớm được). Thiết kế: D-22.
+
+**Ràng buộc:** không đổi hành vi mặc định của agents / arena / k-in-row. Phải sửa agent → thêm tham số có mặc định giữ nguyên
+hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp từ tag: cùng chuỗi nước + cùng stats) phải xanh.
+
+**Lõi** (không được cắt): perft độ sâu 1–3, AB cờ tướng, MCTS cắt + eval, E7 (c) và (d), GUI cờ tướng chơi được.
+**Cắt được nếu thiếu giờ** (đánh dấu ✂): perft độ sâu 4, CLI P4.3, overlay N/W/N cho cờ tướng, E7 (a).
+
+- **P8.0** Thiết kế D-22 + golden hồi quy k-in-row (`tests/kinrow_golden_cases.py` → `tests/golden/kinrow_golden.json`).
+  Done khi: D-22 được duyệt, golden sinh từ code bằng tag, test golden xanh trên branch.
+- **P8.1** `games/xiangqi.py` + `xiangqi.md`: luật theo D-22, FEN, ICCS, Zobrist. Script `experiments/p81_perft.py` → `results/tables/p81_perft.csv`.
+  Done khi:
+  - perft độ sâu 1–3 khớp giá trị chuẩn ở thế khởi đầu (44 / 1 920 / 79 666) và các thế 2–11 của chessprogramming.org
+    "Chinese Chess Perft Results" (URL + ngày truy cập + người đóng góp ghi trong `xiangqi.md`). ✂ Độ sâu 4 (3 290 240): test `slow`.
+  - Test riêng từng loại quân: cản chân mã (8 hướng), cản mắt tượng, tượng không qua sông, sĩ/tướng trong cung, xe, pháo ăn
+    qua đúng 1 ngòi, tốt chưa qua sông chỉ tiến / qua sông thêm đi ngang / không lùi; lộ mặt tướng; không tự chiếu; hết nước
+    (chiếu bí, bí nước) = thua; lặp thế lần 3 → hòa; `max_plies` → hòa; hợp đồng `Game` (undo khôi phục key/winner/lượt,
+    clone độc lập, candidate ⊆ legal); key tăng dần = key tính lại từ đầu.
+  - Đo nút/giây perft, thời gian `legal_moves()` / `winner()`; ghi vào `xiangqi.md` + CSV. Nếu MCTS ước tính < ~200 iter/s →
+    tối đa 1 phiên tối ưu trước khi sang P8.2.
+- **P8.2** `heuristics/xiangqi_eval.py` + `.md`: `evaluate` (vật chất + PST), `delta_eval`, `mvv_lva` (ordering ăn quân giá
+  trị cao bằng quân giá trị thấp trước). Dùng lại `AlphaBetaAgent`; thêm `time_limit` + iterative deepening (D-23); registry:
+  `GameSpec("xiangqi")`, `FUNCTIONS` thêm `xq_evaluate`, `xq_delta`, `xq_mvv_lva`.
+  Done khi: `delta_eval` = hiệu `evaluate` trên thế ngẫu nhiên; AB (eval và delta) cùng giá trị gốc với Minimax depth 2 trên
+  ≥ 10 thế; ordering ít nút hơn; AB ăn quân cho không, thoát chiếu, chiếu bí 1 nước; test ID (time_limit nhỏ vẫn trả nước
+  depth 1, giờ dư = depth cố định); golden k-in-row xanh.
+- **P8.3** MCTS cờ tướng: dùng nguyên `MCTSAgent` với `rollout_limit` + `sigmoid_value(xq_evaluate, scale)` (rollout ngẫu
+  nhiên tới hết ván gần như vô dụng → cắt + lượng giá, đúng tinh thần value network; ghi vào báo cáo 3.4). Hiệu chỉnh `scale`
+  kiểu D-12 (logistic, lưới, mở rộng biên, seed tách biệt) trên nhãn kết quả ván tự đấu AB depth 1 có `random_opening`.
+  **Trước khi fit:** báo tỉ lệ ván phân thắng thua của nhãn; < ~30 % → đổi nguồn nhãn (AB depth 2, hoặc nhãn theo chênh lệch
+  vật chất sau L nước) và ghi D-24. Đo chi phí `check_tactics` (ms/nước, % nước đi thẳng) → quyết định bật/tắt trong E7 (D-24).
+  Done khi: MCTS ăn quân cho không và thoát chiếu bí 1 nước (khi bật tactics; tắt thì ghi tỉ lệ); iteration/s + bảng scale
+  trong `results/`.
+- **P6** GUI cho cả hai trò — xem mục P6 (làm sau P8.3).
+- **P8.4** E7 `experiments/e7_xiangqi.py` + `.md` (thiết kế chi tiết D-25):
+  - ✂ (a) AB depth 1/2 cố định vs Random.
+  - (b) AB ordering: số nút, depth cố định (tất định): không ordering / MVV-LVA / + TT, depth 2–4, thế khởi đầu + ~10 thế
+    giữa ván; kiểm giá trị gốc giống nhau.
+  - (c) MCTS rollout random (tới hết, chặn bởi `max_plies`) vs cắt L nước + eval, cùng `time_limit`: đối đầu + vs Random.
+  - (d) MCTS (tốt nhất ở c) vs AB `time_limit`, cùng s/nước.
+  - Phần theo thời gian: `random_opening` vài nước; cắm sạc, máy rảnh, ghi power + bench như D-21. Mục tiêu **50 ván/điểm**
+    cho (c), (d) như đề; quick cho thấy quá đắt → ≥ 20 ván, ghi lý do vào D-25 + báo cáo. `--quick` trước, báo thời gian ước
+    tính, hỏi trước khi chạy full.
 
 ## 4. Thứ tự & phân việc (khi nhóm có thêm người)
 
-`P0 → P1 → P2 → P3 → P4 → P5 (chạy nền) ∥ P6 → P7 → P8`
+`P0 → P1 → P2 → P3 → P4 → P5` (xong, tag `kinrow-final`) `→ P8.0 → P8.1 → P8.2 → P8.3 → P6 → P8.4 → P7`
 
 Chia việc gợi ý khi có thêm người: A = P2 + E1; B = P3 + E2–E5; C = P6 GUI + P8; báo cáo chia theo mục. Ranh giới giữa các phần là interface `Game`/`Agent` — không sửa interface khi chưa ghi vào DECISIONS.md.
 

@@ -6,10 +6,10 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** chưa chọn (E1–E6 ✅; P4.3 hoãn, gộp với P6)
+- **Task hiện tại:** P8 (cờ tướng, bắt buộc), branch `xiangqi`; P8.0 ✅
 - **Việc đang dở:** —
-- **Bước tiếp theo:** `/next-task` (P6.1 GUI + P4.3 CLI, hoặc P7.1 plots/tables). E6 xong, xem D-21 + `gameai/experiments/e6_tactics.md`.
-- **Cảnh báo / blocker:** —
+- **Bước tiếp theo:** P8.1 luật + perft (`games/xiangqi.py`), theo D-22 + PLAN P8.1. Thứ tự: P8.1 → P8.2 → P8.3 → P6 → P8.4 → P7.
+- **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
 
@@ -35,11 +35,12 @@
 | E4 | N vs W/N | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-19; full 174 s; bỏ đối đầu 15×15 |
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
-| P6.1 | GUI pygame | ⬜ | An | | |
+| P6.1 | GUI pygame (k-in-row + cờ tướng) | ⬜ | An | | làm sau P8.3 (D-22) |
 | P7.1 | Plots/tables | ⬜ | An | | |
 | P7.2 | report.md | ⬜ | An | | |
 | P7.3 | report.docx | ⬜ | An | | |
 | P7.4 | Video demo (script + quay) | ⬜ | An | | |
+| P8.0 | Xiangqi design D-22 + golden k-in-row | ✅ | An | 2026-11-17 | tag `kinrow-final`, branch `xiangqi`; golden 12 ván / 123 nước |
 | P8.1 | Xiangqi rules + perft | ⬜ | An | | |
 | P8.2 | Xiangqi eval + AB | ⬜ | An | | |
 | P8.3 | Xiangqi MCTS | ⬜ | An | | |
@@ -57,6 +58,12 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-17 — P8.0 (xong)
+- Lập plan P8 (An duyệt + 4 bổ sung: hạn chế TT/lặp thế, kiểm tỉ lệ ván phân thắng thua trước khi fit scale, 50 ván/điểm E7 c/d (≥ 20 nếu quá đắt), đánh dấu lõi / ✂).
+- Git: tag annotated `kinrow-final` tại `aa8e3d5`, branch `xiangqi`. File quick chưa track giữ nguyên.
+- Golden hồi quy: `tests/kinrow_golden_cases.py` → `tests/golden/kinrow_golden.json`, sinh khi `git diff kinrow-final -- gameai` rỗng; 12 ván / 123 nước (5 cấu hình, 3×3 + 15×15, AB / MCTS / Greedy / Random); `tests/test_regression_kinrow.py` ~4 s.
+- PLAN: viết lại P8 (P8.0–P8.4, lõi / ✂), P6 cho cả hai trò sau P8.3, thứ tự §4. DECISIONS: D-22 (thiết kế game, kết thúc, hạn chế; đặt chỗ D-23/24/25).
 
 ### 2026-11-17 — E6 (xong)
 - Sau quick (An quyết, D-21): ghi `power`/`battery_pct` mọi bước vào `e6_runinfo.csv`; bench ngắn so `e5_bench`; phần (c) chỉ khi AC; bỏ đối đầu h300 tắt vs bật 5000; lấy mẫu phân tầng 15 thế/tầng `n_candidates`/loại, tỷ lệ chung theo trọng số pool + bootstrap phân tầng; loại 2 thêm tầng `n_mine`. Commit `d8f09af`. Xóa `e6quick_*` lần 1 (pin, thiết kế cũ).
