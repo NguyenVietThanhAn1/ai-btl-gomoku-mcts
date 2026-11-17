@@ -35,7 +35,7 @@
 | E4 | N vs W/N | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-19; full 174 s; bỏ đối đầu 15×15 |
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
-| P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; chờ An chơi thử bằng tay |
+| P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; GUI thay bởi P6.3 (An chơi thử OK) |
 | P6.3 | GUI: game chơi được hoàn chỉnh | ✅ | An | 2026-11-17 | D-29; spec-reviewer PASS; An chơi thử bằng chuột OK |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
