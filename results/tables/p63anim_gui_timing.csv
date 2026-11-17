@@ -1,0 +1,13 @@
+board,kind,level,source,config,opponent,games,ai_moves,search_moves,mean_s,median_s,max_s,power,animations,note
+15,mcts,easy,E3,"MCTS h300 250 iter, c=1.4, tactics",random_human,3,51,47,0.137,0.128,0.219,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+15,mcts,easy,E3,"MCTS h300 250 iter, c=1.4, tactics",ab2,1,8,6,0.119,0.12,0.187,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+15,mcts,medium,E3,"MCTS h300 1000 iter, c=1.4, tactics",random_human,3,49,45,0.369,0.314,0.717,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+15,mcts,medium,E3,"MCTS h300 1000 iter, c=1.4, tactics",ab2,1,10,8,0.531,0.621,0.744,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+15,mcts,hard,E3,"MCTS h300 5000 iter, c=1.4, tactics",random_human,3,29,25,2.046,1.441,3.909,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+15,mcts,hard,E3,"MCTS h300 5000 iter, c=1.4, tactics",ab2,1,13,10,2.508,2.858,3.722,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+15,alphabeta,easy,riêng,"Alpha-Beta depth 1, ordering",random_human,3,15,15,0.001,0.001,0.001,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+15,alphabeta,easy,riêng,"Alpha-Beta depth 1, ordering",ab2,1,8,8,0.001,0.001,0.002,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+15,alphabeta,medium,E3/E5,"Alpha-Beta depth 2, ordering",random_human,3,15,15,0.024,0.025,0.041,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+15,alphabeta,medium,E3/E5,"Alpha-Beta depth 2, ordering",ab2,1,12,12,0.028,0.028,0.051,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+15,alphabeta,hard,E1,"Alpha-Beta depth 3, ordering",random_human,3,15,15,0.104,0.095,0.16,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+15,alphabeta,hard,E1,"Alpha-Beta depth 3, ordering",ab2,1,11,11,0.144,0.144,0.252,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm

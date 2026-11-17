@@ -114,7 +114,7 @@ Mỗi task: **mục tiêu → output → Done khi (acceptance)**. Một task = m
 - **P4.1** (D-13, gộp phần runner của P4.2 cũ) `agents/registry.py`: `AgentSpec`/`GameSpec` (tham số kiểu JSON, pickle được) + `make_agent(spec, seed)` / `make_game(spec)`. `arena.py`: `play_game(game, agent_x, agent_o, max_moves) -> GameRecord` (winner, số nước, chuỗi nước, thời gian do arena đo + `stats` từng nước, lỗi agent → xử thua), `play_seeded_game` (agent **mới** mỗi ván, seed suy tất định từ `pair_seed`, tùy chọn `random_opening`), `play_match(..., n_pairs)` (mỗi seed 2 ván, đổi lượt). `experiments/common.py`: `run_match` chạy song song `ProcessPoolExecutor` (`workers`, mặc định 4), mỗi ván ghi **1 dòng CSV ngay khi xong** + file `*_moves.csv`, chạy tiếp được nếu bị ngắt (kiểm `config_hash`, `git_commit`), `summarize` (W/D/L, win rate + non-loss kèm Wilson 95%, score, số chuỗi nước khác nhau; tách lượt X/O).
   Done P4.1 khi: test cùng seed cùng kết quả (ngân sách iteration, kể cả song song = tuần tự), đổi lượt đúng, resume đúng (dòng cắt dở, không lặp ván), CSV đủ cột, agent lỗi bị xử thua mà batch không sập.
 - **P4.2** Cờ dòng lệnh chung cho script thí nghiệm: `--quick` (ít ván/ít iteration để smoke test), `--workers`, `--allow-code-change`.
-- **P4.3** (hoãn, gộp với P6 — ghi lại 2026-11-10) `cli.py`: `python -m gameai.cli play --board 15 --k 5 --ai mcts --iters 2000` và `match ...`.
+- **P4.3** (✂ cắt 2026-11-17, thay bằng preset + cờ dòng lệnh GUI — D-28; trước đó hoãn, gộp với P6) `cli.py`: `python -m gameai.cli play --board 15 --k 5 --ai mcts --iters 2000` và `match ...`.
   Done P4 khi: 1 match quick chạy end-to-end ra CSV; ngắt giữa chừng chạy lại không lặp ván đã xong.
 
 ### P5 — Thí nghiệm (dữ liệu cho mục 5 báo cáo)
@@ -142,9 +142,24 @@ Ghi chú hiệu năng 15×15: nếu 5000 iter quá chậm, giảm số ván ở 
 ### P6 — GUI pygame (tách theo D-26; gộp ✂ P4.3 CLI)
 - **P6.1** (sau P7.1, trước P8.1) `gui/pygame_app.py`: khung GUI + **một lớp view cho mỗi game** + view k-in-row.
   K-in-row: chọn bàn 3×3/15×15, chọn AI (alphabeta/mcts + tham số), người vs AI, AI vs AI; hiện nước cuối, thông báo thắng/hòa; AI chạy không treo cửa sổ (thread hoặc chia nhỏ iteration). Phục vụ quay video: chế độ AI vs AI có độ trễ chỉnh được giữa các nước; tùy chọn bật overlay hiện N (và W/N) của các nước ứng viên ở gốc MCTS.
-  Done khi: chơi hết 1 ván mỗi chế độ k-in-row không lỗi.
+  Bổ sung của An (D-28): tách `controller` (test headless) / `GameView` (input là máy trạng thái cho P6.2), AI trong thread trên `clone()` + hủy theo id ván, preset = `AgentSpec` của E2/E3 (15×15: h300 5000 iter), seed chỉnh được, phím `S` đổi bên, cửa sổ 1280×720 cố định, 30 fps, font tiếng Việt.
+  Done khi: chơi hết 1 ván mỗi chế độ (người vs AI, AI vs AI) × (3×3, 15×15) không lỗi; test controller xanh; ruff sạch.
 - **P6.2** (sau P8.3) view cờ tướng trên khung P6.1: bấm quân → tô sáng nước hợp lệ → bấm ô đích; báo chiếu / chiếu bí /
   hòa. Cờ tướng chơi được là **lõi**; ✂ overlay N/W/N cho cờ tướng. Done khi: chơi hết 1 ván mỗi chế độ cờ tướng không lỗi.
+- **P6.3** (sau P6.1, An thêm; D-29) Nâng GUI thành game chơi được hoàn chỉnh kiểu chess.com: scene manager + widget tự viết
+  (Home / Setup / Play / modal Kết thúc / Xem lại / Demo / Hướng dẫn); chế độ người vs AI, AI vs AI, 2 người cùng máy; loại AI
+  MCTS / Alpha-Beta × Dễ/Vừa/Khó ánh xạ sang `AgentSpec` (bảng D-29, panel ghi nguồn cấu hình); controller thêm undo / đầu hàng /
+  `position_at`; nhãn tọa độ quanh bàn; tô đường thắng, quân mờ khi hover. Không sửa `agents/`, `games/`, `heuristics/`;
+  giữ cờ dòng lệnh + phím tắt P6.1. ✂ âm thanh, animation, đồng hồ đếm ngược, gợi ý nước, Hướng dẫn chi tiết.
+  Done khi: test headless (click nút → đổi scene, cấu hình → AgentSpec, undo khóa khi AI nghĩ + bỏ kết quả cũ, modal kết thúc,
+  xem lại không đổi ván thật) xanh; golden k-in-row xanh; autoplay mọi chế độ × bàn không lỗi; thời gian/nước mức Khó ≤ ~5 s;
+  ruff sạch; spec-reviewer PASS.
+  **Phiên 3 (An đổi hướng, D-29): giao diện sản phẩm "MoveMind".** 3a: Theme (2 bảng màu) + font đóng gói + sprite khử răng
+  cưa + icon + bàn gỗ; làm lại Home và Play → ảnh 2 phương án trong `report/figures/gui/style/`, An chọn. 3b: Setup / Demo /
+  Help / modal / xem lại theo Theme, animation (cờ tắt cho test), overlay top-8, đường thắng vạch nối tâm, modal trên panel,
+  đo lại thời gian (animation bật, chậm > 15 % → báo An), ảnh `report/figures/gui/`. 3c: autoplay mọi chế độ × bàn × AI, `.md`,
+  spec-reviewer, commit. Done thêm: Home không còn chữ kỹ thuật, nhãn trò không "k=", Demo vẫn hiện "cấu hình thí nghiệm",
+  mọi test GUI chạy với animation tắt, ảnh màn hình sinh bằng script.
 
 ### P7 — Báo cáo & video demo
 - **P7.1** `experiments/plots.py` sinh toàn bộ hình/bảng từ `results/raw` (không vẽ tay).

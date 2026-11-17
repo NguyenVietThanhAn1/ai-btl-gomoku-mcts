@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P7.1 ✅ → tiếp P6.1, branch `master` (D-26)
+- **Task hiện tại:** P6.3 ✅ — mốc "k-in-row hoàn chỉnh" (thí nghiệm E1–E6 + GUI MoveMind): `feat/P6.3` → `develop` → `master` (merge `--no-ff`, đã push).
 - **Việc đang dở:** —
-- **Bước tiếp theo:** P6.1 khung GUI pygame + lớp view theo game + view k-in-row (PLAN P6.1); xong → P8.1 (tạo lại branch `xiangqi` từ master). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md` (sinh bằng `python -m gameai.experiments.plots`).
+- **Bước tiếp theo:** P8.1 (luật cờ tướng + perft) trên `feat/P8.1` tạo từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI cho báo cáo/video: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -28,14 +28,15 @@
 | P4.1 | Arena + runner song song/CSV/resume | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-13; gộp phần runner của P4.2 cũ |
 | P3.3 | Quét sơ bộ T / rollout_limit / scale (heavy) | ✅ | An | 2026-11-10 | spec-reviewer PASS; chọn h300 (sơ bộ); D-12, D-14 |
 | P4.2 | Cờ dòng lệnh chung (`--quick`, …) | ✅ | An | 2026-11-10 | `--quick` trong `add_runner_args`; cột `*_search_*` ở `summarize` (D-15); phần runner ở P4.1 (D-13) |
-| P4.3 | CLI | ⬜ (hoãn) | An | 2026-11-10 | hoãn, gộp với P6 (yêu cầu của An); D-17 |
+| P4.3 | CLI | ✂ (cắt) | An | 2026-11-17 | thay bằng preset + cờ dòng lệnh của GUI (D-28) |
 | E1 | Nodes Minimax vs AB | ✅ | An | 2026-11-10 | full 59 s; D-17; `e1_*.csv` |
 | E2 | 3×3 never lose | ✅ | An | 2026-11-10 | spec-reviewer PASS; full xong; D-16 |
 | E3 | c sweep | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-18; full 226 phút; AB2 qua cổng (2/20) |
 | E4 | N vs W/N | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-19; full 174 s; bỏ đối đầu 15×15 |
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
-| P6.1 | GUI: khung + view k-in-row | ⬜ | An | | sau P7.1 (D-26) |
+| P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; GUI thay bởi P6.3 (An chơi thử OK) |
+| P6.3 | GUI: game chơi được hoàn chỉnh | ✅ | An | 2026-11-17 | D-29; spec-reviewer PASS; An chơi thử bằng chuột OK |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ⬜ | An | | |
@@ -62,6 +63,58 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-17 — P6.3 xong, mốc k-in-row hoàn chỉnh
+- An chơi thử GUI bằng chuột trên cửa sổ thật: ổn → P6.3 ✅.
+- Git: merge `--no-ff` `feat/P6.3` → `develop` (pytest + ruff xanh trên develop, push), `develop` → `master` (mốc "k-in-row hoàn chỉnh": thí nghiệm + GUI, push); xóa `feat/P6.1`, `feat/P6.3` local.
+
+### 2026-11-17 — P6.3 phiên 3c (hoàn tất, chờ An chơi thử)
+- An duyệt ảnh 3b + 2 điểm: (1) hover ô có nhãn overlay → ẩn nhãn ô đó khi vẽ quân mờ (`KInRowView.hover_move`); (2) mọi số cấu hình hiển thị lấy từ `AgentSpec` — phát hiện và bỏ 3 chỗ gõ tay: "h300" cố định + `c` mặc định 1.41 trong `side_label` (nay: `rollout_tag` từ `temperature`, c từ mặc định `MCTSAgent` qua `inspect` = √2 → "1.41", E3 "1.4"), tiêu đề 3 preset (nay `preset_title`), nguồn Demo "E2/E3" (nay `DemoScene.sources` tra ngược `find_level` → "E2", "E3", "E3 · E3/E5").
+- Test: +2 trong `tests/test_gui_polish.py` (ẩn/hiện nhãn khi hover; số trong nhãn/tiêu đề = spec). Full suite xanh (1 xfail chủ ý), golden xanh, ruff sạch.
+- Autoplay headless (animation bật, vẽ mỗi frame, mức Vừa): 18 tổ hợp = 2 bàn × {người vs MCTS/AB × 2 bên, AI vs AI 4 cặp MCTS/AB, 2 người} → **18/18 hết ván, 0 lỗi**, modal kết thúc mở; 3×3 AI vs AI hòa cả 4 cặp; 15×15 dài nhất 26 nước AI vs AI (13 s).
+- spec-reviewer: **PASS** (không lỗi chặn); đã bù góp ý doc (Phụ thuộc / Hạn chế cho anim, icons, brand, render; `logo_surface`). Ảnh `report/figures/gui/*.png` chụp lại.
+
+### 2026-11-17 — P6.3 phiên 3b (theme tối hoàn thiện, animation, đo lại; chờ duyệt ảnh)
+- An chọn theme **tối**; 4 chỉnh thêm (overlay badge trên ô có quân, overlay 3×3 nhạt, Đen/Trắng + ●/○ ở 15×15, bảng Phân tích đủ lề) — ghi D-29.
+- Mới: `gui/anim.py` (+`.md`: Tween theo dt, cờ tắt), `tests/conftest.py` (animation tắt cho mọi test), `tests/test_gui_polish.py` (12 test: tween, cache không tăng khi chạy trọn animation đặt quân + hover qua 60 frame, modal / đường thắng / crossfade, hover dùng tint, overlay badge + 3×3 nhạt, Đen/Trắng, bảng Phân tích trong card, modal không che bàn, Disclosure, tooltip Setup, thời gian người với clock giả).
+- Làm lại: Setup (card, "Đen · đi trước", tóm tắt "Đối thủ: MCTS · Khó" + ⓘ, seed trong "Tùy chọn nâng cao"), Demo (card + nhãn "CẤU HÌNH THÍ NGHIỆM · E2/E3"), Help (card + chip phím, gói dòng; bỏ glyph ← → mà font không có), modal 200 px trên panel (fade + slide, bỏ dòng trùng tiêu đề); widget `Disclosure`, `wrap_text`, hover tween; SceneManager crossfade + `tick(dt)`; `GameController(clock=...)`; `p63_gui_timing` cột `animations`, `--no-anim`, file `p63anim_*`; `pygame_app --no-anim`.
+- Đo (AC, Balanced, bench 0,827× E5 — máy chậm hơn lần gốc ~17 %): MCTS Khó 15×15 2,05 / 2,51 s (gốc 1,85 / 2,38; +10,8 % / +5,3 %) → dưới 15 %, giữ. D-29.
+- Full suite xanh (1 xfail chủ ý), golden xanh, ruff sạch. Ảnh: `report/figures/gui/{home,setup,play15,play3,modal,review,demo,help}.png`.
+
+### 2026-11-17 — P6.3 phiên 3a (giao diện sản phẩm MoveMind, chờ chọn theme)
+- An đổi hướng phiên 3 (D-29 "Phiên 3" + 4 chỉnh khi duyệt: cache sprite không phình theo animation, cache xóa khi `pygame.quit`, chỉ đánh bóng theme được chọn, `set_icon`). Commit `a79c7b8` (D-29/PLAN/PROGRESS).
+- Mới: `gui/assets/fonts/` (Be Vietnam Pro 4 độ đậm + `OFL.txt` + README nguồn/license, tải từ google/fonts), `gui/render.py` (sprite 4× + smoothscale, `lru_cache` có maxsize, xóa khi quit; quân gradient numpy, X/O nét bo, bóng mờ, vạch đầu tròn, vân gỗ sinh bằng code), `gui/icons.py` (13 icon vẽ bằng code), `gui/brand.py` (`APP_NAME = "MoveMind"`, logo, wordmark, icon cửa sổ), `gui/screenshots.py` (ảnh headless), `.md` mỗi file.
+- Làm lại: `widgets.py` (Theme DARK/WARM, 4 cỡ chữ + lưới 8 px, Button có icon / ghost, IconButton, Tooltip, mọi hình qua `render`), `view.get_font` (font đóng gói theo độ đậm, fallback Segoe UI → Arial), `kinrow_view.py` (lớp tĩnh cache: bóng + khung + gỗ + lưới + nhãn; quân sprite; nước cuối một màu = vòng/khung; đường thắng vạch nối tâm có `win_progress`; overlay top-8 theo hạng), `play_scene.py` (thẻ có avatar quân, tên ngắn "MCTS · Khó" + ⓘ tooltip chi tiết/nguồn, Demo hiện "Cấu hình thí nghiệm · E3"; nút icon; card lịch sử + Phân tích; modal đặt trên panel, chỉ làm mờ panel), Home (wordmark + 4 nút icon + bàn 9×9 minh họa; bỏ "Minimax…"/"BTL…"), nhãn trò "Caro 3×3" / "Caro 15×15 · 5 quân thắng"; `pygame_app` caption + `set_icon` + `--theme`.
+- Test: `tests/test_gui_style.py` 10 test (token, mép mềm + cache, quit → init vẽ lại, icon, tên/caption/icon cửa sổ, Home không chữ kỹ thuật, nhãn trò, cache không tăng qua 40 frame có hover, tooltip nguồn, screenshots); test font đổi sang "ưu tiên font đóng gói" + "thiếu file → font hệ thống" (D-29). Full suite xanh (1 xfail chủ ý), golden xanh, ruff sạch.
+- Ảnh 2 phương án (Home, Play 15×15 có Phân tích + W/N + quân mờ, Play 3×3): `report/figures/gui/style/{dark,warm}/`.
+
+### 2026-11-17 — P6.3 phiên 2/3 (UI, chờ duyệt ảnh)
+- Mới: `gui/widgets.py` (theme tối kiểu chess.com; Button, Toggle, SegmentedControl, Stepper, Modal, ScrollList theo cột), `gui/scene.py` (Scene, SceneManager), `gui/scenes.py` (Home, Setup, Demo, Help), `gui/play_scene.py` (AppState chuyển từ pygame_app; thẻ 2 người chơi, lịch sử, Đi lại / Ván mới / Đầu hàng / Menu, Phân tích + W/N, modal kết thúc, xem lại), `.md` mỗi file.
+- Sửa: `pygame_app.py` = chủ SceneManager (không `--preset` → Home; có → vào thẳng ván; API `App.ctrl/view/state/handle_key/handle_click` giữ cho test P6.1 + `p63_gui_timing`); `view.py` hook `preview` / `draw_ghost` / `winning_cells` (có mặc định, không phá P6.2); `kinrow_view.py` nhãn tọa độ (a–c / A–O, hàng 1.. từ trên — khớp lịch sử; 3×3 `move_label` đổi `B2` → `b2`), quân mờ khi hover, nước cuối nền vàng; `presets.find_level` / `source_of`.
+- 4 chỉnh của An đều có: undo khóa khi AI nghĩ (nút disabled), nhãn tọa độ, Esc theo màn, Setup AI vs AI có độ trễ + nút "X/O đầu hàng" ở 2 người, không có Đầu hàng ở AI vs AI (thay bằng Tạm dừng / Tiếp tục).
+- Lỗi tìm được: `get_font` cache `Font` qua `pygame.quit()` → access violation ở test sau `run()`; sửa bằng xóa cache qua `pygame.register_quit` (đăng ký lại mỗi chu kỳ init vì pygame bỏ danh sách sau mỗi lần quit).
+- Test: `tests/test_gui_scenes.py` 15 test (chuyển màn bằng click, Setup → AgentSpec + nguồn, Demo giữ spec, nút ván, undo khóa khi AI nghĩ, modal kết thúc / Bạn thắng / Bạn thua / đường thắng / Chơi lại, xem lại không đổi ván thật, quân mờ, widget, `run`). Full suite xanh (1 xfail chủ ý), golden xanh, ruff sạch. CLI headless: preset 3 (50 iter) và 3×3 `--swap` autoplay hết ván; không preset → Home.
+- Ảnh headless (scratchpad, không commit): Home, Setup người vs AI / AI vs AI, ván 15×15 có Phân tích + W/N + quân mờ, modal 3×3, xem lại, 2 người 15×15 đường thắng.
+
+### 2026-11-17 — P6.3 phiên 1/3 (xong) — đo lại thời gian
+- An: chuyển script đo vào repo → `gameai/experiments/p63_gui_timing.{py,md}` (+ `tests/test_p63_gui_timing.py`), CSV `results/tables/p63_gui_{timing,runinfo}.csv` + `p63_bench.csv`, cột `note` = minh họa GUI; dừng nếu không AC. `git branch -u origin/develop develop`.
+- Đo cắm sạc (D-21: AC, Balanced, máy rảnh, bench 0,996× E5), 130 s: MCTS Khó 15×15 trung bình 1,85–2,38 s/nước, tối đa 3,60 → đạt luật, giữ cấu hình; bảng đủ ở D-29. Bỏ số đo trên pin.
+- xfail duy nhất: `tests/test_mcts.py::test_15x15_block_without_tactics_is_unreliable` — lý do đã nằm trong `reason=` (MCTS thuần 1000 iter rollout random không chặn được four 15×15; D-11, E6).
+
+### 2026-11-17 — P6.3 phiên 1/3 (dừng chờ đo lại thời gian) — số pin, đã thay bằng đo lại ở trên
+- Git: `develop` merge `--no-ff` `feat/P6.1` (local, `5747e08`, chưa push), tạo `feat/P6.3`. D-29 + PLAN P6.3 (commit `a953986`); An duyệt plan + 4 chỉnh (undo khóa khi AI nghĩ, nhãn tọa độ, Esc theo màn, độ trễ AI vs AI + nút đầu hàng theo chế độ).
+- Code: `gui/controller.py` (`undo`/`can_undo`, `resign`/`resign_side`/`can_resign`, `outcome`, `side_time`, `position_at`, thời gian nghĩ của người, bỏ kết quả AI khi ván đã dừng), `gui/presets.py` (`DIFFICULTY` 12 ô, `Level`, 3 spec AB riêng, `side_label` AB), `gui/game_config.py` mới. `.md` cập nhật. Không sửa `agents/`, `games/`, `heuristics/`.
+- Test: +9 test controller, `tests/test_gui_config.py` mới (20 case); full suite xanh (1 xfail chủ ý), golden xanh, ruff sạch.
+- Đo thời gian/nước (script scratchpad `time_levels.py`: App trên Surface headless 30 fps, người = nước ngẫu nhiên trong candidate có seed; 3×3 5 ván/mức; 15×15 3 ván + 1 ván vs AB2/mức). 3×3 (mean / max s): MCTS 0,004 / 0,013 · 0,036 / 0,065 · 0,143 / 0,243; AB 0,000 · 0,000 · 0,005 / 0,020. 15×15 **trên pin, không dùng làm số chốt**: MCTS Dễ 0,31 / 0,52, Vừa 0,92–1,25 / 1,86, Khó 4,65–5,63 / 9,33; AB Dễ 0,003, Vừa 0,05–0,08 / 0,14, Khó 0,25–0,34 / 0,52. Kiểm chéo không vẽ (controller, seed 0) MCTS Khó 14,5 s/nước → chậm do pin, không do GUI.
+
+### 2026-11-17 — Setup git + P6.1 (xong)
+- Git: `.gitignore` giữ `!results/*_full.log`; bỏ track 77 file quick (`git rm --cached`, còn trên đĩa); track `results/e3_full.log`; D-27 cập nhật. Commit `13f4f94` trên `develop`, merge `--no-ff` vào `master` (`51dfbb8`, mốc tài liệu), push cả hai. Tạo `feat/P6.1` từ `develop`.
+- P6.1 (D-28): `gui/presets.py`, `gui/controller.py`, `gui/view.py`, `gui/kinrow_view.py`, `gui/pygame_app.py` (+ `.md` mỗi file). Preset 15×15 dùng h300 5000 iter (bổ sung của An). Không sửa `agents/`, `games/`, `heuristics/`.
+- Test: `tests/test_gui_controller.py` 26 test (controller headless, view, font tiếng Việt + đúng font hệ thống, App trên Surface, AI vs AI 15×15 h300 50 iter vs AB2); full suite xanh (golden xanh), ruff sạch.
+- Autoplay headless (`SDL_VIDEODRIVER=dummy`, người = nước ngẫu nhiên có seed): 3×3 người vs MCTS seed 1 (O thắng, 6 nước) và đổi bên seed 2 (X = MCTS thắng, 5 nước); 15×15 người vs h300 5000 seed 3 (MCTS thắng, 10 nước, 10,6 s); 15×15 h300 5000 vs AB2 delay 0 seed 0 (**AB2 thắng**, 26 nước, 24,3 s — khớp E3: h300 5000 vs AB2 chỉ 0,22). 3×3 AI vs AI: test controller. Không lỗi.
+- Đo ngoài GUI: h300 5000 iter ≈ 2,1 s/nước (thế 5 quân); AB2 ≈ 0,01 s.
+- spec-reviewer: **PASS**; đã sửa 3 góp ý nhỏ (test font đúng font hệ thống, test 15×15 hết ván, ghi chú overlay chỉ sau nước AI).
+- Chưa làm: chơi thử bằng chuột trên cửa sổ thật (cần An).
 
 ### 2026-11-17 — P7.1 (xong)
 - Đổi thứ tự (An, D-26): `xiangqi` fast-forward vào master; P7.1 → P6.1 → P8.1…; tách P6.1 / P6.2. Commit `e98dc49`.
