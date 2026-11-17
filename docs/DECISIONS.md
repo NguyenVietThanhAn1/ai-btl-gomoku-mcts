@@ -265,3 +265,11 @@
 | 15×15 | AB | 0,001 / 0,003 | 0,02–0,03 / 0,05 | 0,09–0,13 / 0,20 |
 
   → MCTS Khó 15×15 đạt luật (trung bình ≤ 5 s), giữ cấu hình. Lần đo trước trên pin (MCTS Khó 4,6–5,6 s, không vẽ 14,5 s) bỏ, không dùng.
+- **Phiên 3 — giao diện sản phẩm (2026-11-17, An đổi hướng; chia 3a / 3b / 3c, dừng duyệt sau 3a và 3b):**
+  - **Nhận diện:** tên `APP_NAME = "MoveMind"` (hằng số duy nhất ở `gui/brand.py`), logo + wordmark vẽ bằng code. Home bỏ dòng "Minimax · Alpha-Beta · MCTS" và "BTL…", không tên nhóm. Lời văn sản phẩm: "Caro 3×3", "Caro 15×15 · 5 quân thắng" (không "k="); seed vào "Tùy chọn nâng cao" thu gọn.
+  - **Nguồn cấu hình gọn:** Setup/Play ghi "MCTS · Khó"; chi tiết spec + "cấu hình E…" ở tooltip ⓘ. Demo thí nghiệm giữ nhãn "cấu hình thí nghiệm" **hiện rõ** (video phải khớp báo cáo).
+  - **Chất lượng hình:** design tokens trong `widgets.Theme` (nền, surface 3 cấp, 1 màu nhấn, màu thắng/thua, lưới 8 px, 4 cỡ chữ, bo góc, bóng); hai bảng `DARK` (tối, nhấn xanh lá) và `WARM` (sáng, gỗ ấm) để An chọn sau 3a. Sprite khử răng cưa (vẽ 4× rồi `smoothscale`, cache theo kích thước) — không vẽ thẳng `pygame.draw` lên màn hình. Icon vẽ bằng code. Bàn gỗ **sinh bằng code** (numpy, seed cố định — không cần license ảnh); lớp tĩnh (nền, bàn) cache.
+  - **Font:** đóng gói Be Vietnam Pro (SIL OFL 1.1) trong `gui/assets/fonts/` + `OFL.txt`; fallback Segoe UI → Arial. Test font đổi từ "ưu tiên font hệ thống" sang "ưu tiên font đóng gói" (lý do: hình giống nhau trên mọi máy, kể cả máy quay video).
+  - **Chuyển động** (✂ theo thứ tự ngược nếu thiếu giờ): đặt quân 150 ms, hover 100 ms, modal fade + slide, chuyển scene 150 ms, đường thắng vẽ dần 300 ms, pulse "đang nghĩ". Helper tween theo `dt`; cờ tắt (`anim.set_enabled(False)`, `--no-anim`) → trạng thái cuối ngay, dùng cho test + ảnh tất định.
+  - **Hiệu năng:** đo lại MCTS Khó 15×15 với animation bật (cắm sạc, bench như p63) → file `p63anim_*`; chậm hơn > 15 % so với bảng trên → báo An trước khi làm tiếp.
+  - **Sửa từ ảnh phiên 2:** overlay 15×15 chỉ top-8 theo N (màu theo hạng, ghi hạng + N, + W/N); đường thắng vạch dày nối tâm quân, vẽ dần; modal kết thúc đặt trên panel phải (không che bàn); một màu đánh dấu nước cuối cho mọi bàn; test thời gian nghĩ của người > 0 (clock tiêm vào controller); script ảnh headless → `report/figures/gui/` (commit ảnh).

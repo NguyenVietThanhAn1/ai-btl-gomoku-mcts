@@ -154,6 +154,12 @@ Ghi chú hiệu năng 15×15: nếu 5000 iter quá chậm, giảm số ván ở 
   Done khi: test headless (click nút → đổi scene, cấu hình → AgentSpec, undo khóa khi AI nghĩ + bỏ kết quả cũ, modal kết thúc,
   xem lại không đổi ván thật) xanh; golden k-in-row xanh; autoplay mọi chế độ × bàn không lỗi; thời gian/nước mức Khó ≤ ~5 s;
   ruff sạch; spec-reviewer PASS.
+  **Phiên 3 (An đổi hướng, D-29): giao diện sản phẩm "MoveMind".** 3a: Theme (2 bảng màu) + font đóng gói + sprite khử răng
+  cưa + icon + bàn gỗ; làm lại Home và Play → ảnh 2 phương án trong `report/figures/gui/style/`, An chọn. 3b: Setup / Demo /
+  Help / modal / xem lại theo Theme, animation (cờ tắt cho test), overlay top-8, đường thắng vạch nối tâm, modal trên panel,
+  đo lại thời gian (animation bật, chậm > 15 % → báo An), ảnh `report/figures/gui/`. 3c: autoplay mọi chế độ × bàn × AI, `.md`,
+  spec-reviewer, commit. Done thêm: Home không còn chữ kỹ thuật, nhãn trò không "k=", Demo vẫn hiện "cấu hình thí nghiệm",
+  mọi test GUI chạy với animation tắt, ảnh màn hình sinh bằng script.
 
 ### P7 — Báo cáo & video demo
 - **P7.1** `experiments/plots.py` sinh toàn bộ hình/bảng từ `results/raw` (không vẽ tay).

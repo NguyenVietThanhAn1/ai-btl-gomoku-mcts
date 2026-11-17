@@ -7,8 +7,8 @@
 ## Đang ở đâu (đọc mục này trước tiên)
 
 - **Task hiện tại:** P6.3 🔄 trên branch `feat/P6.3` (từ `develop` sau khi merge `feat/P6.1`, chưa push)
-- **Việc đang dở:** phiên 2/3 xong (UI + test), **chờ An duyệt ảnh chụp headless** các màn trước khi sang phiên 3.
-- **Bước tiếp theo:** An duyệt ảnh → phiên 3: hoàn thiện giao diện theo góp ý, autoplay mọi chế độ × bàn × loại AI, `.md` hoàn chỉnh (✅), spec-reviewer, PROGRESS, commit `P6.3: ...` (không push, không merge); An chơi thử bằng chuột trên cửa sổ thật. Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
+- **Việc đang dở:** phiên 3a (An đổi hướng phiên 3 → giao diện sản phẩm "MoveMind", D-29): Theme + font + sprite + icon + bàn gỗ, làm lại Home và Play.
+- **Bước tiếp theo:** hết 3a → gửi An ảnh 2 phương án màu (`report/figures/gui/style/`), chờ chọn → 3b (màn còn lại, animation, sửa từ ảnh phiên 2, đo lại thời gian) → 3c. Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -36,7 +36,7 @@
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
 | P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; chờ An chơi thử bằng tay |
-| P6.3 | GUI: game chơi được hoàn chỉnh | 🔄 | An | 2026-11-17 | D-29; phiên 2/3 xong, chờ duyệt ảnh |
+| P6.3 | GUI: game chơi được hoàn chỉnh | 🔄 | An | 2026-11-17 | D-29; phiên 3a (giao diện sản phẩm) |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ⬜ | An | | |
