@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P6.1 ✅ trên branch `feat/P6.1` (chưa merge về `develop`)
-- **Việc đang dở:** —
-- **Bước tiếp theo:** An tự chơi thử 1 ván mỗi preset trên cửa sổ thật (`python -m gameai.gui.pygame_app --preset ...`, phím ở `gameai/gui/pygame_app.md`), rồi merge `feat/P6.1` → `develop`; sau đó P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
+- **Task hiện tại:** P6.3 🔄 trên branch `feat/P6.3` (từ `develop` sau khi merge `feat/P6.1`, chưa push)
+- **Việc đang dở:** phiên 1/3 — controller (undo/đầu hàng/`position_at`) + bảng độ khó (D-29) + đo thời gian/nước từng mức.
+- **Bước tiếp theo:** báo An bảng thời gian/nước; An duyệt → phiên 2 (widgets, scenes, play_scene). Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -36,6 +36,7 @@
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
 | P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; chờ An chơi thử bằng tay |
+| P6.3 | GUI: game chơi được hoàn chỉnh | 🔄 | An | 2026-11-17 | D-29; phiên 1/3 |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ⬜ | An | | |

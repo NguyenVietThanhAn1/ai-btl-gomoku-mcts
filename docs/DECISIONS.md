@@ -240,3 +240,18 @@
 - **Video:** cửa sổ cố định 1280×720, `SetProcessDpiAware` (win32), 30 fps, font Segoe UI → Arial (tiếng Việt), phím `S` đổi bên người/AI (quay MCTS 3×3 ở cả hai vai như E2). Thời gian/nước trên GUI chậm hơn thí nghiệm (GIL với vòng vẽ) → chỉ minh họa.
 - **Overlay:** `last_root_stats()` của nước AI vừa đi; tô theo N/maxN, thêm W/N khi bật; nước đi thẳng nhờ tactics (tactic 1/2) ghi "tactic", không overlay.
 - **P4.3 CLI (✂) cắt:** thay bằng preset + cờ dòng lệnh của GUI (`--preset --seed --delay --iterations --swap --autoplay`); match chạy bằng script thí nghiệm.
+
+### D-29 (2026-11-17) — Thiết kế GUI P6.3: game chơi được hoàn chỉnh (An duyệt plan + 4 chỉnh)
+- **Scene manager** trong `gui/` (`scene.py`, `scenes.py`, `play_scene.py`), widget tự viết bằng pygame (`widgets.py`: Button, Toggle, SegmentedControl, Modal, ScrollList) — không thêm thư viện UI. Màn: Home → Setup (trò, chế độ, bên, loại AI, độ khó, seed; AI vs AI có thêm độ trễ) → Play (bàn trái + nhãn tọa độ khớp lịch sử; panel phải: thẻ 2 người chơi, lịch sử cuộn, Đi lại / Ván mới / Đầu hàng / Menu, công tắc Phân tích) → modal Kết thúc (Chơi lại / Xem lại / Về menu) → Xem lại (◀ ▶, click lịch sử). Demo = 3 preset P6.1 nguyên spec, nhãn "cấu hình thí nghiệm". Cờ tướng disabled tới P6.2.
+- **Không có `--preset`** → Home; có → vào thẳng Play (giữ cờ dòng lệnh + phím tắt P6.1). **Esc:** Setup/Demo/Help → Home; Play → thoát như P6.1, trừ khi modal mở thì đóng modal.
+- **Controller (không import pygame):** `undo` — người vs AI lùi 2 ply (tới lượt người, bớt 1 nước của người), 2 người lùi 1 ply; **khóa khi AI đang nghĩ** (không hủy được thread vì không sửa `agents/` → tránh dồn thread mồ côi), khóa ở AI vs AI, sau đầu hàng, khi chưa có nước của người. Undo / ván mới / đầu hàng đều `game_id += 1` (kết quả thread cũ bị bỏ theo `game_id` + `ply`); undo tạo lại agent (MCTS / rollout heavy có trạng thái) → sau undo chuỗi nước không còn tái lập theo seed cả ván. `resign(player)` → `outcome` = bên kia thắng; `winner` giữ nghĩa cũ (= `game.winner()`). Thời gian nghĩ của người ghi vào `MoveInfo.time`. `position_at(ply)` dựng thế bằng ván mới + replay, không đụng ván thật. Đầu hàng: người vs AI = người; 2 người = bên đang tới lượt ("X đầu hàng"/"O đầu hàng"); AI vs AI không có nút.
+- **Độ khó chỉ ánh xạ sang `AgentSpec`.** "E" = trùng hệt spec hàm thí nghiệm sinh ra (test `==`); "riêng" = cấu hình mới của chế độ chơi (An cho phép), chỉ dùng tham số có sẵn của `AlphaBetaAgent`, panel ghi "cấu hình riêng của chế độ chơi, không có trong thí nghiệm".
+
+| Trò | AI | Dễ | Vừa | Khó |
+|---|---|---|---|---|
+| 3×3 | MCTS | `e2.mcts_spec(100)` — E2 | `e2.mcts_spec(1000)` — E2 | `e2.mcts_spec(5000)` — E2 |
+| 3×3 | AB | depth 1 + `evaluate` — riêng | depth 2 + `evaluate` — riêng | `e1.VARIANTS_3["ab_order_tt"]` — E1 |
+| 15×15 | MCTS | `e3.mcts_spec(15, 1.4, 250)` — E3 | `e3.mcts_spec(15, 1.4, 1000)` — E3 | `e3.mcts_spec(15, 1.4, 5000)` — E3 |
+| 15×15 | AB | depth 1 + eval + delta + ordering — riêng | `e3.AB2` — E3/E5 | `e1.variants_15(3)["ab_order"]` — E1 |
+
+  MCTS đủ 3 mức trong thí nghiệm → không thêm cấu hình MCTS. Eval k-in-row tổng quát theo k (`win_score(k)`) → dùng được cho AB 3×3 độ sâu giới hạn. Spec E1 có `seeded=False` → AB Khó tất định, giữ nguyên cho đúng "cấu hình E1". Thời gian/nước từng mức: đo ở phiên 1 (bảng bên dưới); mức Khó > ~5 s/nước → báo An trước khi đổi.
