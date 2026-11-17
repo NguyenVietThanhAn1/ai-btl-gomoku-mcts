@@ -184,7 +184,8 @@ def test_specs_match_e3_e5():
 
 def test_match_points_and_paths():
     pts = e6.match_points()
-    assert [(p.part, p.iters) for p in pts] == [("mref", 1000), ("self", 1000), ("self", 5000),
+    # D-21: bỏ đối đầu tắt vs bật ở 5000
+    assert [(p.part, p.iters) for p in pts] == [("mref", 1000), ("self", 1000),
                                                 ("greedy", 1000), ("greedy", 5000)]  # fmt: skip
     paths = {e6.match_raw(p.part, p.spec_a.name, q) for p in pts for q in (True, False)}
     assert len(paths) == 2 * len(pts)
@@ -220,6 +221,57 @@ def test_choice_table_strata_and_nolose():
     assert lo["correct_rate"] == 1.0 and lo["n_pos"] == 1
     on = next(r for r in t if r["rollout"] == "on" and r["stratum"] == "all")
     assert on["correct_rate"] == 1.0
+    # tầng n_mine (offline, chỉ loại 2)
+    positions = [{**p, "n_mine": m} for p, m in zip(positions, ("1", "2"), strict=True)]
+    t = e6.choice_table(rows, positions, sanity)
+    m1 = next(r for r in t if r["rollout"] == "rand" and r["stratum"] == "mine=1")
+    m2 = next(r for r in t if r["rollout"] == "rand" and r["stratum"] == "mine>=2")
+    assert (m1["correct_rate"], m1["n_pos"], m2["correct_rate"]) == (1.0, 1, 0.0)
+    # trọng số tự nhiên của tầng: <60 nặng 0,9 → all = 0,9·1 + 0,1·0 (sample vẫn 0,5)
+    w = {"win": {"<60": 0.9, "60-100": 0.0, ">100": 0.1}}
+    t = e6.choice_table(rows, positions, sanity, w)
+    allr = next(r for r in t if r["rollout"] == "rand" and r["stratum"] == "all")
+    samp = next(r for r in t if r["rollout"] == "rand" and r["stratum"] == "sample")
+    assert allr["weighting"] == "pool" and allr["correct_rate"] == pytest.approx(0.9)
+    assert allr["boot_lo"] == pytest.approx(0.9) and allr["boot_hi"] == pytest.approx(0.9)
+    assert allr["wilson_lo"] == ""
+    assert allr["nolose_rate"] == pytest.approx(1.0)
+    assert samp["weighting"] == "sample" and samp["correct_rate"] == 0.5
+
+
+def test_select_positions_stratified():
+    def cand(h: str, nc: int) -> dict:
+        return {"hash": h, "n_candidates": nc, "source": "s", "game_id": "g", "ply": 20,
+                "mover": 1, "n_mine": 1, "n_opp": 0, "correct": [1], "moves": [1]}  # fmt: skip
+
+    pool = [cand(f"{i:03d}a", 50) for i in range(20)] + [cand(f"{i:03d}b", 80) for i in range(3)]
+    pool += [cand(f"{i:03d}c", 120) for i in range(30)]
+    pool.sort(key=lambda c: c["hash"])
+    sel_f = e6.select_positions({"win": pool}, quick=False)
+    sel_q = e6.select_positions({"win": pool}, quick=True)
+    by = {s: [p for p in sel_f if p["stratum"] == s] for s in ("<60", "60-100", ">100")}
+    assert [len(by[s]) for s in by] == [15, 3, 15]  # tầng thiếu thế → lấy hết
+    assert {p["pos_id"] for p in sel_q} <= {p["pos_id"] for p in sel_f}
+    assert len(sel_q) == 2 + 2 + 2
+
+
+def test_pool_weights(tmp_path: Path):
+    cols = ["type", "pool_<60", "pool_60-100", "pool_>100"]
+    with (tmp_path / "e6_positions_summary.csv").open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, cols)
+        w.writeheader()
+        w.writerow({"type": "block", "pool_<60": 1, "pool_60-100": 2, "pool_>100": 1})
+        w.writerow({"type": "open4", "pool_<60": 5, "pool_60-100": 5, "pool_>100": 5})
+    wts = e6.pool_weights(False, tmp_path)
+    assert wts == {"block": {"<60": 0.25, "60-100": 0.5, ">100": 0.25}}
+
+
+def test_power_status_and_cost_skips_without_ac(monkeypatch, tmp_path: Path):
+    power, _ = e6.power_status()
+    assert power in ("AC", "battery", "unknown")
+    monkeypatch.setattr(e6, "power_status", lambda: ("battery", 40))
+    assert e6.run_cost(True, tmp_path, tmp_path) != e6.run_cost(True, tmp_path, tmp_path)  # nan
+    assert not (tmp_path / "e6quick_cost_check.csv").exists()
 
 
 def test_side_rows_skip_ply0():

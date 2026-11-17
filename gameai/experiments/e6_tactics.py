@@ -72,8 +72,8 @@ N, K = 15, 5
 CHECKPOINTS = (100, 500, 1000, 2500, 5000)
 ROLLOUTS = ("rand", "h300")
 TYPES = ("block", "win")
-N_POS = 40
-QUICK_POS = 4
+N_PER_STRATUM = 15  # D-21 (sửa sau quick): 15 thế/tầng/loại → 45/loại
+QUICK_PER_STRATUM = 2
 N_SEEDS = 10
 QUICK_SEEDS = 2
 QUIET_PER_PHASE = 14
@@ -82,7 +82,8 @@ QUIET_MIN_PLY = 4  # thế yên tĩnh: bỏ vài nước đầu (bàn gần tr�
 STRATA = (("<60", 0, 59), ("60-100", 60, 100), (">100", 101, None))
 BOOT_N = 2000
 BOOT_SEED = 21
-MATCH_ITERS = (1000, 5000)
+SELF_ITERS = (1000,)  # D-21: bỏ đối đầu 5000
+GREEDY_ITERS = (1000, 5000)
 MREF_ITER = 1000
 N_PAIRS = 25  # 50 ván/điểm
 QUICK_PAIRS = 1
@@ -97,7 +98,9 @@ SOURCE_PATTERNS = (
     "e5_mref_*.csv",
     "e5_ab2_*.csv",
 )
-STEPS = ("positions", "sanity", "choice", "match", "cost", "tables", "all")
+STEPS = ("bench", "positions", "sanity", "choice", "match", "cost", "tables", "all")
+BENCH_PLIES = (8, 16, 24)  # bench ngắn, so với cùng thế trong e5_bench.csv
+BENCH_SEEDS = (0,)
 
 
 def prefix(quick: bool) -> str:
@@ -302,12 +305,23 @@ def extract_positions(
 
 
 def select_positions(cands: dict[str, list[dict[str, Any]]], quick: bool) -> list[dict[str, Any]]:
-    n_main = QUICK_POS if quick else N_POS
+    """Loại 1/2: lấy mẫu phân tầng theo `n_candidates`, mỗi tầng N đầu danh sách (sắp theo sha256)
+    → tất định, quick ⊂ full. Thế yên tĩnh: N đầu mỗi nhóm giai đoạn."""
+    n_str = QUICK_PER_STRATUM if quick else N_PER_STRATUM
     n_quiet = QUICK_QUIET if quick else QUIET_PER_PHASE
     sel = []
     for t in sorted(cands):
-        n = n_main if t in TYPES else n_quiet if t.startswith("quiet:") else 0
-        for p in cands[t][:n]:
+        if t in TYPES:
+            chosen = [
+                p
+                for name, _, _ in STRATA
+                for p in [c for c in cands[t] if stratum_of(c["n_candidates"]) == name][:n_str]
+            ]
+        elif t.startswith("quiet:"):
+            chosen = cands[t][:n_quiet]
+        else:
+            chosen = []
+        for p in chosen:
             sel.append(
                 {
                     "pos_id": f"{t.split(':')[0]}-{p['hash'][:10]}",
@@ -344,19 +358,22 @@ def run_positions(quick: bool, raw_dir: Path = RAW_DIR, table_dir: Path = TABLE_
         if t.startswith("quiet:"):
             chosen = [p for p in chosen if p["phase"] == t.split(":")[1]]
         row = {"type": t, **c, "selected": len(chosen)}
+        pool = cands.get(t, [])
         for name, _, _ in STRATA:
             row[f"sel_{name}"] = sum(p["stratum"] == name for p in chosen)
+            row[f"pool_{name}"] = sum(stratum_of(x["n_candidates"]) == name for x in pool)
         if chosen:
             ncs = [int(p["n_candidates"]) for p in chosen]
             row.update(cand_min=min(ncs), cand_median=statistics.median(ncs), cand_max=max(ncs))
         rows.append(row)
     cols = ["type", "occurrences", "games", "distinct", "selected",
-            *[f"sel_{s[0]}" for s in STRATA], "cand_min", "cand_median", "cand_max"]  # fmt: skip
+            *[f"sel_{s[0]}" for s in STRATA], *[f"pool_{s[0]}" for s in STRATA],
+            "cand_min", "cand_median", "cand_max"]  # fmt: skip
     _write(table_dir / f"{prefix(quick)}positions_summary.csv", cols, rows)
     dt = time.perf_counter() - t0
     print(f"[positions] {counts['_meta']['games']} ván nguồn, {dt:.1f} s")
     for r in rows:
-        strata = ", ".join(f"{s[0]}: {r[f'sel_{s[0]}']}" for s in STRATA)
+        strata = ", ".join(f"{s[0]}: {r[f'sel_{s[0]}']}/{r[f'pool_{s[0]}']}" for s in STRATA)
         print(
             f"  {r['type']}: {r['occurrences']} lần, {r['games']} ván, "
             f"{r['distinct']} thế khác nhau, "
@@ -367,6 +384,19 @@ def run_positions(quick: bool, raw_dir: Path = RAW_DIR, table_dir: Path = TABLE_
 
 def load_positions(quick: bool, raw_dir: Path = RAW_DIR) -> list[dict[str, str]]:
     return read_rows(positions_path(quick, raw_dir))
+
+
+def pool_weights(quick: bool, table_dir: Path = TABLE_DIR) -> dict[str, dict[str, float]]:
+    """Trọng số tự nhiên của tầng = tỷ lệ thế trong pool đầy đủ (sau khử trùng) của từng loại."""
+    path = table_dir / f"{prefix(quick)}positions_summary.csv"
+    out: dict[str, dict[str, float]] = {}
+    if not path.exists():
+        return out
+    for r in read_rows(path):
+        if r["type"] in TYPES:
+            tot = sum(int(r[f"pool_{s[0]}"]) for s in STRATA)
+            out[r["type"]] = {s[0]: int(r[f"pool_{s[0]}"]) / tot for s in STRATA}
+    return out
 
 
 def position_game(p: dict[str, str]) -> KInRow:
@@ -556,13 +586,13 @@ def match_points() -> list[MatchPoint]:
             str(RAW_DIR / f"e5_mref_rand_i{MREF_ITER}.csv"),
         )
     ]
-    for it in MATCH_ITERS:
+    for it in SELF_ITERS:
         out.append(
             MatchPoint(
                 "self", it, spec_off("h300", it), mcts_spec("h300", iterations=it), None, None
             )
         )
-    for it in MATCH_ITERS:
+    for it in GREEDY_ITERS:
         out.append(
             MatchPoint(
                 "greedy",
@@ -592,9 +622,56 @@ def on_source(pt: MatchPoint, quick: bool, raw_dir: Path = RAW_DIR) -> tuple[str
     return "e6", match_raw(pt.part, pt.on_a.name, quick, raw_dir), reason
 
 
-RUNINFO_COLUMNS = ["part", "iters", "label_a", "label_b", "role", "source", "workers", "n_pairs",
-                   "cpu", "logical_cpus", "started", "finished", "wall_s", "git_commit",
-                   "git_dirty", "note"]  # fmt: skip
+RUNINFO_COLUMNS = ["step", "part", "iters", "label_a", "label_b", "role", "source", "workers",
+                   "n_pairs", "cpu", "logical_cpus", "power", "battery_pct", "started", "finished",
+                   "wall_s", "git_commit", "git_dirty", "note"]  # fmt: skip
+
+
+def power_status() -> tuple[str, int | str]:
+    """('AC' | 'battery' | 'unknown', % pin) qua `GetSystemPowerStatus` (Windows)."""
+    try:
+        import ctypes
+
+        class _S(ctypes.Structure):
+            _fields_ = [("ac", ctypes.c_byte), ("flag", ctypes.c_byte), ("pct", ctypes.c_byte),
+                        ("saver", ctypes.c_byte), ("life", ctypes.c_ulong),
+                        ("full", ctypes.c_ulong)]  # fmt: skip
+
+        st = _S()
+        if not ctypes.windll.kernel32.GetSystemPowerStatus(ctypes.byref(st)):  # type: ignore[attr-defined]
+            return "unknown", ""
+        pct = st.pct if 0 <= st.pct <= 100 else ""
+        return {1: "AC", 0: "battery"}.get(st.ac, "unknown"), pct
+    except Exception:  # noqa: BLE001 — không phải Windows
+        return "unknown", ""
+
+
+def log_run(step: str, quick: bool, started: str, t0: float, raw_dir: Path = RAW_DIR,
+            **fields: Any) -> None:  # fmt: skip
+    """Ghi 1 dòng `e6_runinfo.csv` cho mọi bước (D-21: kèm trạng thái nguồn điện)."""
+    commit, dirty = git_info()
+    power, pct = power_status()
+    _append_csv(
+        raw_dir / f"{prefix(quick)}runinfo.csv",
+        RUNINFO_COLUMNS,
+        {
+            "step": step,
+            "cpu": cpu_name(),
+            "logical_cpus": os.cpu_count(),
+            "power": power,
+            "battery_pct": pct,
+            "started": started,
+            "finished": datetime.now().isoformat(timespec="seconds"),
+            "wall_s": round(time.perf_counter() - t0, 1),
+            "git_commit": commit,
+            "git_dirty": int(dirty),
+            **fields,
+        },
+    )
+
+
+def _now() -> str:
+    return datetime.now().isoformat(timespec="seconds")
 
 
 def _run_one(
@@ -615,28 +692,11 @@ def _run_one(
         path, GAME15, spec_a, spec_b, n_pairs, workers=workers, allow_code_change=allow
     )
     s = next(x for x in summarize(rows) if x["split"] == "all")
-    commit, dirty = git_info()
-    _append_csv(
-        raw_dir / f"{prefix(quick)}runinfo.csv",
-        RUNINFO_COLUMNS,
-        {
-            "part": pt.part,
-            "iters": pt.iters,
-            "label_a": spec_a.name,
-            "label_b": spec_b.name,
-            "role": role,
-            "source": "e6",
-            "workers": workers,
-            "n_pairs": n_pairs,
-            "cpu": cpu_name(),
-            "logical_cpus": os.cpu_count(),
-            "started": started,
-            "finished": datetime.now().isoformat(timespec="seconds"),
-            "wall_s": round(time.perf_counter() - t0, 1),
-            "git_commit": commit,
-            "git_dirty": int(dirty),
-        },
-    )
+    log_run(
+        "match", quick, started, t0, raw_dir,
+        part=pt.part, iters=pt.iters, label_a=spec_a.name, label_b=spec_b.name, role=role,
+        source="e6", workers=workers, n_pairs=n_pairs,
+    )  # fmt: skip
     print(
         f"[match] {spec_a.name} vs {spec_b.name}: W/D/L {s['wins']}/{s['draws']}/{s['losses']} "
         f"(n={s['n']}, distinct={s['distinct_games']}), {time.perf_counter() - t0:.1f} s"
@@ -659,6 +719,40 @@ def run_matches(quick: bool, workers: int, allow: bool, raw_dir: Path = RAW_DIR)
             print(f"[match] bản bật {pt.on_a.name}: tái dùng {src} — {reason}")
 
 
+# ---------------------------------------------------------------- bench tốc độ (D-21)
+
+BENCH_COLUMNS = ["rollout", "plies", "seed", "iterations", "agent_time", "iter_per_s",
+                 "e5_iter_per_s", "speed_vs_e5", "power"]  # fmt: skip
+
+
+def run_bench(quick: bool, table_dir: Path = TABLE_DIR) -> float:
+    """Bench ngắn đơn luồng (1 s/thế, thế 8/16/24 quân, seed 0, rand + h300) bằng
+    `e5_rollout.bench`; so với cùng (rollout, thế, seed) trong `e5_bench.csv` → `speed_vs_e5`.
+    Trả trung vị tỷ lệ."""
+    from gameai.experiments.e5_rollout import bench
+
+    power, _ = power_status()
+    rows = bench(seconds=1.0, plies=BENCH_PLIES, seeds=BENCH_SEEDS, path=None)
+    ref_path = table_dir / "e5_bench.csv"
+    ref = {}
+    if ref_path.exists():
+        for r in read_rows(ref_path):
+            ref[(r["rollout"], r["plies"], r["seed"])] = float(r["iter_per_s"])
+    ratios = []
+    for r in rows:
+        e5 = ref.get((r["rollout"], str(r["plies"]), str(r["seed"])))
+        r["e5_iter_per_s"] = e5 if e5 is not None else ""
+        r["speed_vs_e5"] = round(r["iter_per_s"] / e5, 3) if e5 else ""
+        r["power"] = power
+        if e5:
+            ratios.append(r["iter_per_s"] / e5)
+    _write(table_dir / f"{prefix(quick)}bench.csv", BENCH_COLUMNS, rows)
+    med = statistics.median(ratios) if ratios else math.nan
+    detail = ", ".join(f"{x:.2f}" for x in ratios)
+    print(f"[bench] nguồn {power}; tốc độ / e5_bench: trung vị {med:.2f} ({detail})")
+    return med
+
+
 # ---------------------------------------------------------------- (c) chi phí: microbench
 
 COST_COLUMNS = ["pos_id", "type", "phase", "n_candidates", "tactic", "check_ms", "rand1000_ms",
@@ -668,6 +762,10 @@ COST_COLUMNS = ["pos_id", "type", "phase", "n_candidates", "tactic", "check_ms",
 def run_cost(quick: bool, raw_dir: Path = RAW_DIR, table_dir: Path = TABLE_DIR) -> float:
     """Đơn luồng: thời gian `_tactics` (trung vị CHECK_REPS lần) mọi thế; thế yên tĩnh đo thêm MCTS
     1000 iter tắt tactics (rand, h300; 1 lần, seed 0) → overhead = check / search."""
+    power, _ = power_status()
+    if power != "AC":
+        print(f"[cost] BỎ QUA: nguồn = {power}; D-21 chỉ đo phần (c) khi cắm sạc")
+        return math.nan
     t_all = time.perf_counter()
     reps = 1 if quick else CHECK_REPS
     rows = []
@@ -727,23 +825,29 @@ def _boot_ci(
     return stats[int(0.025 * n_boot)], stats[min(n_boot - 1, int(0.975 * n_boot))]
 
 
-CHOICE_TABLE_COLUMNS = ["type", "rollout", "iter", "stratum", "n_pos", "n_runs", "correct",
-                        "correct_rate", "wilson_lo", "wilson_hi", "boot_lo", "boot_hi",
+CHOICE_TABLE_COLUMNS = ["type", "rollout", "iter", "stratum", "weighting", "n_pos", "n_runs",
+                        "correct", "correct_rate", "wilson_lo", "wilson_hi", "boot_lo", "boot_hi",
                         "pos_all_correct", "pos_none_correct", "nolose_rate", "nolose_wilson_lo",
                         "nolose_wilson_hi", "nolose_boot_lo", "nolose_boot_hi",
                         "expanded_rate", "median_n_correct"]  # fmt: skip
+MINE_STRATA = (("mine=1", 1, 1), ("mine>=2", 2, None))  # loại 2, phân tầng offline theo n_mine
+
+
+def _by_pos(rows: list[dict[str, Any]], key: str) -> dict[str, tuple[int, int]]:
+    acc: dict[str, list[int]] = {}
+    for r in rows:
+        v = acc.setdefault(r["pos_id"], [0, 0])
+        v[0] += int(r[key])
+        v[1] += 1
+    return {p: (v[0], v[1]) for p, v in acc.items()}
 
 
 def _rate_block(rows: list[dict[str, Any]], key: str) -> dict[str, Any]:
-    by_pos: dict[str, list[int]] = {}
-    for r in rows:
-        by_pos.setdefault(r["pos_id"], [0, 0])
-        by_pos[r["pos_id"]][0] += int(r[key])
-        by_pos[r["pos_id"]][1] += 1
+    by_pos = _by_pos(rows, key)
     k = sum(v[0] for v in by_pos.values())
     n = sum(v[1] for v in by_pos.values())
     lo, hi = wilson(k, n)
-    blo, bhi = _boot_ci({p: (v[0], v[1]) for p, v in by_pos.items()})
+    blo, bhi = _boot_ci(by_pos)
     return {
         "k": k,
         "n": n,
@@ -757,72 +861,162 @@ def _rate_block(rows: list[dict[str, Any]], key: str) -> dict[str, Any]:
     }
 
 
+def _weighted_block(
+    rows: list[dict[str, Any]],
+    strat: dict[str, str],
+    weights: dict[str, float],
+    key: str,
+    n_boot: int = BOOT_N,
+    seed: int = BOOT_SEED,
+) -> dict[str, Any]:
+    """Tỷ lệ chung = Σ w_s · tỷ lệ tầng s (w = trọng số tự nhiên trong pool, chuẩn hóa lại trên các
+    tầng có dữ liệu). Khoảng: bootstrap phân tầng (lấy lại thế trong từng tầng, kết hợp cùng w)."""
+    groups: dict[str, dict[str, tuple[int, int]]] = {}
+    for name, _, _ in STRATA:
+        bp = _by_pos([r for r in rows if strat.get(r["pos_id"]) == name], key)
+        if bp:
+            groups[name] = bp
+    wsum = sum(weights.get(n, 0.0) for n in groups)
+    if not groups or wsum <= 0:
+        return {"rate": math.nan, "blo": math.nan, "bhi": math.nan}
+    w = {n: weights.get(n, 0.0) / wsum for n in groups}
+
+    def rate(g: dict[str, tuple[int, int]]) -> float:
+        return sum(v[0] for v in g.values()) / sum(v[1] for v in g.values())
+
+    est = sum(w[n] * rate(g) for n, g in groups.items())
+    rng = random.Random(seed)
+    stats = []
+    for _ in range(n_boot):
+        tot = 0.0
+        for n in sorted(groups):
+            ids = sorted(groups[n])
+            k = m = 0
+            for _ in ids:
+                a, b = groups[n][ids[rng.randrange(len(ids))]]
+                k += a
+                m += b
+            tot += w[n] * k / m
+        stats.append(tot)
+    stats.sort()
+    return {
+        "rate": est,
+        "blo": stats[int(0.025 * n_boot)],
+        "bhi": stats[min(n_boot - 1, int(0.975 * n_boot))],
+    }
+
+
+def _choice_base(
+    choice_rows: list[dict[str, str]], sanity_rows: list[dict[str, str]], t: str, roll: str, it: Any
+) -> list[dict[str, Any]]:
+    if roll == "on":
+        return [
+            {"pos_id": r["pos_id"], "correct": r["ok"], "nolose": r["ok"]}
+            for r in sanity_rows
+            if r["type"] == t
+        ]
+    return [
+        {**r, "nolose": int(r["correct"] == "1" or r["keeps_win"] == "1")}
+        for r in choice_rows
+        if r["type"] == t and r["rollout"] == roll and int(r["iter"]) == it
+    ]
+
+
 def choice_table(
     choice_rows: list[dict[str, str]],
     positions: list[dict[str, str]],
     sanity_rows: list[dict[str, str]],
+    weights: dict[str, dict[str, float]] | None = None,
 ) -> list[dict[str, Any]]:
+    """Mỗi (loại, rollout, iter): dòng `all` (trọng số tự nhiên của tầng trong pool; không có
+    `weights` → gộp mẫu), `sample` (gộp mẫu, không trọng số), từng tầng `n_candidates`, và (loại 2)
+    tầng `n_mine`. `rollout = on` lấy từ sanity."""
+    weights = weights or {}
     strat = {p["pos_id"]: p["stratum"] for p in positions}
+    mine = {p["pos_id"]: int(p["n_mine"]) for p in positions if p.get("n_mine")}
     out = []
     for t in TYPES:
         for roll in (*ROLLOUTS, "on"):
             iters: tuple[Any, ...] = CHECKPOINTS if roll != "on" else ("",)
             for it in iters:
-                for s in ("all", *(x[0] for x in STRATA)):
-                    if roll == "on":
-                        rows = [
-                            {"pos_id": r["pos_id"], "correct": r["ok"], "nolose": r["ok"]}
-                            for r in sanity_rows
-                            if r["type"] == t
+                base = _choice_base(choice_rows, sanity_rows, t, roll, it)
+                groups: list[tuple[str, list[dict[str, Any]]]] = [("all", base), ("sample", base)]
+                for n, _, _ in STRATA:
+                    groups.append((n, [r for r in base if strat.get(r["pos_id"]) == n]))
+                if t == "win":
+                    for n, lo, hi in MINE_STRATA:
+                        sel = [
+                            r
+                            for r in base
+                            if mine.get(r["pos_id"], 0) >= lo
+                            and (hi is None or mine.get(r["pos_id"], 0) <= hi)
                         ]
-                    else:
-                        rows = [
-                            {
-                                **r,
-                                "nolose": int(r["correct"] == "1" or r["keeps_win"] == "1"),
-                            }
-                            for r in choice_rows
-                            if r["type"] == t and r["rollout"] == roll and int(r["iter"]) == it
-                        ]
-                    if s != "all":
-                        rows = [r for r in rows if strat.get(r["pos_id"]) == s]
-                    if not rows:
-                        continue
-                    c = _rate_block(rows, "correct")
-                    row: dict[str, Any] = {
-                        "type": t,
-                        "rollout": roll,
-                        "iter": it,
-                        "stratum": s,
-                        "n_pos": len({r["pos_id"] for r in rows}),
-                        "n_runs": c["n"],
-                        "correct": c["k"],
-                        "correct_rate": c["rate"],
-                        "wilson_lo": c["wlo"],
-                        "wilson_hi": c["whi"],
-                        "boot_lo": c["blo"],
-                        "boot_hi": c["bhi"],
-                        "pos_all_correct": c["all"],
-                        "pos_none_correct": c["none"],
-                    }
-                    if t == "win":
-                        nl = _rate_block(rows, "nolose")
-                        row.update(
-                            nolose_rate=nl["rate"],
-                            nolose_wilson_lo=nl["wlo"],
-                            nolose_wilson_hi=nl["whi"],
-                            nolose_boot_lo=nl["blo"],
-                            nolose_boot_hi=nl["bhi"],
-                        )
-                    if roll != "on":
-                        row["expanded_rate"] = sum(
-                            r["correct_expanded"] == "1" for r in rows
-                        ) / len(rows)
-                        row["median_n_correct"] = statistics.median(
-                            int(r["n_correct"]) for r in rows
-                        )
-                    out.append(row)
+                        groups.append((n, sel))
+                for s, rows in groups:
+                    if rows:
+                        out.append(_choice_row(t, roll, it, s, rows, strat, weights))
     return out
+
+
+def _choice_row(
+    t: str,
+    roll: str,
+    it: Any,
+    s: str,
+    rows: list[dict[str, Any]],
+    strat: dict[str, str],
+    weights: dict[str, dict[str, float]],
+) -> dict[str, Any]:
+    c = _rate_block(rows, "correct")
+    weighted = s == "all" and t in weights
+    row: dict[str, Any] = {
+        "type": t,
+        "rollout": roll,
+        "iter": it,
+        "stratum": s,
+        "weighting": "pool" if weighted else "sample",
+        "n_pos": len({r["pos_id"] for r in rows}),
+        "n_runs": c["n"],
+        "correct": c["k"],
+        "correct_rate": c["rate"],
+        "wilson_lo": c["wlo"],
+        "wilson_hi": c["whi"],
+        "boot_lo": c["blo"],
+        "boot_hi": c["bhi"],
+        "pos_all_correct": c["all"],
+        "pos_none_correct": c["none"],
+    }
+    if weighted:  # Wilson không áp dụng cho tỷ lệ có trọng số
+        wb = _weighted_block(rows, strat, weights[t], "correct")
+        row.update(
+            correct_rate=wb["rate"],
+            boot_lo=wb["blo"],
+            boot_hi=wb["bhi"],
+            wilson_lo="",
+            wilson_hi="",
+        )
+    if t == "win":
+        nl = _rate_block(rows, "nolose")
+        row.update(
+            nolose_rate=nl["rate"],
+            nolose_wilson_lo=nl["wlo"],
+            nolose_wilson_hi=nl["whi"],
+            nolose_boot_lo=nl["blo"],
+            nolose_boot_hi=nl["bhi"],
+        )
+        if weighted:
+            wb = _weighted_block(rows, strat, weights[t], "nolose")
+            row.update(
+                nolose_rate=wb["rate"],
+                nolose_boot_lo=wb["blo"],
+                nolose_boot_hi=wb["bhi"],
+                nolose_wilson_lo="",
+                nolose_wilson_hi="",
+            )
+    if roll != "on":
+        row["expanded_rate"] = sum(r["correct_expanded"] == "1" for r in rows) / len(rows)
+        row["median_n_correct"] = statistics.median(int(r["n_correct"]) for r in rows)
+    return row
 
 
 MATCH_COLUMNS = ["part", "iters", "tactics", "source", "raw", *SUMMARY_COLUMNS]
@@ -896,7 +1090,12 @@ def build_tables(
     cp = choice_path(quick, raw_dir)
     sp = table_dir / f"{p}sanity.csv"
     if cp.exists():
-        out["choice"] = choice_table(read_rows(cp), pos, read_rows(sp) if sp.exists() else [])
+        out["choice"] = choice_table(
+            read_rows(cp),
+            pos,
+            read_rows(sp) if sp.exists() else [],
+            pool_weights(quick, table_dir),
+        )
         _write(table_dir / f"{p}choice.csv", CHOICE_TABLE_COLUMNS, out["choice"])
     n_pairs = QUICK_PAIRS if quick else N_PAIRS
     match, paired, rates, times = [], [], [], []
@@ -968,7 +1167,7 @@ def estimate_full(
             "seq_minutes": round(positions_s / 60, 1),
             "est_wall_minutes": round(positions_s / 60, 1), "note": "đơn luồng"}]  # fmt: skip
     rows = read_rows(choice_path(True, raw_dir)) if choice_path(True, raw_dir).exists() else []
-    n_full = N_POS * len(TYPES) * N_SEEDS
+    n_full = N_PER_STRATUM * len(STRATA) * len(TYPES) * N_SEEDS
     for roll in ROLLOUTS:
         ts = [
             float(r["time_s"])
@@ -1008,9 +1207,10 @@ def estimate_full(
                         "est_wall_minutes": round((seq / sp + POOL_OVERHEAD_S) / 60, 1),
                         "note": f"{len(mr)} ván quick"})  # fmt: skip
     qp = load_positions(True, raw_dir)
-    scale = (len(TYPES) * N_POS + 3 * QUIET_PER_PHASE) / max(1, len(qp))
+    n_cost = len(TYPES) * len(STRATA) * N_PER_STRATUM + 3 * QUIET_PER_PHASE
+    scale = n_cost / max(1, len(qp))
     seq = cost_s * scale * CHECK_REPS  # quick đo 1 lần; full 3 lần check (search chỉ 1 lần → trên)
-    out.append({"part": "cost", "units": len(TYPES) * N_POS + 3 * QUIET_PER_PHASE,
+    out.append({"part": "cost", "units": n_cost,
                 "sec_per_unit": round(cost_s / max(1, len(qp)), 2),
                 "seq_minutes": round(seq / 60, 1), "est_wall_minutes": round(seq / 60, 1),
                 "note": "đơn luồng, cận trên"})  # fmt: skip
@@ -1098,9 +1298,9 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
     if mpath.exists():
         rows = [r for r in read_rows(mpath) if r["split"] == "all"]
         fig, axes = plt.subplots(1, 2, figsize=(11, 4.0), facecolor=SURFACE,
-                                 gridspec_kw={"width_ratios": [3, 2]})  # fmt: skip
+                                 gridspec_kw={"width_ratios": [3, 1.3]})  # fmt: skip
         ax = axes[0]
-        cats = [("mref", MREF_ITER), *(("greedy", it) for it in MATCH_ITERS)]
+        cats = [("mref", MREF_ITER), *(("greedy", it) for it in GREEDY_ITERS)]
         for j, (tac, col, mk) in enumerate((("off", "#2a78d6", "o"), ("on", "#eb6834", "s"))):
             xs, ys, lo, hi = [], [], [], []
             for i, (part, it) in enumerate(cats):
@@ -1124,7 +1324,7 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
         _style(ax)
         ax = axes[1]
         xs, ys, lo, hi = [], [], [], []
-        for i, it in enumerate(MATCH_ITERS):
+        for i, it in enumerate(SELF_ITERS):
             r = next((x for x in rows if x["part"] == "self" and int(x["iters"]) == it), None)
             if r is None:
                 continue
@@ -1140,9 +1340,9 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
                     markersize=7, elinewidth=1.2, markeredgecolor=SURFACE,
                     label="h300 bật thắng h300 tắt")  # fmt: skip
         ax.axhline(0.5, color=INK2, linestyle=":", linewidth=1)
-        ax.set_xticks(range(len(MATCH_ITERS)))
-        ax.set_xticklabels([f"{it} iter" for it in MATCH_ITERS])
-        ax.set_xlim(-0.5, len(MATCH_ITERS) - 0.5)
+        ax.set_xticks(range(len(SELF_ITERS)))
+        ax.set_xticklabels([f"{it} iter" for it in SELF_ITERS])
+        ax.set_xlim(-0.5, len(SELF_ITERS) - 0.5)
         ax.set_ylim(0.0, 1.05)
         ax.set_title("Đối đầu trực tiếp h300 bật vs tắt", color=INK, fontsize=10, loc="left")
         ax.legend(frameon=False, fontsize=8, labelcolor=INK)
@@ -1171,17 +1371,26 @@ def main() -> None:
     q, w, allow = args.quick, args.workers, args.allow_code_change
     t0 = time.perf_counter()
     pos_s = cost_s = math.nan
+
+    def step(name: str, fn: Any, *a: Any, **fields: Any) -> Any:
+        started, ts = _now(), time.perf_counter()
+        res = fn(*a)
+        log_run(name, q, started, ts, workers=fields.get("workers", 1), note=fields.get("note", ""))
+        return res
+
+    if args.step in ("bench", "all"):
+        step("bench", run_bench, q)
     if args.step in ("positions", "all"):
-        pos_s = run_positions(q)
+        pos_s = step("positions", run_positions, q)
     if args.step in ("sanity", "all"):
-        if not run_sanity(q):
+        if not step("sanity", run_sanity, q):
             sys.exit("sanity tactics bật < 100 % → dừng (D-21), báo An")
     if args.step in ("choice", "all"):
-        run_choice(q, w)
+        step("choice", run_choice, q, w, workers=w)
     if args.step in ("match", "all"):
         run_matches(q, w, allow)
     if args.step in ("cost", "all"):
-        cost_s = run_cost(q)
+        cost_s = step("cost", run_cost, q)
     build_tables(q)
     make_figures(q)
     if q and args.step == "all":
