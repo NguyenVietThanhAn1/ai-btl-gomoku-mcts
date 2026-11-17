@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
+from pathlib import Path
 
 import pygame
 
@@ -13,12 +14,22 @@ from gameai.agents.registry import GameSpec
 from gameai.core.game import Game, Move
 from gameai.gui.controller import MoveInfo
 
-FONT_NAMES = ("segoeui", "arial")  # có dấu tiếng Việt trên Windows; không có → font mặc định pygame
+FONT_NAMES = ("segoeui", "arial")  # fallback hệ thống (có dấu tiếng Việt trên Windows)
+FONT_DIR = Path(__file__).resolve().parent / "assets" / "fonts"
+FONT_FILES = {"regular": "Regular", "medium": "Medium", "semibold": "SemiBold", "bold": "Bold"}
+BOLD_WEIGHTS = ("semibold", "bold")
 
 
-def get_font(size: int, bold: bool = False) -> pygame.font.Font:
-    """Font hỗ trợ tiếng Việt: SysFont ưu tiên Segoe UI, rồi Arial, cuối cùng font mặc định.
+def font_path(weight: str = "regular") -> Path | None:
+    """File Be Vietnam Pro đóng gói cho `weight` (None nếu thiếu)."""
+    path = FONT_DIR / f"BeVietnamPro-{FONT_FILES[weight]}.ttf"
+    return path if path.exists() else None
 
+
+def get_font(size: int, bold: bool = False, weight: str | None = None) -> pygame.font.Font:
+    """Font tiếng Việt: Be Vietnam Pro đóng gói (D-29) → Segoe UI → Arial → font mặc định.
+
+    `weight` ∈ regular / medium / semibold / bold; không truyền → `bold` (tương thích P6.1).
     Có cache; cache bị xóa khi `pygame.quit()` (font cũ không dùng được nữa → access violation).
     """
     global _quit_hook
@@ -27,7 +38,7 @@ def get_font(size: int, bold: bool = False) -> pygame.font.Font:
     if not _quit_hook:  # pygame bỏ danh sách register_quit sau mỗi lần quit → đăng ký lại
         pygame.register_quit(_on_quit)
         _quit_hook = True
-    return _load_font(size, bold)
+    return _load_font(size, weight or ("bold" if bold else "regular"))
 
 
 _quit_hook = False
@@ -40,11 +51,15 @@ def _on_quit() -> None:
 
 
 @lru_cache(maxsize=64)
-def _load_font(size: int, bold: bool) -> pygame.font.Font:
+def _load_font(size: int, weight: str) -> pygame.font.Font:
+    path = font_path(weight)
+    if path is not None:
+        return pygame.font.Font(str(path), size)
+    bold = weight in BOLD_WEIGHTS
     for name in FONT_NAMES:
-        path = pygame.font.match_font(name, bold=bold)
-        if path:
-            return pygame.font.Font(path, size)
+        sys_path = pygame.font.match_font(name, bold=bold)
+        if sys_path:
+            return pygame.font.Font(sys_path, size)
     font = pygame.font.Font(None, size)
     font.set_bold(bold)
     return font

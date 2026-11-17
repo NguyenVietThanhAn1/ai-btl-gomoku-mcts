@@ -7,8 +7,8 @@
 ## Đang ở đâu (đọc mục này trước tiên)
 
 - **Task hiện tại:** P6.3 🔄 trên branch `feat/P6.3` (từ `develop` sau khi merge `feat/P6.1`, chưa push)
-- **Việc đang dở:** phiên 3a (An đổi hướng phiên 3 → giao diện sản phẩm "MoveMind", D-29): Theme + font + sprite + icon + bàn gỗ, làm lại Home và Play.
-- **Bước tiếp theo:** hết 3a → gửi An ảnh 2 phương án màu (`report/figures/gui/style/`), chờ chọn → 3b (màn còn lại, animation, sửa từ ảnh phiên 2, đo lại thời gian) → 3c. Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
+- **Việc đang dở:** phiên 3a xong — **chờ An chọn theme** (ảnh `report/figures/gui/style/{dark,warm}/`).
+- **Bước tiếp theo:** An chọn → đặt `DEFAULT_THEME`; 3b chỉ hoàn thiện + chụp theme được chọn (theme kia giữ token, `--theme`): Setup (Tùy chọn nâng cao, ⓘ), Demo, Help, modal, xem lại theo Theme; animation (cache không phình); đo lại thời gian (animation bật, > 15 % → báo An); ảnh `report/figures/gui/` → dừng gửi ảnh. Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27).
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -36,7 +36,7 @@
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
 | P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; chờ An chơi thử bằng tay |
-| P6.3 | GUI: game chơi được hoàn chỉnh | 🔄 | An | 2026-11-17 | D-29; phiên 3a (giao diện sản phẩm) |
+| P6.3 | GUI: game chơi được hoàn chỉnh | 🔄 | An | 2026-11-17 | D-29; 3a xong, chờ chọn theme |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ⬜ | An | | |
@@ -63,6 +63,13 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-17 — P6.3 phiên 3a (giao diện sản phẩm MoveMind, chờ chọn theme)
+- An đổi hướng phiên 3 (D-29 "Phiên 3" + 4 chỉnh khi duyệt: cache sprite không phình theo animation, cache xóa khi `pygame.quit`, chỉ đánh bóng theme được chọn, `set_icon`). Commit `a79c7b8` (D-29/PLAN/PROGRESS).
+- Mới: `gui/assets/fonts/` (Be Vietnam Pro 4 độ đậm + `OFL.txt` + README nguồn/license, tải từ google/fonts), `gui/render.py` (sprite 4× + smoothscale, `lru_cache` có maxsize, xóa khi quit; quân gradient numpy, X/O nét bo, bóng mờ, vạch đầu tròn, vân gỗ sinh bằng code), `gui/icons.py` (13 icon vẽ bằng code), `gui/brand.py` (`APP_NAME = "MoveMind"`, logo, wordmark, icon cửa sổ), `gui/screenshots.py` (ảnh headless), `.md` mỗi file.
+- Làm lại: `widgets.py` (Theme DARK/WARM, 4 cỡ chữ + lưới 8 px, Button có icon / ghost, IconButton, Tooltip, mọi hình qua `render`), `view.get_font` (font đóng gói theo độ đậm, fallback Segoe UI → Arial), `kinrow_view.py` (lớp tĩnh cache: bóng + khung + gỗ + lưới + nhãn; quân sprite; nước cuối một màu = vòng/khung; đường thắng vạch nối tâm có `win_progress`; overlay top-8 theo hạng), `play_scene.py` (thẻ có avatar quân, tên ngắn "MCTS · Khó" + ⓘ tooltip chi tiết/nguồn, Demo hiện "Cấu hình thí nghiệm · E3"; nút icon; card lịch sử + Phân tích; modal đặt trên panel, chỉ làm mờ panel), Home (wordmark + 4 nút icon + bàn 9×9 minh họa; bỏ "Minimax…"/"BTL…"), nhãn trò "Caro 3×3" / "Caro 15×15 · 5 quân thắng"; `pygame_app` caption + `set_icon` + `--theme`.
+- Test: `tests/test_gui_style.py` 10 test (token, mép mềm + cache, quit → init vẽ lại, icon, tên/caption/icon cửa sổ, Home không chữ kỹ thuật, nhãn trò, cache không tăng qua 40 frame có hover, tooltip nguồn, screenshots); test font đổi sang "ưu tiên font đóng gói" + "thiếu file → font hệ thống" (D-29). Full suite xanh (1 xfail chủ ý), golden xanh, ruff sạch.
+- Ảnh 2 phương án (Home, Play 15×15 có Phân tích + W/N + quân mờ, Play 3×3): `report/figures/gui/style/{dark,warm}/`.
 
 ### 2026-11-17 — P6.3 phiên 2/3 (UI, chờ duyệt ảnh)
 - Mới: `gui/widgets.py` (theme tối kiểu chess.com; Button, Toggle, SegmentedControl, Stepper, Modal, ScrollList theo cột), `gui/scene.py` (Scene, SceneManager), `gui/scenes.py` (Home, Setup, Demo, Help), `gui/play_scene.py` (AppState chuyển từ pygame_app; thẻ 2 người chơi, lịch sử, Đi lại / Ván mới / Đầu hàng / Menu, Phân tích + W/N, modal kết thúc, xem lại), `.md` mỗi file.

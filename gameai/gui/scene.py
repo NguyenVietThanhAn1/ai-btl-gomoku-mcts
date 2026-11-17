@@ -6,7 +6,7 @@ from typing import Any
 
 import pygame
 
-from gameai.gui.widgets import BG, Widget
+from gameai.gui.widgets import Widget, current_theme
 
 
 class Scene:
@@ -37,7 +37,7 @@ class Scene:
         """Gọi mỗi frame trước `draw`."""
 
     def draw(self, surf: pygame.Surface) -> None:
-        surf.fill(BG)
+        surf.fill(current_theme().bg)
         for w in self.widgets:
             w.draw(surf)
 

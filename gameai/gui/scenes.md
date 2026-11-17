@@ -11,6 +11,8 @@ Các màn Home, Setup (chọn chế độ), Demo thí nghiệm, Hướng dẫn.
 ## Public API
 ```python
 class HomeScene(Scene):   name = "home";  buttons: {"play", "demo", "help", "quit"}     # Esc → thoát
+    # wordmark MoveMind + 4 nút có icon (trái), bàn 9×9 minh họa (phải, hero_board cache theo theme);
+    # không chữ kỹ thuật (Minimax/BTL…, D-29 phiên 3)
 class SetupScene(Scene):  name = "setup"
     cfg: GameConfig                 # giữ giữa các lần vào màn
     controls: dict[str, Widget]     # "game", "mode", "side", "ai_kind", "ai_level", "ai_o_kind", "ai_o_level", "delay", "seed"

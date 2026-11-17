@@ -11,7 +11,8 @@ Lớp view chung cho mọi game trong GUI (vẽ bàn + chuyển click thành nư
 
 ## Public API
 ```python
-def get_font(size: int, bold: bool = False) -> pygame.font.Font  # Segoe UI → Arial → font mặc định; có cache
+def get_font(size, bold=False, weight=None) -> Font  # Be Vietnam Pro đóng gói → Segoe UI → Arial; có cache
+FONT_DIR = gui/assets/fonts;  def font_path(weight) -> Path | None   # weight: regular/medium/semibold/bold
 @dataclass class OverlayOpts: show: bool = True; show_wn: bool = False
 
 class GameView(ABC):
@@ -43,7 +44,9 @@ def make_view(spec: GameSpec, rect) -> GameView             # KeyError nếu kin
 - `make_view` import `gui/kinrow_view.py` để đăng ký; view mới gọi `register_view(kind, factory)` khi import.
 - Font cache (`lru_cache`) bị xóa khi `pygame.quit()` (đăng ký lại `register_quit` mỗi chu kỳ init vì pygame bỏ
   danh sách sau mỗi lần quit) — font cũ sau quit gây access violation.
-- Font: tương đương `SysFont("segoeui,arial")` nhưng viết tường minh — `pygame.font.match_font` theo thứ tự `FONT_NAMES = ("segoeui", "arial")` rồi `Font(path)`; không tìm thấy → `Font(None)` (mặc định). Đúng dấu tiếng Việt trên Windows.
+- **Font (D-29 phiên 3):** ưu tiên Be Vietnam Pro đóng gói (`assets/fonts`, SIL OFL 1.1, xem
+  `assets/fonts/README.md`) để hình giống nhau trên mọi máy; thiếu file → fallback hệ thống như P6.1.
+- Font hệ thống (fallback): tương đương `SysFont("segoeui,arial")` nhưng viết tường minh — `pygame.font.match_font` theo thứ tự `FONT_NAMES = ("segoeui", "arial")` rồi `Font(path)`; không tìm thấy → `Font(None)` (mặc định). Đúng dấu tiếng Việt trên Windows.
 
 ## Test
 - `tests/test_gui_controller.py`: render chuỗi có dấu ("Đang nghĩ…", "Hòa") trên Surface headless; khi máy có Segoe UI/Arial thì ảnh render trùng byte với font đó (không rơi về mặc định); app vẽ được.

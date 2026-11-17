@@ -11,7 +11,7 @@ Biến lựa chọn của người ở màn Setup (trò, chế độ, bên, lo�
 
 ## Public API
 ```python
-GAMES = {"3x3": (GAME3, "Caro 3×3 (k=3)"), "15x15": (GAME15, ...), "xiangqi": (None, "Cờ tướng")}  # None = chưa chơi được (P6.2)
+GAMES = {"3x3": (GAME3, "Caro 3×3"), "15x15": (GAME15, "Caro 15×15 · 5 quân thắng"), "xiangqi": (None, "Cờ tướng")}  # None = chưa chơi được (P6.2)
 MODES = {"human_ai": "Người vs AI", "ai_ai": "AI vs AI", "two_players": "2 người cùng máy"}
 SIDES = {"X": ..., "O": ..., "random": "Ngẫu nhiên"};  AI_NAMES = {"mcts": "MCTS", "alphabeta": "Alpha-Beta"}
 DEFAULT_AI_DELAY = 0.5

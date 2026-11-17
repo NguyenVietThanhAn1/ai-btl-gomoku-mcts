@@ -10,8 +10,8 @@ from gameai.arena import derive_seed
 from gameai.gui.presets import GAME3, GAME15, LEVEL_NAMES, Level, Preset, level_for
 
 GAMES: dict[str, tuple[GameSpec | None, str]] = {
-    "3x3": (GAME3, "Caro 3×3 (k=3)"),
-    "15x15": (GAME15, "Caro 15×15 (k=5)"),
+    "3x3": (GAME3, "Caro 3×3"),
+    "15x15": (GAME15, "Caro 15×15 · 5 quân thắng"),
     "xiangqi": (None, "Cờ tướng"),  # sắp có — P6.2
 }
 MODES = {"human_ai": "Người vs AI", "ai_ai": "AI vs AI", "two_players": "2 người cùng máy"}

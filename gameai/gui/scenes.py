@@ -7,6 +7,7 @@ from typing import Any
 
 import pygame
 
+from gameai.gui import brand, render
 from gameai.gui.game_config import (
     AI_NAMES,
     GAMES,
@@ -21,15 +22,17 @@ from gameai.gui.presets import LEVEL_NAMES, LEVELS, PRESET_ORDER, PRESETS, side_
 from gameai.gui.scene import Scene
 from gameai.gui.view import OverlayOpts
 from gameai.gui.widgets import (
-    ACCENT,
-    INK,
-    MUTED,
-    PANEL,
+    BODY,
+    TITLE,
+    WORDMARK,
     Button,
     SegmentedControl,
     Stepper,
     draw_text,
+    panel,
+    space,
 )
+from gameai.gui.widgets import current_theme as T
 
 W, H = 1280, 720
 BACK_RECT = (60, 640, 180, 50)
@@ -42,19 +45,26 @@ def level_line(cfg: GameConfig, choice: AIChoice) -> str:
 
 
 class HomeScene(Scene):
+    """Màn chào: wordmark + 4 nút bên trái, bàn minh họa bên phải (không chữ kỹ thuật, D-29)."""
+
     name = "home"
+    COL_X, COL_W, BTN_H = 120, 380, 56
+    HERO = pygame.Rect(676, 132, 456, 456)
 
     def on_enter(self, **_: Any) -> None:
-        x, w, h = W // 2 - 160, 320, 58
+        x, w, h = self.COL_X, self.COL_W, self.BTN_H
         m = self.manager
+        y0, gap = 330, space(2)
         self.buttons = {
-            "play": Button(
-                (x, 290, w, h), "Chơi", lambda: m.switch("setup"), primary=True, size=24
-            ),
-            "demo": Button((x, 360, w, h), "Demo thí nghiệm", lambda: m.switch("demo"), size=22),
-            "help": Button((x, 430, w, h), "Hướng dẫn", lambda: m.switch("help"), size=22),
-            "quit": Button((x, 500, w, h), "Thoát", m.quit, size=22),
-        }
+            "play": Button((x, y0, w, h), "Chơi", lambda: m.switch("setup"), primary=True,
+                           size=TITLE, icon="play"),
+            "demo": Button((x, y0 + (h + gap), w, h), "Demo thí nghiệm", lambda: m.switch("demo"),
+                           size=BODY + 1, icon="flask"),
+            "help": Button((x, y0 + 2 * (h + gap), w, h), "Hướng dẫn", lambda: m.switch("help"),
+                           size=BODY + 1, icon="book"),
+            "quit": Button((x, y0 + 3 * (h + gap), w, h), "Thoát", m.quit, size=BODY + 1,
+                           icon="close", ghost=True),
+        }  # fmt: skip
         self.widgets = list(self.buttons.values())
 
     def handle_key(self, key: int) -> None:
@@ -63,11 +73,65 @@ class HomeScene(Scene):
 
     def draw(self, surf: pygame.Surface) -> None:
         super().draw(surf)
-        draw_text(surf, "Caro AI", (W // 2, 110), 72, INK, bold=True, anchor="midtop")
-        draw_text(surf, "Minimax · Alpha-Beta · MCTS-UCT", (W // 2, 200), 24, ACCENT,
-                  anchor="midtop")  # fmt: skip
-        draw_text(surf, "BTL Trí tuệ nhân tạo — k-in-a-row (3×3, 15×15)", (W // 2, 236), 18, MUTED,
-                  anchor="midtop")  # fmt: skip
+        t = T()
+        wm = brand.draw_wordmark(surf, (0, 0), WORDMARK, t)  # đo kích thước rồi vẽ lại đúng chỗ
+        surf.fill(t.bg, wm)
+        brand.draw_wordmark(surf, (self.COL_X + wm.w // 2, 230), WORDMARK, t)
+        surf.blit(hero_board(self.HERO.w, t.name), self.HERO)
+
+
+HERO_STONES = (  # (hàng, cột, quân) trên bàn 9×9
+    (2, 2, 1), (3, 3, 1), (4, 4, 1), (5, 5, 1), (6, 6, 1), (3, 5, 2), (4, 3, 2),
+               (5, 4, 2), (2, 6, 2), (6, 2, 2), (4, 6, 1), (5, 3, 2))  # fmt: skip
+
+
+@render._cached(4)
+def hero_board(size: int, theme_name: str) -> pygame.Surface:
+    """Bàn 9×9 minh họa (gỗ, quân, đường thắng chéo) cho màn Home; cache theo theme."""
+    from gameai.gui.widgets import THEMES
+
+    t = THEMES[theme_name]
+    out = pygame.Surface((size, size), pygame.SRCALPHA)
+    pad, blur = 24, 18
+    frame = pygame.Rect(pad, pad, size - 2 * pad, size - 2 * pad)
+    out.blit(
+        render.shadow(frame.w, frame.h, 18, blur, t.shadow_alpha),
+        (frame.x - blur, frame.y - blur + 8),
+    )
+    out.blit(render.rounded_rect(frame.w, frame.h, 18, t.board_frame), frame)
+    inner = frame.inflate(-12, -12)
+    wood = render.wood(inner.w, inner.h, t.board_light, t.board_dark, t.board_grain, seed=11).copy()
+    n = 9
+    cell = inner.w // n
+    off = (inner.w - cell * n) // 2
+    lines = pygame.Surface(inner.size, pygame.SRCALPHA)
+    for i in range(n + 1):
+        p = off + i * cell
+        pygame.draw.line(lines, (*t.grid, 130), (off, p), (off + cell * n, p))
+        pygame.draw.line(lines, (*t.grid, 130), (p, off), (p, off + cell * n))
+    wood.blit(lines, (0, 0))
+    wood.blit(
+        render.rounded_mask(inner.w, inner.h, 14), (0, 0), special_flags=pygame.BLEND_RGBA_MULT
+    )
+    out.blit(wood, inner)
+    d = cell - 6
+    dark = render.stone(d, t.stone_dark, t.stone_dark_hi, (0, 0, 0))
+    light = render.stone(d, t.stone_light, t.stone_light_hi, (150, 146, 140))
+    sh = render.stone_shadow(d, max(30, t.shadow_alpha))
+
+    def center(r: int, c: int) -> tuple[int, int]:
+        return inner.x + off + c * cell + cell // 2, inner.y + off + r * cell + cell // 2
+
+    for r, c, v in HERO_STONES:
+        cx, cy = center(r, c)
+        out.blit(sh, sh.get_rect(center=(cx + 1, cy + 3)))
+        sprite = dark if v == 1 else light
+        out.blit(sprite, sprite.get_rect(center=(cx, cy)))
+    (x0, y0), (x1, y1) = center(2, 2), center(6, 6)
+    thick = max(6, cell // 6)
+    line = render.line(x1 - x0, y1 - y0, thick, (*t.win, 235))
+    out.blit(line, (x0 - thick, y0 - thick))
+    return out
 
 
 class SetupScene(Scene):
@@ -159,15 +223,15 @@ class SetupScene(Scene):
 
     def draw(self, surf: pygame.Surface) -> None:
         super().draw(surf)
-        draw_text(surf, "Chọn chế độ chơi", (W // 2, 36), 34, INK, bold=True, anchor="midtop")
+        draw_text(surf, "Chọn chế độ chơi", (W // 2, 36), 34, T().ink, bold=True, anchor="midtop")
         for label, cy in self.rows:
-            draw_text(surf, label, (self.LABEL_X, cy), 20, INK, bold=True, anchor="midleft")
+            draw_text(surf, label, (self.LABEL_X, cy), 20, T().ink, bold=True, anchor="midleft")
         lines = self.ai_lines()
         if lines:
             box = pygame.Rect(self.CTRL_X, self.info_y, self.CTRL_W, 18 + 26 * len(lines))
-            pygame.draw.rect(surf, PANEL, box, border_radius=8)
+            panel(surf, box)
             for i, line in enumerate(lines):
-                draw_text(surf, line, (box.x + 14, box.y + 10 + 26 * i), 17, ACCENT,
+                draw_text(surf, line, (box.x + 14, box.y + 10 + 26 * i), 17, T().accent,
                           max_width=box.w - 28)  # fmt: skip
 
 
@@ -192,9 +256,9 @@ class DemoScene(Scene):
 
     def draw(self, surf: pygame.Surface) -> None:
         super().draw(surf)
-        draw_text(surf, "Demo thí nghiệm", (W // 2, 40), 34, INK, bold=True, anchor="midtop")
+        draw_text(surf, "Demo thí nghiệm", (W // 2, 40), 34, T().ink, bold=True, anchor="midtop")
         draw_text(surf, "Cấu hình thí nghiệm: spec giống hệt E2 / E3 (phím 1 / 2 / 3 trong ván).",
-                  (W // 2, 92), 18, MUTED, anchor="midtop")  # fmt: skip
+                  (W // 2, 92), 18, T().muted, anchor="midtop")  # fmt: skip
 
 
 HELP_LINES = [
@@ -226,13 +290,13 @@ class HelpScene(Scene):
 
     def draw(self, surf: pygame.Surface) -> None:
         super().draw(surf)
-        draw_text(surf, "Hướng dẫn", (W // 2, 40), 34, INK, bold=True, anchor="midtop")
+        draw_text(surf, "Hướng dẫn", (W // 2, 40), 34, T().ink, bold=True, anchor="midtop")
         y = 110
         for text, header in HELP_LINES:
             if header:
                 y += 10
-                draw_text(surf, text, (120, y), 22, ACCENT, bold=True)
+                draw_text(surf, text, (120, y), 22, T().accent, bold=True)
                 y += 34
             else:
-                draw_text(surf, text, (140, y), 18, INK, max_width=W - 260)
+                draw_text(surf, text, (140, y), 18, T().ink, max_width=W - 260)
                 y += 30

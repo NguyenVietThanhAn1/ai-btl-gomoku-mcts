@@ -11,7 +11,7 @@ modal kết thúc; xem lại. Giữ toàn bộ phím tắt P6.1.
 
 ## Public API
 ```python
-BOARD_RECT = Rect(16, 16, 688, 688)      # gồm lề nhãn (view tự chừa 24 px)
+BOARD_RECT = Rect(24, 24, 672, 672)      # gồm khung + lề nhãn (view tự chừa)
 @dataclass class AppState:
     preset_key: str | None; seed; swapped; iterations; delay; overlay: OverlayOpts
     base: Preset | None; config: GameConfig | None
@@ -24,7 +24,10 @@ class PlayScene(Scene):  name = "play"
     restart(); handle_click(pos) -> bool; handle_key(key)
     result_view() -> (tiêu đề, dòng phụ, màu); open_result(); enter_review(ply); step(±1); exit_review()
     displayed() -> (Game, MoveInfo | None)   # thế đang vẽ: bản dựng lại khi xem lại, không thì ván thật
-    player_name(side) -> (tên, dòng cấu hình)
+    player_name(side) -> (tên ngắn "MCTS · Khó", chi tiết + nguồn)   # chi tiết hiện ở tooltip ⓘ
+    subtitle(side) -> (dòng dưới tên, tô nhấn?)   # Demo: "Cấu hình thí nghiệm · E3" hiện rõ
+    info_lines(side) -> list[str]                  # tooltip ⓘ: spec, nguồn, seed, độ trễ
+    info / tips: dict[side, IconButton / Tooltip]
 ```
 
 ## Bố cục (1280×720)

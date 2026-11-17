@@ -15,12 +15,14 @@ import time
 
 import pygame
 
+from gameai.gui import brand
 from gameai.gui.controller import GameController
 from gameai.gui.play_scene import BOARD_RECT, AppState, PlayScene
 from gameai.gui.presets import PRESET_ORDER
 from gameai.gui.scene import SceneManager
 from gameai.gui.scenes import DemoScene, HelpScene, HomeScene, SetupScene
 from gameai.gui.view import GameView, OverlayOpts
+from gameai.gui.widgets import DEFAULT_THEME, THEMES, set_theme
 
 __all__ = ["WINDOW", "BOARD_RECT", "FPS", "App", "AppState", "autoplay_move", "run", "main"]
 
@@ -121,7 +123,8 @@ def run(state: AppState | None, autoplay: bool = False, max_frames: int | None =
     """Vòng lặp chính, khóa 30 fps. `autoplay`: tự đánh thay người và thoát khi ván xong."""
     set_dpi_aware()
     pygame.init()
-    pygame.display.set_caption("Caro AI — Minimax / Alpha-Beta / MCTS")
+    pygame.display.set_caption(brand.APP_NAME)
+    pygame.display.set_icon(brand.window_icon())
     app = App(state)
     clock = pygame.time.Clock()
     rng = random.Random(state.seed if state is not None else 0)
@@ -146,7 +149,7 @@ def run(state: AppState | None, autoplay: bool = False, max_frames: int | None =
 
 
 def main(argv: list[str] | None = None) -> None:
-    ap = argparse.ArgumentParser(description="GUI Caro AI (pygame).")
+    ap = argparse.ArgumentParser(description=f"{brand.APP_NAME} — GUI caro (pygame).")
     ap.add_argument("--preset", choices=PRESET_ORDER, default=None,
                     help="vào thẳng ván với preset thí nghiệm (bỏ qua menu)")  # fmt: skip
     ap.add_argument("--seed", type=int, default=0)
@@ -158,7 +161,9 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--autoplay", action="store_true", help="tự đánh thay người, thoát khi hết ván")
     ap.add_argument("--max-frames", type=int, default=None)
     ap.add_argument("--timeout", type=float, default=None)
+    ap.add_argument("--theme", choices=sorted(THEMES), default=DEFAULT_THEME, help="bảng màu")
     args = ap.parse_args(argv)
+    set_theme(args.theme)
     preset = args.preset if args.preset is not None or not args.autoplay else PRESET_ORDER[0]
     state = None
     if preset is not None:

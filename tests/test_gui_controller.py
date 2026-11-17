@@ -233,15 +233,35 @@ def test_vietnamese_font_renders():
         assert img.get_width() > 0
 
 
-def test_font_prefers_system_vietnamese_font():
-    """Có Segoe UI / Arial trên máy → phải dùng đúng font đó (không rơi về font mặc định)."""
-    path = next((p for p in map(pygame.font.match_font, FONT_NAMES) if p), None)
-    if path is None:
-        pytest.skip("máy không có Segoe UI / Arial")
-    expected = pygame.font.Font(path, 20).render("Hòa", True, (0, 0, 0))
+def test_font_prefers_packaged_font():
+    """D-29: ưu tiên Be Vietnam Pro đóng gói (hình giống nhau trên mọi máy)."""
+    from gameai.gui import view
+
+    path = view.font_path("regular")
+    assert path is not None and path.name == "BeVietnamPro-Regular.ttf"
+    assert (path.parent / "OFL.txt").exists()
+    expected = pygame.font.Font(str(path), 20).render("Hòa", True, (0, 0, 0))
     got = get_font(20).render("Hòa", True, (0, 0, 0))
-    assert got.get_size() == expected.get_size()
     assert pygame.image.tobytes(got, "RGBA") == pygame.image.tobytes(expected, "RGBA")
+    for weight in ("medium", "semibold", "bold"):
+        assert view.font_path(weight) is not None
+
+
+def test_font_falls_back_to_system_font(monkeypatch, tmp_path):
+    """Thiếu file đóng gói → Segoe UI / Arial (nếu máy có)."""
+    from gameai.gui import view
+
+    sys_path = next((p for p in map(pygame.font.match_font, FONT_NAMES) if p), None)
+    if sys_path is None:
+        pytest.skip("máy không có Segoe UI / Arial")
+    monkeypatch.setattr(view, "FONT_DIR", tmp_path)
+    view._load_font.cache_clear()
+    try:
+        expected = pygame.font.Font(sys_path, 20).render("Hòa", True, (0, 0, 0))
+        got = get_font(20).render("Hòa", True, (0, 0, 0))
+        assert pygame.image.tobytes(got, "RGBA") == pygame.image.tobytes(expected, "RGBA")
+    finally:
+        view._load_font.cache_clear()
 
 
 def test_ai_vs_ai_15x15_full_game():

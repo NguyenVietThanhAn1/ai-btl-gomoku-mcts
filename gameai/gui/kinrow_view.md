@@ -6,7 +6,8 @@
 **Trạng thái:** ✅ ổn định  ·  **Task:** P6.1 (D-28), P6.3 (D-29)  ·  **Cập nhật:** 2026-11-17
 
 ## Mục đích
-`GameView` cho `KInRow` (3×3 và 15×15): vẽ bàn dạng ô, nước cuối, đường thắng, overlay thống kê gốc MCTS.
+`GameView` cho `KInRow` (3×3 và 15×15): bàn gỗ + khung + bóng (lớp tĩnh cache), quân sprite khử răng cưa,
+nước cuối, đường thắng vạch nối tâm, overlay top-8 gốc MCTS (P6.3 phiên 3a).
 
 ## Public API
 ```python
@@ -21,7 +22,13 @@ class KInRowView(GameView):
     def draw_ghost(self, surf, move, player) -> None  # quân mờ (alpha 110)
     def winning_cells(self, game, last) -> list[int]  # winning_line quanh nước cuối nếu có người thắng
     def draw(self, surf, game, last, overlay_info, opts) -> None
+    def static_layer(theme=None) -> Surface          # bóng + khung + gỗ + lưới + nhãn; dựng lại khi đổi theme
+    def piece_sprite(v, theme=None) -> Surface       # sprite chuẩn (cache) của quân 1 = X / 2 = O
+    def draw_piece(surf, m, v, scale=1.0, alpha=255) # scale/alpha cho animation (không thêm cache)
+    def draw_last_marker(surf, move, theme=None)     # một màu last_move: vòng quanh quân 15×15, khung bo 3×3
+    win_progress: float                             # 0→1, đường thắng vẽ dần (scene điều khiển)
 def winning_line(board, n, k, move) -> list[int]      # ô thẳng hàng ≥ k qua move (chỉ đọc board)
+def top_k(stats, k=8) -> [(hạng, move, N, W/N)]      # overlay: K nước N lớn nhất, màu đậm theo hạng
 ```
 - Đăng ký `VIEWS["kinrow"]` khi import.
 - Vẽ: 3×3 (n ≤ 5) chữ X đỏ / O xanh; 15×15 quân đen (X) / trắng (O). Nhãn tọa độ: cột dưới bàn, hàng bên trái (lề 24 px,
