@@ -46,6 +46,7 @@
 | P8.2 | Xiangqi eval + AB | ⬜ | An | | |
 | P8.3 | Xiangqi MCTS | ⬜ | An | | |
 | P8.4 | Xiangqi experiments | ⬜ | An | | |
+| B2 | Bài 2 (Bonus) | ⬜ | | | chưa chốt phạm vi — chờ An xác nhận yêu cầu với giảng viên (PLAN §0) |
 
 ## Kết quả thí nghiệm đã có
 
