@@ -15,12 +15,12 @@ class Scene:
     def on_enter(self, **kwargs) -> None       # gọi mỗi lần switch tới màn
     def handle_event(self, ev) -> bool         # chuột: phát cho widget từ trên xuống (widget vẽ sau nhận trước)
     def handle_key(self, key) -> None          # mặc định: Esc → "home"
-    def update(self) -> None;  def draw(self, surf) -> None   # draw mặc định: nền + widget
+    def update(self, dt=0.0) -> None;  def draw(self, surf) -> None   # update mặc định: widget.update(dt)
 class SceneManager:
     def __init__(self, surface);  scenes: dict[str, Scene];  current; current_name; running
     def add(self, scene);  def switch(self, name, **kw) -> Scene;  def quit(self)
     def handle_event(self, ev)                 # QUIT → quit(); KEYDOWN → current.handle_key; còn lại → current.handle_event
-    def tick(self)                             # current.update() + current.draw(surface)
+    def tick(self, dt=1/30)                    # current.update(dt) + draw; + crossfade 150 ms sau switch
 ```
 
 ## Phụ thuộc

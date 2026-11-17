@@ -33,6 +33,9 @@ class SegmentedControl(Widget): (rect, options=[(key, nhãn)], selected, on_chan
 class Stepper(Widget):  (rect, value, step, lo, hi, on_change=None, fmt=str)   # nút − / + (minus, plus)
 class Modal(Widget):    (rect, ..., dim_rect=None)  show(title, lines, buttons, title_color); close(); open
 class Tooltip(Widget):  (rect, lines | () -> lines, width=340)   # hiện khi hover rect; vẽ sau cùng
+class Disclosure(Widget): (rect, label, open_=False, on_toggle=None)  # "Tùy chọn nâng cao" thu gọn / mở
+def wrap_text(text, size, width, weight="regular") -> list[str]   # gói dòng theo từ
+Widget.update(dt)   # tween mỗi frame (Scene.update gọi); Button: màu hover RGBA 100 ms; Modal: fade + slide
 class ScrollList(Widget): (rect, row_h=26, on_click=None, columns=())
     rows; selected; offset;  set_rows(rows, follow=False); scroll(d); ensure_visible(i); row_rect(i)
 ```
@@ -47,6 +50,8 @@ class ScrollList(Widget): (rect, row_h=26, on_click=None, columns=())
 ## Thiết kế & quyết định
 - Không có hệ layout: mỗi màn đặt `rect` tuyệt đối (cửa sổ cố định 1280×720, D-28).
 - Trạng thái hover cập nhật từ `MOUSEMOTION`; vẽ hoàn toàn từ trạng thái → test headless chỉ cần gửi event.
+- 3b: màu đang chuyển (hover) vẽ bằng `render.tint(mask)` (không cache); `ScrollList.symbols` = ký hiệu → sprite
+  (font không có glyph ● ○, dùng cho lịch sử Đen/Trắng).
 
 ## Test
 - `tests/test_gui_scenes.py::test_widgets_basic` (Button disabled, Toggle, Segmented disabled, ScrollList kẹp/cuộn,

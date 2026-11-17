@@ -16,6 +16,7 @@ python -m gameai.experiments.p63_gui_timing --boards 15     # chỉ 15×15 (gi�
 python -m gameai.experiments.p63_gui_timing --quick         # 1 ván/mức, file p63quick_* (không commit)
 ```
 - Không cắm sạc → dừng (D-21); `--allow-battery` để bỏ qua (số đo khi đó không dùng được).
+- Animation GUI bật mặc định → file `p63anim_*` (cột `animations = 1`); `--no-anim` → `p63_*` (bảng gốc D-29).
 - Thời gian: 3×3 ~10 s; 15×15 vài phút (MCTS Khó ~2–5 s/nước chiếm phần lớn).
 
 ## Điều kiện đo (D-21)

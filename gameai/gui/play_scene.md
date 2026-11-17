@@ -28,6 +28,8 @@ class PlayScene(Scene):  name = "play"
     subtitle(side) -> (dòng dưới tên, tô nhấn?)   # Demo: "Cấu hình thí nghiệm · E3" hiện rõ
     info_lines(side) -> list[str]                  # tooltip ⓘ: spec, nguồn, seed, độ trễ
     info / tips: dict[side, IconButton / Tooltip]
+    side(p) -> str; result_text() -> str           # tên bên theo view: 15×15 "Đen"/"Trắng", 3×3 "X"/"O"
+    update(dt)                                     # tween: đặt quân, đường thắng, modal, hover
 ```
 
 ## Bố cục (1280×720)
@@ -51,6 +53,9 @@ class PlayScene(Scene):  name = "play"
 - Modal kết thúc (mở khi ván vừa hết): người vs AI "Bạn thắng!" / "Bạn thua" / "Bạn đã đầu hàng" / "Hòa"; khác: "X thắng",
   "O đầu hàng", "Hòa"; dòng phụ `result_text` + số nước + seed; nút Chơi lại / Xem lại / Về menu.
 - Xem lại (chỉ sau khi hết ván; ✂ khi đang chơi): ‹ › / ← →, click dòng lịch sử; `ctrl.position_at(k)` dựng thế, ván thật không đổi; click bàn bị bỏ.
+- 15×15 dùng Đen/Trắng trong lời văn (lượt, modal, nút "Đen đầu hàng", thẻ "Người chơi Đen"), lịch sử
+  dùng chấm ●/○ (sprite); 3×3 giữ X/O. Modal (200 px) đặt trên panel phải, chỉ làm mờ panel; dòng phụ bỏ câu trùng tiêu đề.
+- Card Phân tích cao 200 px: tiêu đề + công tắc, nước cuối, bảng top-5 có lề dưới (test kiểm).
 - Phím: P6.1 (1/2/3, N, S, [ ], I/K, −/=, O, W, Space) + ← → (xem lại). Esc: modal mở → đóng, không thì thoát.
 
 ## Phụ thuộc

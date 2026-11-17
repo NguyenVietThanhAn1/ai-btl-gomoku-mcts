@@ -15,6 +15,7 @@ python -m gameai.gui.screenshots --theme warm --only home play15 play3 --out rep
 ```
 - Màn (`--only`): `home`, `setup`, `play15` (người X vs MCTS Vừa, 4 nước, Phân tích + W/N, chuột trên ô trống),
   `play3` (người X vs MCTS Khó, Phân tích), `modal` (2 người 15×15, X thắng), `review` (xem lại nước 5), `demo`, `help`.
+- Chụp với animation tắt (trạng thái cuối ngay), theme mặc định = dark (An chọn ở cuối 3a).
 - Ván tất định theo seed (MCTS theo iteration); thời gian trên thẻ khác nhau giữa các lần chạy → ảnh không trùng byte.
 
 ## Public API

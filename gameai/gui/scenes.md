@@ -33,6 +33,10 @@ def level_line(cfg, choice) -> str
 | Setup / Demo / Help | Quay lại, Esc | Home |
 | Demo | chọn preset | Play (preset P6.1 nguyên spec, nhãn "cấu hình thí nghiệm") |
 
+- Setup (3b): card "Ván mới"; 15×15 ghi "Đen · đi trước" / "Trắng · đi sau", AI vs AI "AI Đen" / "AI Trắng";
+  dưới hàng AI là tóm tắt "Đối thủ: MCTS · Khó" + ⓘ (tooltip: spec + nguồn); seed trong "Tùy chọn nâng cao"
+  (`controls["advanced"]`, thu gọn mặc định). Demo: 3 card, nhãn "CẤU HÌNH THÍ NGHIỆM · E2/E3" hiện rõ.
+  Help: card Luật chơi / Trong ván (gói dòng) + card Phím tắt (chip).
 - Setup: Cờ tướng disabled ("sắp có — P6.2"). "Bạn cầm" chỉ ở người vs AI; AI vs AI có 2 hàng AI (X, O) + **Độ trễ AI**
   (0–5 s, bước 0,25); 2 người không có hàng AI. Hộp dưới cùng ghi tên cấu hình thật + nguồn của từng bên.
 

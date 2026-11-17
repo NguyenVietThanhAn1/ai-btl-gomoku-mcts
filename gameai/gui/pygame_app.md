@@ -13,7 +13,7 @@ Cửa sổ game Caro AI (người vs AI, AI vs AI, 2 người) để chơi, demo
 ```
 python -m gameai.gui.pygame_app [--preset KEY] [--seed S] [--delay GIÂY] [--iterations N] [--swap]
                                 [--no-overlay] [--wn] [--autoplay] [--max-frames F] [--timeout GIÂY]
-                                [--theme dark|warm]     # caption + icon cửa sổ = MoveMind (brand.py)
+                                [--theme dark|warm] [--no-anim]   # caption + icon = MoveMind; dark mặc định (An chọn)
 ```
 - Không có `--preset` → mở **Home** (menu). Có `--preset` (`3x3_human_mcts` | `15_human_h300` | `15_h300_vs_ab2`, xem
   `presets.md`) → vào thẳng màn ván với cấu hình thí nghiệm; các cờ khác như P6.1. `--autoplay` không kèm preset → preset 1.

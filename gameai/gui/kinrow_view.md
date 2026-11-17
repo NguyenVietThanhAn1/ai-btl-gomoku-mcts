@@ -27,10 +27,14 @@ class KInRowView(GameView):
     def draw_piece(surf, m, v, scale=1.0, alpha=255) # scale/alpha cho animation (không thêm cache)
     def draw_last_marker(surf, move, theme=None)     # một màu last_move: vòng quanh quân 15×15, khung bo 3×3
     win_progress: float                             # 0→1, đường thắng vẽ dần (scene điều khiển)
+    anim_move: (ô, scale, alpha) | None             # quân đang đặt (scene điều khiển)
+    stones: bool; side_name(p) -> "Đen"/"Trắng" (15×15) | "X"/"O" (3×3); side_symbol(p) -> "●"/"○" | "X"/"O"
 def winning_line(board, n, k, move) -> list[int]      # ô thẳng hàng ≥ k qua move (chỉ đọc board)
 def top_k(stats, k=8) -> [(hạng, move, N, W/N)]      # overlay: K nước N lớn nhất, màu đậm theo hạng
 ```
 - Đăng ký `VIEWS["kinrow"]` khi import.
+- Overlay (3b): ô trống tô màu theo hạng (15×15 alpha 215 → 75; 3×3 nhạt hơn 120 → 36 để vân gỗ + chữ đọc rõ) + "#hạng",
+  N, (W/N); ô đã có quân (thường #1 = nước AI vừa đi) không tô, chỉ gắn badge "#k" ở góc trên-phải, vẽ sau vòng nước cuối.
 - Vẽ: 3×3 (n ≤ 5) chữ X đỏ / O xanh; 15×15 quân đen (X) / trắng (O). Nhãn tọa độ: cột dưới bàn, hàng bên trái (lề 24 px,
   khớp `move_label` trong lịch sử). Nước cuối: nền vàng mờ + khung đỏ. Đường thắng: khung xanh lá.
 - Overlay (khi `opts.show` và `overlay_info.root_stats` khác rỗng): mỗi nước ở gốc tô cam với độ đậm ∝ N/maxN,

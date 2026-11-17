@@ -7,8 +7,8 @@
 ## Đang ở đâu (đọc mục này trước tiên)
 
 - **Task hiện tại:** P6.3 🔄 trên branch `feat/P6.3` (từ `develop` sau khi merge `feat/P6.1`, chưa push)
-- **Việc đang dở:** phiên 3a xong — **chờ An chọn theme** (ảnh `report/figures/gui/style/{dark,warm}/`).
-- **Bước tiếp theo:** An chọn → đặt `DEFAULT_THEME`; 3b chỉ hoàn thiện + chụp theme được chọn (theme kia giữ token, `--theme`): Setup (Tùy chọn nâng cao, ⓘ), Demo, Help, modal, xem lại theo Theme; animation (cache không phình); đo lại thời gian (animation bật, > 15 % → báo An); ảnh `report/figures/gui/` → dừng gửi ảnh. Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27).
+- **Việc đang dở:** phiên 3b xong — **chờ An duyệt ảnh** `report/figures/gui/*.png` (theme tối).
+- **Bước tiếp theo:** An duyệt → 3c: autoplay mọi chế độ × bàn × AI, `.md` hoàn chỉnh (✅), spec-reviewer, PROGRESS, commit `P6.3: ...` (không push, không merge); An chơi thử bằng chuột trên cửa sổ thật. Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27).
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -36,7 +36,7 @@
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
 | P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; chờ An chơi thử bằng tay |
-| P6.3 | GUI: game chơi được hoàn chỉnh | 🔄 | An | 2026-11-17 | D-29; 3a xong, chờ chọn theme |
+| P6.3 | GUI: game chơi được hoàn chỉnh | 🔄 | An | 2026-11-17 | D-29; 3b xong, chờ duyệt ảnh |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ⬜ | An | | |
@@ -63,6 +63,13 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-17 — P6.3 phiên 3b (theme tối hoàn thiện, animation, đo lại; chờ duyệt ảnh)
+- An chọn theme **tối**; 4 chỉnh thêm (overlay badge trên ô có quân, overlay 3×3 nhạt, Đen/Trắng + ●/○ ở 15×15, bảng Phân tích đủ lề) — ghi D-29.
+- Mới: `gui/anim.py` (+`.md`: Tween theo dt, cờ tắt), `tests/conftest.py` (animation tắt cho mọi test), `tests/test_gui_polish.py` (12 test: tween, cache không tăng khi chạy trọn animation đặt quân + hover qua 60 frame, modal / đường thắng / crossfade, hover dùng tint, overlay badge + 3×3 nhạt, Đen/Trắng, bảng Phân tích trong card, modal không che bàn, Disclosure, tooltip Setup, thời gian người với clock giả).
+- Làm lại: Setup (card, "Đen · đi trước", tóm tắt "Đối thủ: MCTS · Khó" + ⓘ, seed trong "Tùy chọn nâng cao"), Demo (card + nhãn "CẤU HÌNH THÍ NGHIỆM · E2/E3"), Help (card + chip phím, gói dòng; bỏ glyph ← → mà font không có), modal 200 px trên panel (fade + slide, bỏ dòng trùng tiêu đề); widget `Disclosure`, `wrap_text`, hover tween; SceneManager crossfade + `tick(dt)`; `GameController(clock=...)`; `p63_gui_timing` cột `animations`, `--no-anim`, file `p63anim_*`; `pygame_app --no-anim`.
+- Đo (AC, Balanced, bench 0,827× E5 — máy chậm hơn lần gốc ~17 %): MCTS Khó 15×15 2,05 / 2,51 s (gốc 1,85 / 2,38; +10,8 % / +5,3 %) → dưới 15 %, giữ. D-29.
+- Full suite xanh (1 xfail chủ ý), golden xanh, ruff sạch. Ảnh: `report/figures/gui/{home,setup,play15,play3,modal,review,demo,help}.png`.
 
 ### 2026-11-17 — P6.3 phiên 3a (giao diện sản phẩm MoveMind, chờ chọn theme)
 - An đổi hướng phiên 3 (D-29 "Phiên 3" + 4 chỉnh khi duyệt: cache sprite không phình theo animation, cache xóa khi `pygame.quit`, chỉ đánh bóng theme được chọn, `set_icon`). Commit `a79c7b8` (D-29/PLAN/PROGRESS).

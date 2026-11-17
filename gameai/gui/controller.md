@@ -19,7 +19,8 @@ cửa sổ. **Không import pygame** → test được headless. Không phụ th
 @dataclass class AIResult:   game_id, ply, player, move, stats, root_stats, time, error
 
 class GameController:
-    def __init__(self, preset: Preset, seed: int = 0, delay: float | None = None)  # None → preset.delay
+    def __init__(self, preset, seed=0, delay=None, clock=time.monotonic)  # delay None → preset.delay;
+        # clock: đồng hồ (giây) cho độ trễ AI + thời gian nghĩ của người — tiêm được cho test (P6.3)
     game; preset; seed; delay; paused; game_id; history: list[MoveInfo]; error: str | None
     specs / agents: dict[player, AgentSpec | None] / dict[player, Agent | None]   # None = người
     thinking: bool; ply; last; last_ai; over; winner; ai_vs_ai

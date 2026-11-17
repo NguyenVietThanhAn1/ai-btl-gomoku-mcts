@@ -26,6 +26,8 @@ class GameView(ABC):
     def preview(self, pos, game) -> Move | None             # nước nếu click ở pos (hover); KHÔNG đổi trạng thái input; mặc định None
     def draw_ghost(self, surf, move, player) -> None        # quân mờ; mặc định không vẽ
     def winning_cells(self, game, last) -> list[Move]       # đường thắng; mặc định []
+    def side_name(self, player) -> str                      # lời văn: mặc định "X"/"O"
+    def side_symbol(self, player) -> str                    # lịch sử: mặc định = side_name
 
 VIEWS: dict[str, Callable[[GameSpec, Rect], GameView]]
 def register_view(kind, factory) -> None
