@@ -10,7 +10,7 @@ Xem [docs/SETUP.md](docs/SETUP.md) (venv `.venv`, Python 3.11+, `python -m pip i
 python -m pytest -q                              # test (phải xanh)
 python -m ruff check . --fix; python -m ruff format .
 python -m gameai.experiments.plots --check       # bảng/hình báo cáo sinh lại từ results/raw
-python -m gameai.gui.pygame_app                  # GUI (sau P6)
+python -m gameai.gui.pygame_app --preset 3x3_human_mcts   # GUI; preset: 3x3_human_mcts | 15_human_h300 | 15_h300_vs_ab2 (phím: gameai/gui/pygame_app.md)
 ```
 
 ## Quy ước làm việc nhóm (D-27)
