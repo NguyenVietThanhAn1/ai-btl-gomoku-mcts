@@ -198,6 +198,7 @@
     - 100 iter — **một phần.** Con sai có W = 0: 0,73 [0,64; 0,82] (gộp) vs rand 0,55 → cao hơn rõ nhưng dưới ngưỡng 0,8. Lần chọn sai chủ yếu do rollout đầu của chính ô chặn thua (W/N ô chặn 0,17, N trung vị 1), nước sai được chọn có W/N > 0 chỉ 61 % → không phải "nước sai thoát phạt" như dự đoán P1b. Lần chọn đúng: N ô chặn > mọi con sai 68 %.
     - 1000 iter — **khớp cơ chế, không khớp độ lớn.** W/N nước sai được chọn 0,90 [0,86; 0,93] (dự đoán ≈ 0,6), ≥ W/N ô chặn (0,65) ở 100 % lần; ô thắng của đối thủ đã mở dưới nó 0,20 [0,11; 0,29].
     - 5000 iter — **khớp.** Đã mở 0,20 → 0,97 [0,91; 1,00]; W/N nút sai top khi đã mở 0,69 vs chưa mở 0,94; W/N nước sai được chọn 0,90 → 0,70 (vẫn > ô chặn 0,60 trong nhóm sai → bác bỏ mới bắt đầu, N nút bác bỏ trung vị 3).
+  - **Tính hợp lệ của raw:** `raw/e6_mechanism.csv` có `git_dirty = 1` (lúc chạy `experiments/` và DECISIONS chưa commit); code ảnh hưởng cây (agents/games/heuristics/core/arena) không đổi so với `kinrow-final` (kiểm trước khi chạy), 4 500/4 500 checkpoint khớp `e6_choice.csv` → dữ liệu hợp lệ.
 
 ### D-22 (2026-11-17) — Phase P8 cờ tướng: phạm vi, git, thiết kế game (P8.0)
 - **Phạm vi:** P8 **bắt buộc** (đề: điều kiện điểm > 9). Thứ tự `P8.0 → P8.1 → P8.2 → P8.3 → P6 → P8.4 → P7` (P6 GUI cho cả hai trò, chỉ phụ thuộc P8.1). Lõi / cắt được (✂) ghi ở PLAN P8. An duyệt 2026-11-17.
@@ -223,3 +224,10 @@
 - **Thứ tự mới** (An quyết): `P8.0 → P7.1 → P6.1 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4 → P7.2–P7.4`. Lý do: khép phần k-in-row (bảng/hình báo cáo, GUI k-in-row) khi còn nhớ chi tiết, trước khối việc lớn cờ tướng.
 - **Tách P6:** P6.1 = khung GUI + lớp view theo game + view k-in-row (gộp ✂ P4.3); P6.2 = view cờ tướng, sau P8.3.
 - **Git:** `xiangqi` fast-forward vào `master` (`faf5577`); P7.1 / P6.1 làm trên `master`; tới P8.1 tạo lại branch `xiangqi` từ master. Tag `kinrow-final` giữ nguyên; golden k-in-row vẫn là điều kiện mọi sửa agent.
+
+### D-27 (2026-11-17) — Làm việc nhóm: quy ước git và PROGRESS
+- **Branch:** `master` = bản ổn định / nộp được, **chỉ merge từ `develop` ở mốc**, không commit thẳng. `develop` = tích hợp. Mỗi task một branch `feat/<task-id>` (vd. `feat/P6.1`) tạo từ `develop`; merge về `develop` sau khi `pytest` + `ruff` xanh và spec-reviewer PASS. Branch `xiangqi` (D-22/D-26) đã xóa local — P8.1 tạo `feat/P8.1` từ `develop`. Tag `kinrow-final` giữ nguyên (số liệu E1–E6 khóa).
+- **Commit:** `<TaskID>: <mô tả ngắn>`, không trailer (CLAUDE.md).
+- **PROGRESS.md:** mỗi người chỉ sửa dòng task của mình (cột Owner); session log chỉ thêm, không sửa dòng người khác.
+- **Dữ liệu chạy thử:** `results/**/*quick*` và `results/*.log` vào `.gitignore`; ngoại lệ `!results/*_full.log` (log chạy full được track — `e6_full.log` là nguồn trích dẫn D-21). Cập nhật 2026-11-17: file quick đã track trước đó được bỏ track (`git rm --cached`, vẫn giữ trên đĩa).
+- **Bất biến:** `tests/test_regression_kinrow.py` phải xanh; không sửa `agents/` khi chưa ghi DECISIONS (D-22).

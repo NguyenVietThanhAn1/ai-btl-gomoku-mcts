@@ -6,3 +6,8 @@ __pycache__/
 .claude/settings.local.json
 results/raw/*.tmp
 report/~$*.docx
+
+# Dữ liệu chạy thử (quick) và log chạy dài — không commit
+results/**/*quick*
+results/*.log
+!results/*_full.log

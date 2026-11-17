@@ -23,6 +23,9 @@ Thiết lập thực nghiệm theo đề: ≥ 50 ván/cấu hình, **đổi lư�
 
 Khung báo cáo bắt buộc: Tóm tắt (≤200 từ) · 1 Giới thiệu · 2 Phát biểu bài toán · 3 Phương pháp (3.1–3.4) · 4 Thiết lập thực nghiệm · 5 Kết quả · 6 Thảo luận.
 
+### Bài 2 (Bonus) — chưa chốt phạm vi
+Chưa có phạm vi/task. **Chờ An xác nhận yêu cầu với giảng viên**; khi có thì thêm task ID + tiêu chí vào đây và ghi DECISIONS. Trạng thái ở PROGRESS (dòng `B2`, ⬜).
+
 ## 1. Quyết định đã chốt
 
 - Ngôn ngữ: **Python 3.11+**, thuần Python + numpy/matplotlib/pandas; GUI **pygame**; test **pytest**.
