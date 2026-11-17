@@ -98,7 +98,16 @@ xác suất trong 9 lần mở rộng ≈ 9/100. Nên ~91 % con sai chưa từng
 theo N gần như ngẫu nhiên. `check_tactics` giải quyết bằng 100 × 100 = 10⁴ play/undo (~vài chục ms), rẻ hơn nhiều so
 với số iteration cần để search tự thấy.
 
-**Kết quả:** chưa có (quick xong mới ghi; số liệu báo cáo chỉ từ full).
+**Kết quả:** chưa có full (số liệu báo cáo chỉ từ full).
+
+## Quick (2026-11-17, commit `6e86acc`, không commit file `e6quick_*` — không phải số liệu báo cáo)
+- 724 s, **máy chạy pin** → chậm 2,5–5× so với `e5_bench.csv`; thời gian/ước tính bị phóng to (xem D-21).
+- Thế: block 1 526 thế khác nhau, win 2 828, open4 2 864 (đúng 1 lần/ván có thắng thua → thế loại 2 luôn là nước
+  cuối của người thắng). Bộ full 40 thế/loại theo tầng candidate: block 9 / 27 / 4, win 3 / 23 / 14 (< 60 / 60–100 / > 100).
+- Sanity bật 8/8; test checkpoint pass. Choice (4 thế × 2 seed): block rand 0,125 → 0,50, h300 0–0,25; win rand 0 → 1,0
+  từ 2 500 iter, h300 thắng ngay 0,25 nhưng không mất thắng 0,75.
+- Match 1 cặp/điểm: bản tắt thua 2/2 ở mọi điểm; E3/E5 tái dùng `ok`. Ước tính full trên pin ~191 phút
+  (self 5000 ~74, choice ~54, greedy 5000 ~32).
 
 ## Phụ thuộc
 `experiments/common.py` (`run_match`, `summarize`, `read_rows`, `moves_path_for`, `add_runner_args`, `git_info`,

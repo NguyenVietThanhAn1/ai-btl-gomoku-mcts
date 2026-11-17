@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** chưa chọn (E1–E5 ✅; P4.3 hoãn, gộp với P6)
-- **Việc đang dở:** —
-- **Bước tiếp theo:** `/next-task` E6 (tác dụng `check_tactics`: bật vs tắt, rollout random, cùng iteration; (a) chặn đúng trên thế có four, (b) vs Greedy và AB2, (c) thời gian/nước). Lưu ý từ E5: vs AB2 rollout random ở 5000 iter vẫn 0/20 → (b) vs AB2 gần như chắc ở sàn, cần chốt đối thủ/cổng trong DECISIONS trước khi chạy (như D-20).
+- **Task hiện tại:** E6 (thiết kế lại theo D-21) — quick xong, **chờ An duyệt full**
+- **Việc đang dở:** chưa chạy full. Đã có: D-21, `gameai/experiments/e6_tactics.py` + `.md`, `tests/test_e6_tactics.py` (16 test, pass; toàn bộ suite pass), commit `6e86acc`; quick 724 s (kết quả ở D-21 + `e6_tactics.md`).
+- **Bước tiếp theo:** (1) cắm sạc, đo lại tốc độ (quick chạy trên pin, chậm 2,5–5× so với `e5_bench.csv`); (2) An chốt: có giữ `self 5000` (~74 phút trên pin) và có lấy mẫu phân tầng theo `n_candidates` không (tầng > 100 của block chỉ 4 thế, < 60 của win chỉ 3); (3) `python -m gameai.experiments.e6_tactics all` (resume được), rồi ghi kết quả full, spec-reviewer.
 - **Cảnh báo / blocker:** —
 
 ## Bảng trạng thái
@@ -34,7 +34,7 @@
 | E3 | c sweep | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-18; full 226 phút; AB2 qua cổng (2/20) |
 | E4 | N vs W/N | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-19; full 174 s; bỏ đối đầu 15×15 |
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
-| E6 | Tác dụng check_tactics | ⬜ | An | | thêm theo D-11 |
+| E6 | Tác dụng check_tactics | 🔄 | An | 2026-11-17 | D-21 (thiết kế lại); quick xong, chờ full |
 | P6.1 | GUI pygame | ⬜ | An | | |
 | P7.1 | Plots/tables | ⬜ | An | | |
 | P7.2 | report.md | ⬜ | An | | |
@@ -57,6 +57,11 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-17 — E6 (quick, dừng trước full)
+- PLAN E6 gốc kẹt sàn (E5: rand bật vs Greedy ≤ 0,08, vs AB2 0/20) → An chọn thiết kế lại, ghi D-21 trước khi code: (a) bộ thế thật từ ván E3/E5 (loại 1 chặn four 1 ô, loại 2 thắng ngay), tắt tactics theo iter {100…5000} × rand/h300 × 10 seed, checkpoint trong một cây; bật = sanity; tầng `n_candidates`; loại 2 thêm "không mất thắng" (phụ); (b) randoff vs mref, h300 tắt vs bật, h300 tắt vs Greedy (bản bật tái dùng E3/E5), bỏ AB2; (c) chi phí.
+- Không sửa code agent/game (giữ tái dùng E3/E5). Commit `6e86acc`.
+- Quick 724 s trên pin: sanity 8/8, tái dùng E3/E5 ok, ước tính full ~191 phút (phóng to do pin). Chi tiết D-21.
 
 ### 2026-11-11 — E5 (xong)
 - Trước full (An duyệt): commit riêng `.claude/settings.json` (`50e4099`); D-20 sửa luật cờ tốc độ theo nhóm giai đoạn ván ply 0–9 / 10–19 / ≥ 20 so với benchmark cùng nhóm (`method = phase`; dự phòng `mixed` ghi rõ trộn giai đoạn), rand là chỉ báo tải, cờ không loại dữ liệu; benchmark 7 thế chạy ở đầu full (commit `ec3b8d5`, 26 test E5).
