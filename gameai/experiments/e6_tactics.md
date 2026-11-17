@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🔄 full  ·  **Task:** E6 (D-21)  ·  **Cập nhật:** 2026-11-17
+**Trạng thái:** ✅ full xong  ·  **Task:** E6 (D-21)  ·  **Cập nhật:** 2026-11-17
 
 ## Mục đích
 Đo tác dụng của bước kiểm tra "thắng ngay / chặn ngay" (`MCTSAgent(check_tactics=True)`) trước khi search, trên
@@ -107,9 +107,11 @@ xác suất trong 9 lần mở rộng ≈ 9/100. Nên ~91 % con sai chưa từng
 theo N gần như ngẫu nhiên. `check_tactics` giải quyết bằng 100 × 100 = 10⁴ play/undo (~vài chục ms), rẻ hơn nhiều so
 với số iteration cần để search tự thấy.
 
-**Kết quả:** chưa có full (số liệu báo cáo chỉ từ full).
 
-## Quick (2026-11-17, commit `6e86acc`, không commit file `e6quick_*` — không phải số liệu báo cáo)
+## Quick lần 2 (2026-11-17, commit `d8f09af`, AC, thiết kế sau sửa D-21)
+88 s; bench / `e5_bench` = 0,98; sanity 12/12; ước tính full ~23 phút (thực tế 24). File `e6quick_*` của lần 1 đã xóa.
+
+## Quick lần 1 (2026-11-17, commit `6e86acc`, **pin**, thiết kế cũ 40 thế/loại — đã thay)
 - 724 s, **máy chạy pin** → chậm 2,5–5× so với `e5_bench.csv`; thời gian/ước tính bị phóng to (xem D-21).
 - Thế: block 1 526 thế khác nhau, win 2 828, open4 2 864 (đúng 1 lần/ván có thắng thua → thế loại 2 luôn là nước
   cuối của người thắng). Bộ full 40 thế/loại theo tầng candidate: block 9 / 27 / 4, win 3 / 23 / 14 (< 60 / 60–100 / > 100).
@@ -117,6 +119,65 @@ với số iteration cần để search tự thấy.
   từ 2 500 iter, h300 thắng ngay 0,25 nhưng không mất thắng 0,75.
 - Match 1 cặp/điểm: bản tắt thua 2/2 ở mọi điểm; E3/E5 tái dùng `ok`. Ước tính full trên pin ~191 phút
   (self 5000 ~74, choice ~54, greedy 5000 ~32).
+
+## Kết quả full (2026-11-17, commit `d8f09af`)
+Thời gian thực **1 433 s ≈ 24 phút** (dòng `tổng` trong `results/e6_full.log`; runinfo 10:20:47 → 10:44:35 = 1 428 s), **cắm sạc (AC) suốt** mọi bước, `git_dirty = 0`
+(`results/raw/e6_runinfo.csv`). Bench đầu full: tốc độ / `e5_bench.csv` = 0,98–1,03 (trung vị 0,99) → máy ở trạng thái
+như E5. Choice 1 800 task 667 s (4 worker); match 4 điểm mới 699 s; cost 50 s (đơn luồng). 200 ván mới, 0 lỗi,
+`distinct_games` 50/50 (49/50 ở `h300off_i1000` vs Greedy). Bản bật lấy từ E5/E3 (`source`, điều kiện tái dùng `ok`).
+
+**Bộ thế** (`e6_positions_summary.csv`): từ 2 870 ván, pool sau khử trùng block 1 526 (tầng < 60 / 60–100 / > 100:
+413 / 989 / 124 → trọng số 0,27 / 0,65 / 0,08), win 2 828 (180 / 2 015 / 633 → 0,06 / 0,71 / 0,22). Chọn 15/tầng =
+45 thế/loại; loại 2: `n_mine` = 1 ở 22 thế, ≥ 2 ở 23; 14 thế đối thủ cũng có ô thắng. Thế loại 2 luôn là nước cuối của
+người thắng (mọi agent nguồn đều thắng ngay / chặn four đơn). **Sanity bật: 90/90.**
+
+**(a) Tỷ lệ chọn đúng khi tắt tactics** (dòng `all` = có trọng số pool, [bootstrap phân tầng 95 %]; 10 seed/thế):
+
+| iter | block rand | block h300 | win rand: thắng ngay | win h300: thắng ngay | win h300: không mất thắng |
+|---|---|---|---|---|---|
+| 100 | 0,03 [0,01; 0,06] | 0,50 [0,40; 0,61] | 0,05 [0,03; 0,07] | 0,27 [0,17; 0,40] | 0,54 [0,40; 0,70] |
+| 500 | 0,08 [0,05; 0,11] | 0,22 [0,12; 0,34] | 0,74 [0,66; 0,81] | 0,28 [0,17; 0,40] | 0,55 [0,40; 0,71] |
+| 1000 | 0,12 [0,08; 0,16] | 0,14 [0,06; 0,25] | 0,97 [0,95; 0,99] | 0,28 [0,17; 0,40] | 0,55 [0,40; 0,71] |
+| 2500 | 0,26 [0,20; 0,33] | 0,13 [0,05; 0,24] | 1,00 | 0,29 [0,18; 0,41] | 0,56 [0,42; 0,71] |
+| 5000 | 0,38 [0,30; 0,46] | 0,48 [0,36; 0,61] | 1,00 | 0,39 [0,26; 0,54] | 0,66 [0,51; 0,81] |
+| bật | 1,00 | 1,00 | 1,00 | 1,00 | 1,00 |
+
+win rand "không mất thắng": 0,24 / 0,87 / 1,00 / 1,00 / 1,00.
+- **Theo tầng `n_candidates`** (5000 iter, block): rand < 60: 0,48, 60–100: 0,36, > 100: 0,17; h300 0,97 [0,94; 1,00] /
+  0,31 / 0,15. Win rand 500 iter: 0,98 / 0,87 / 0,29. Càng nhiều candidate càng chậm, đúng như sanity D-14.
+- **Theo `n_mine`** (win, h300): `n_mine ≥ 2` "không mất thắng" 0,99–1,00 ở mọi iter trong khi "thắng ngay" chỉ
+  0,44–0,47 → h300 chọn một nước thắng chắc khác (D-11). `n_mine = 1`: thắng ngay 0,12 (100–1000 iter), 0,17 (2500),
+  0,49 (5000); "không mất thắng" 0,15–0,53 — nhưng `keeps_win` chỉ là điều kiện đủ nên **không** kết luận được h300
+  đánh rơi thắng ở các thế này.
+- **block h300 không đơn điệu** (0,50 → 0,14 → 0,48). Giải thích khả dĩ (chưa kiểm riêng): ở 100 iter gốc chưa mở rộng
+  hết (`expanded_rate` 0,94, trung vị N con đúng = 2), max_n hòa N → phá theo W; sau nước không chặn, rollout heavy cho
+  đối thủ thắng ngay → W = 0, nên con chặn thường thắng. Khi cây sâu thêm, con không chặn được mở rộng nước đáp trả
+  ngẫu nhiên của đối thủ (hiếm khi đúng ô thắng); từ nút đó rollout heavy tới lượt ta → ta tự chặn → nước sai trông
+  lại tốt (cơ chế "che đe dọa" của D-14), tới khi đủ lượt thăm để mở rộng ô thắng (5000 iter, tầng < 60: 0,97).
+
+**(b) Win rate** (50 ván, Wilson 95 %; so cặp theo `game_id`, d = bật − tắt):
+
+| Điểm | tắt | bật | d [cặp 95 %] |
+|---|---|---|---|
+| rand 1000 vs mref | 0,46 [0,33; 0,60] | 0,50 [0,37; 0,63] (E5) | +0,04 [−0,10; 0,18] |
+| h300 1000 vs Greedy | 0,10 [0,04; 0,21] | 0,48 [0,35; 0,62] (E3) | **+0,38** [0,23; 0,53] |
+| h300 5000 vs Greedy | 0,30 [0,19; 0,44] | 0,92 [0,81; 0,97] (E3) | **+0,62** [0,47; 0,77] |
+| h300 1000 tắt vs bật (đối đầu) | 16/50 | **34/50 = 0,68** [0,54; 0,79] | — |
+
+Tactics quan trọng khi đối thủ biết tạo và kết thúc đe dọa (Greedy, h300 bật); vs mref (MCTS rollout random, ít tạo
+four có chủ đích) không thấy khác biệt.
+
+**(c) Chi phí** (c1 đơn luồng, AC):
+- Một lần `_tactics`: thế loại 1 trung vị 13,3 ms (max 56), loại 2 0,15 ms (dừng ở nước thắng đầu tiên), thế yên tĩnh
+  27,4 ms (max 98,5; trung vị 72 candidate; ~5,4 µs/candidate²). Theo giai đoạn (yên tĩnh): ply 0–9 10,7 ms, 10–19
+  31,3 ms, ≥ 20 46,6 ms.
+- So với MCTS 1000 iter tắt tactics trên cùng thế yên tĩnh: **overhead trung vị 7,3 % (rand, max 22,8 %), 4,4 %
+  (h300)**; theo giai đoạn rand 2,6 / 7,3 / 12,0 %.
+- c2 — nước đi thẳng (bỏ ply 0): rand 1000 vs mref 6,1 % (25 thắng + 16 chặn / 672); h300 1000 đối đầu 17,2 %; h300 vs
+  Greedy 21,3 % (1000) và 31,0 % (5000). Tactic 3 (restrict) = 0 mọi nơi (đúng thiết kế k-in-row).
+- c3 — `agent_time` trung bình/nước tắt vs bật: vs mref 0,46 vs 0,44 s; đối đầu 1000 0,66 vs 0,61 s; vs Greedy 1000
+  0,69 vs 1,18 s, 5000 3,33 vs 3,28 s. Nước đi thẳng 5–25 ms. Bản bật vs Greedy là ván E3 (chạy lúc khác, thế cờ khác)
+  → chỉ tham khảo; số overhead chính là c1.
 
 ## Phụ thuộc
 `experiments/common.py` (`run_match`, `summarize`, `read_rows`, `moves_path_for`, `add_runner_args`, `git_info`,

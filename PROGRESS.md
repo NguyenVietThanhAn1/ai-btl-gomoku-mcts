@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** E6 (thiết kế lại theo D-21) — quick xong, **chờ An duyệt full**
-- **Việc đang dở:** chưa chạy full. Đã có: D-21, `gameai/experiments/e6_tactics.py` + `.md`, `tests/test_e6_tactics.py` (16 test, pass; toàn bộ suite pass), commit `6e86acc`; quick 724 s (kết quả ở D-21 + `e6_tactics.md`).
-- **Bước tiếp theo:** (1) cắm sạc, đo lại tốc độ (quick chạy trên pin, chậm 2,5–5× so với `e5_bench.csv`); (2) An chốt: có giữ `self 5000` (~74 phút trên pin) và có lấy mẫu phân tầng theo `n_candidates` không (tầng > 100 của block chỉ 4 thế, < 60 của win chỉ 3); (3) `python -m gameai.experiments.e6_tactics all` (resume được), rồi ghi kết quả full, spec-reviewer.
+- **Task hiện tại:** chưa chọn (E1–E6 ✅; P4.3 hoãn, gộp với P6)
+- **Việc đang dở:** —
+- **Bước tiếp theo:** `/next-task` (P6.1 GUI + P4.3 CLI, hoặc P7.1 plots/tables). E6 xong, xem D-21 + `gameai/experiments/e6_tactics.md`.
 - **Cảnh báo / blocker:** —
 
 ## Bảng trạng thái
@@ -34,7 +34,7 @@
 | E3 | c sweep | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-18; full 226 phút; AB2 qua cổng (2/20) |
 | E4 | N vs W/N | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-19; full 174 s; bỏ đối đầu 15×15 |
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
-| E6 | Tác dụng check_tactics | 🔄 | An | 2026-11-17 | D-21 (thiết kế lại); quick xong, chờ full |
+| E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
 | P6.1 | GUI pygame | ⬜ | An | | |
 | P7.1 | Plots/tables | ⬜ | An | | |
 | P7.2 | report.md | ⬜ | An | | |
@@ -57,6 +57,11 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-17 — E6 (xong)
+- Sau quick (An quyết, D-21): ghi `power`/`battery_pct` mọi bước vào `e6_runinfo.csv`; bench ngắn so `e5_bench`; phần (c) chỉ khi AC; bỏ đối đầu h300 tắt vs bật 5000; lấy mẫu phân tầng 15 thế/tầng `n_candidates`/loại, tỷ lệ chung theo trọng số pool + bootstrap phân tầng; loại 2 thêm tầng `n_mine`. Commit `d8f09af`. Xóa `e6quick_*` lần 1 (pin, thiết kế cũ).
+- Quick lần 2 (AC) 88 s, ước tính 23 phút → chạy full theo luật (≤ 100 phút): 1 433 s, AC, `git_dirty = 0`, sanity 90/90.
+- Kết quả: chặn four khi tắt tactics rand 0,03 → 0,38, h300 0,50 → 0,14 → 0,48; thắng ngay rand → 1,00 từ 2 500 iter, h300 0,27–0,39 (chọn thắng chắc khác); vs Greedy bật − tắt +0,38 / +0,62; vs mref +0,04 (không khác); h300 bật thắng h300 tắt 34/50; overhead `check_tactics` ~7 % (rand 1000 iter). Sửa hình sau full (legend), không đổi dữ liệu.
 
 ### 2026-11-17 — E6 (quick, dừng trước full)
 - PLAN E6 gốc kẹt sàn (E5: rand bật vs Greedy ≤ 0,08, vs AB2 0/20) → An chọn thiết kế lại, ghi D-21 trước khi code: (a) bộ thế thật từ ván E3/E5 (loại 1 chặn four 1 ô, loại 2 thắng ngay), tắt tactics theo iter {100…5000} × rand/h300 × 10 seed, checkpoint trong một cây; bật = sanity; tầng `n_candidates`; loại 2 thêm "không mất thắng" (phụ); (b) randoff vs mref, h300 tắt vs bật, h300 tắt vs Greedy (bản bật tái dùng E3/E5), bỏ AB2; (c) chi phí.

@@ -1244,7 +1244,7 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
     cpath = table_dir / f"{p}choice.csv"
     if cpath.exists():
         rows = [r for r in read_rows(cpath) if r["stratum"] == "all"]
-        fig, axes = plt.subplots(1, 2, figsize=(11, 4.4), facecolor=SURFACE, sharey=True)
+        fig, axes = plt.subplots(1, 2, figsize=(11, 5.2), facecolor=SURFACE, sharey=True)
         titles = {"block": "Loại 1 — phải chặn four (1 ô chặn)", "win": "Loại 2 — có thắng ngay"}
         for ax, t in zip(axes, TYPES, strict=True):
             for i, roll in enumerate(ROLLOUTS):
@@ -1263,8 +1263,7 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
                 ax.errorbar(xs, [q[1] for q in pts], yerr=err, color=COLORS[roll],
                             marker=MARKERS[roll], markersize=6, linewidth=2, elinewidth=1.2,
                             capsize=0, markeredgecolor=SURFACE, markeredgewidth=1,
-                            label=NAMES[roll] + (" — thắng ngay" if t == "win"
-                                                    else ""))  # fmt: skip
+                            label=NAMES[roll] + " — chọn đúng (chặn / thắng ngay)")  # fmt: skip
                 if t == "win":
                     ax.plot(xs, [q[4] for q in pts], color=COLORS[roll], linestyle="--",
                             linewidth=1.5, marker=MARKERS[roll], markersize=5,
@@ -1279,16 +1278,16 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
             ax.set_title(titles[t], color=INK, fontsize=10, loc="left")
             _style(ax)
         axes[0].set_ylabel("tỷ lệ chọn đúng", color=INK2)
-        h0, l0 = axes[0].get_legend_handles_labels()
+        # legend chung dưới hình (panel loại 2 có đủ mọi loại đường), không đè dữ liệu
         h1, l1 = axes[1].get_legend_handles_labels()
-        axes[0].legend(h0, l0, frameon=False, fontsize=8, loc="center right", labelcolor=INK)
-        axes[1].legend(h1, l1, frameon=False, fontsize=8, loc="center right", labelcolor=INK)
+        fig.legend(h1, l1, loc="lower left", bbox_to_anchor=(0.01, 0.045), ncol=3,
+                   frameon=False, fontsize=8, labelcolor=INK)  # fmt: skip
         fig.suptitle("E6 — MCTS tắt check_tactics trên bộ thế cờ thật 15×15", color=INK,
                      fontsize=12, x=0.01, ha="left")  # fmt: skip
-        fig.text(0.01, 0.005, "Thanh lỗi: bootstrap 95 % theo cụm thế (seed trong một thế không "
-                 "độc lập). Bảng đủ (Wilson, tầng n_candidates): e6_choice.csv.", color=INK2,
-                 fontsize=8, ha="left", va="bottom")  # fmt: skip
-        fig.tight_layout(rect=(0, 0.03, 1, 0.95))
+        fig.text(0.01, 0.005, "Tỷ lệ chung có trọng số tầng n_candidates theo pool (D-21). Thanh "
+                 "lỗi: bootstrap phân tầng 95 % theo cụm thế. Từng tầng: e6_choice.csv.",
+                 color=INK2, fontsize=8, ha="left", va="bottom")  # fmt: skip
+        fig.tight_layout(rect=(0, 0.17, 1, 0.95))
         path = fig_dir / f"{p}choice.png"
         path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(path, dpi=150, facecolor=SURFACE)

@@ -1,0 +1,10 @@
+step,part,iters,label_a,label_b,role,source,workers,n_pairs,cpu,logical_cpus,power,battery_pct,started,finished,wall_s,git_commit,git_dirty,note
+bench,,,,,,,1,,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,7,2026-11-17T10:20:47,2026-11-17T10:20:54,6.4,d8f09afc20c9eb4e0cc454f366ceffee243a2ad0,0,
+positions,,,,,,,1,,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,7,2026-11-17T10:20:54,2026-11-17T10:20:58,4.1,d8f09afc20c9eb4e0cc454f366ceffee243a2ad0,0,
+sanity,,,,,,,1,,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,7,2026-11-17T10:20:58,2026-11-17T10:20:59,1.0,d8f09afc20c9eb4e0cc454f366ceffee243a2ad0,0,
+choice,,,,,,,4,,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,12,2026-11-17T10:20:59,2026-11-17T10:32:06,666.9,d8f09afc20c9eb4e0cc454f366ceffee243a2ad0,0,
+match,mref,1000,randoff_i1000,mref,off,e6,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,13,2026-11-17T10:32:06,2026-11-17T10:34:40,154.5,d8f09afc20c9eb4e0cc454f366ceffee243a2ad0,0,
+match,self,1000,h300off_i1000,h300_i1000,off,e6,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,13,2026-11-17T10:34:40,2026-11-17T10:36:17,96.4,d8f09afc20c9eb4e0cc454f366ceffee243a2ad0,0,
+match,greedy,1000,h300off_i1000,greedy,off,e6,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,14,2026-11-17T10:36:17,2026-11-17T10:37:11,54.5,d8f09afc20c9eb4e0cc454f366ceffee243a2ad0,0,
+match,greedy,5000,h300off_i5000,greedy,off,e6,4,25,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,16,2026-11-17T10:37:11,2026-11-17T10:43:45,393.2,d8f09afc20c9eb4e0cc454f366ceffee243a2ad0,0,
+cost,,,,,,,1,,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,16,2026-11-17T10:43:45,2026-11-17T10:44:35,49.7,d8f09afc20c9eb4e0cc454f366ceffee243a2ad0,0,
