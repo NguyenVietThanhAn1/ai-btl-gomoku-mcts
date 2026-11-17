@@ -9,7 +9,7 @@ import pytest
 
 from gameai.experiments import report_check as rc
 
-DEC = "### D-18 (x) — E3\n"
+DEC = "### D-18 (x) — E3\n- c ∈ {0.5, 1.0, 1.4, 2.0} × iter 1000, 5000; 0,5 s\n"
 
 
 @pytest.fixture
@@ -112,3 +112,40 @@ def test_fenced_code_and_example_marker(src: Path):
     assert run("UCT(X2) = 2,48 <!-- example: ex.md -->", src) == []
     assert any("không có file" in m for m in run("2,48 <!-- example: none.md -->", src))
     assert any("thiếu đường dẫn" in m for m in run("2,48 <!-- example: -->", src))
+
+
+def test_ci_span(src: Path):
+    """`x [lo; hi]` một comment: neo summary cần cả chuỗi; CSV cần cột x,lo,hi."""
+    (src / "results" / "tables" / "c.csv").write_text(
+        "k,win_rate,win_lo,win_hi\na,0.62,0.481,0.741\n", encoding="utf-8"
+    )
+    c = "results/tables/c.csv"
+    assert (
+        run(f"thắng 0,62 [0,48; 0,74] <!-- src: {c} | k=a | win_rate,win_lo,win_hi -->", src) == []
+    )
+    bad = run(f"0,62 [0,48; 0,75] <!-- src: {c} | k=a | win_rate,win_lo,win_hi -->", src)
+    assert any("cần '0,62 [0,48; 0,74]'" in m for m in bad)
+    assert run("hiệu 0,62 [0,48; 0,76] <!-- src: summary_kinrow.md#E5 -->", src) == []
+    msgs = run("hiệu 0,62 [0,48; 0,77] <!-- src: summary_kinrow.md#E5 -->", src)
+    assert any("không có trong mục" in m for m in msgs)
+    # số khác trong câu vẫn phải có nguồn riêng
+    assert len(run("0,99 và 0,62 [0,48; 0,76] <!-- src: summary_kinrow.md#E5 -->", src)) == 1
+
+
+def test_const_token_list(src: Path):
+    ok = (
+        f"ở 1000 và 5000 iteration, c = 2,0 thắng 0,92 <!-- src: {T} | c=1.4 | win_rate --> "
+        "<!-- const: D-18 | 1000 5000 2,0 -->"
+    )
+    assert run(ok, src) == []
+    # token không liệt kê vẫn phải có nguồn; token liệt kê phải có trong D-xx
+    assert any("'0,77'" in m for m in run("0,77 ở 1000 <!-- const: D-18 | 1000 -->", src))
+    assert any("không có trong D-18" in m for m in run("2500 <!-- const: D-18 | 2500 -->", src))
+
+
+def test_range_span_anchor(src: Path):
+    (src / "results" / "tables" / "summary_kinrow.md").write_text(
+        "## E3 — x\n\n- thắng 0,915–0,980.\n", encoding="utf-8"
+    )
+    assert run("thắng 0,915–0,980 <!-- src: summary_kinrow.md#E3 -->", src) == []
+    assert run("thắng 0,915–0,990 <!-- src: summary_kinrow.md#E3 -->", src) != []

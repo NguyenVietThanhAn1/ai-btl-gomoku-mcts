@@ -7,7 +7,7 @@
 ## Đang ở đâu (đọc mục này trước tiên)
 
 - **Task hiện tại:** P7.2 🔄 (`feat/P7.2`) — báo cáo `report/report.md`. Thứ tự mới D-30: xong Bài 1 (P7.2 → P7.3 → P7.4) trước cờ tướng.
-- **Việc đang dở:** P7.2 — xong Bước 0, Bước 1, `report_check`, đợt (a) (mục 1–4 + phụ lục + tài liệu tham khảo). **Chờ An duyệt đợt (a)** rồi mới viết đợt (b) mục 5, đợt (c) mục 6 + Tóm tắt.
+- **Việc đang dở:** P7.2 — xong đợt (a) (đã duyệt + sửa) và đợt (b) mục 5. **Chờ An duyệt mục 5** rồi viết đợt (c) mục 6 + Tóm tắt, spec-reviewer.
 - **Bước tiếp theo:** P7.2 → P7.3 (docx) → P7.4 (video) → P8.1 (luật cờ tướng + perft, `feat/P8.1` từ `develop`). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
@@ -63,6 +63,13 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-18 — P7.2 đợt (b) (dừng chờ An duyệt)
+- Sửa (a) theo An: caption hình kiểu pandoc `![Hình n. …](…)` (bỏ dòng **Hình** đậm), dấu phẩy thập phân trong văn xuôi (E2: c = √2 ≈ 1,41 — `e2.mcts_spec` dùng mặc định `MCTSAgent`), câu thời gian GUI nêu bench 0,827× vs 0,996× (không gõ % chênh tự tính), "tối đa $15 	imes 15 = 225$ nước". Quy tắc: không đặt số đo trong code fence.
+- `plots.py`: tiêu đề cột c kiểu VN; bảng summary mới — E2 vét cạn (theo vai), E4 3×3 thống kê + 15×15 + đối đầu (tách bên đi trước), E5 cùng thời gian / cùng iteration (+ bench rand/h300 = 1,50, kiểm tra hợp lệ mref), E6 chọn đúng / so cặp / chi phí / nước đi thẳng (cột nguồn ván bật E3/E5/E6). `plots --check` 25/25 CSV giống byte.
+- `report_check`: caption hình trong alt (cấm dòng **Hình**, thiếu alt báo lỗi, `Hình B.n` không đếm); một `src` phủ `x [lo; hi]` (CSV 3 cột hoặc neo summary) hoặc khoảng `a–b` (neo summary); `const: D-xx | tok …` chỉ miễn token liệt kê, token phải có trong văn bản D-xx. 14 test.
+- `report.md` mục 5 (5.1–5.6): 18 bảng `src-table` (Bảng 2–19), 8 hình (Hình 1–8), chỉ mô tả kết quả. `report_check` 0 lỗi (146 số có nguồn, 55 dòng const, 2 dòng ví dụ tay). Mục 5 thêm ~2 500 từ văn xuôi (~4 600 kể cả bảng); cả báo cáo ~7 300 từ không tính bảng. pytest xanh, ruff sạch.
+- Hình `e6_mechanism.png` để dành cho mục 6 (cơ chế = giải thích). Chú giải trong các hình matplotlib vẫn dấu chấm (c = 0.5) — chưa sửa.
 
 ### 2026-11-18 — P7.2 đợt (a) (dừng chờ An duyệt)
 - An chốt thứ tự D-30 (Bài 1 trước cờ tướng); PLAN §4/P8/P7.2 + PROGRESS sửa; branch `feat/P7.2` từ `develop`. An duyệt plan + 6 chỉnh (src-table so byte, neo theo heading không theo dòng, A(s) = mọi ô trống / candidate là tỉa nhánh ở mục 3, ví dụ E4 15×15 có tham chiếu, tương thích pandoc không crossref, GUI timing đúng file D-29 + ghi bật/tắt animation; thêm Silver 2017).

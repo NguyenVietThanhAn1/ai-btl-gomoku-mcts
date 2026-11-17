@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import statistics
 import subprocess
 import sys
 import tempfile
@@ -308,11 +309,26 @@ def section_e2(td: Path) -> list[str]:
     rows = [[r["label_a"], r["label_b"], f"{r['wins']}/{r['draws']}/{r['losses']}",
              vn(r["nonloss_rate"]) + " " + ci(r["nonloss_lo"], r["nonloss_hi"])]
             for r in play]  # fmt: skip
-    return lines + _table(
+    lines += _table(
         "Bảng E2 — W/D/L của MCTS 3×3 (`e2_play.csv`)",
         ["MCTS", "đối thủ", "W/D/L", "không thua [Wilson 95 %]"],
         rows,
     )
+    role = _t(td, "e2_exhaustive_by_role.csv")
+
+    def zero(it: str, pl: str) -> str:
+        r = _one(role, iterations=it, mcts_player=pl)
+        return f"{r['seeds_zero_loss']}/{r['n_seeds']}"
+
+    rows = [[r["iterations"], r["n_runs"], vn(r["branches"], 0), r["losses"], r["runs_with_loss"],
+             zero(r["iterations"], "1"), zero(r["iterations"], "-1")] for r in exh]  # fmt: skip
+    return lines + _table(
+        "Bảng E2 — vét cạn mọi chuỗi nước đáp của đối thủ (`e2_exhaustive.csv`, "
+        "`e2_exhaustive_by_role.csv`)",
+        ["iter", "run (seed × vai)", "nhánh (lá)", "nhánh thua", "run có thua",
+         "seed không thua, MCTS = X", "seed không thua, MCTS = O"],
+        rows,
+    )  # fmt: skip
 
 
 def section_e3(td: Path) -> list[str]:
@@ -336,17 +352,18 @@ def section_e3(td: Path) -> list[str]:
         + " từ 2500 iter (mọi c).",
         "- 15×15 vs Greedy (h300 + tactics): "
         + "; ".join(
-            f"c={r['c']} {r['iterations']} iter {vn(r['win_rate'])} {ci(r['win_lo'], r['win_hi'])}"
+            f"c = {vn(r['c'], 1)}, {r['iterations']} iter {vn(r['win_rate'])} "
+            f"{ci(r['win_lo'], r['win_hi'])}"
             for r in g
         )
         + ".",  # fmt: skip
-        f"- AB depth 2: pilot c={pilot['c']} thắng {pilot['wins']}/{pilot['n']}; tốt nhất "
-        f"c={best_ab['c']} {best_ab['iterations']} iter {vn(best_ab['win_rate'])} "
+        f"- AB depth 2: pilot c = {vn(pilot['c'], 1)} thắng {pilot['wins']}/{pilot['n']}; tốt nhất "
+        f"c = {vn(best_ab['c'], 1)}, {best_ab['iterations']} iter {vn(best_ab['win_rate'])} "
         f"{ci(best_ab['win_lo'], best_ab['win_hi'])}.",
     ]
     rows = [[str(it)] + [vn(_one(gr, c=c, iterations=it)["win_rate"]) for c in cs] for it in its]
     lines += _table("Bảng E3 — tỷ lệ thắng vs Greedy 15×15 (`e3_greedy.csv`)",
-                    ["iter"] + [f"c = {c}" for c in cs], rows)  # fmt: skip
+                    ["iter"] + [f"c = {vn(c, 1)}" for c in cs], rows)  # fmt: skip
     for name, rs, what in (
         ("e3_3x3_random.csv", rnd, "3×3 vs Random"),
         ("e3_3x3_minimax.csv", mm, "3×3 vs Minimax"),
@@ -354,7 +371,7 @@ def section_e3(td: Path) -> list[str]:
         ("e3_ab2.csv", ab, "15×15 vs AB depth 2"),
     ):
         lines += _table(f"Bảng E3 — W/D/L của MCTS, {what}, {rs[0]['n']} ván/điểm (`{name}`)",
-                        ["iter"] + [f"c = {c}" for c in cs], _wdl_rows(rs, cs))  # fmt: skip
+                        ["iter"] + [f"c = {vn(c, 1)}" for c in cs], _wdl_rows(rs, cs))  # fmt: skip
     return lines
 
 
@@ -390,7 +407,8 @@ def section_e4(td: Path) -> list[str]:
         + ".",  # fmt: skip
         "- 15×15: số search có max_n ≠ max_wn: "
         + ", ".join(
-            f"c={r['c']} {r['iterations']} iter {r['n_differ']}/{r['n_positions']}" for r in s15
+            f"c = {vn(r['c'], 1)}, {r['iterations']} iter {r['n_differ']}/{r['n_positions']}"
+            for r in s15
         )
         + ".",  # fmt: skip
         f"- Đối đầu 3×3 max_n vs max_wn ({m[0]['n']} ván/điểm): score "
@@ -403,9 +421,35 @@ def section_e4(td: Path) -> list[str]:
     rows = [[r["move"], vn(r["W"], 1), r["N"], vn(r["wn"], 3),
              "✓" if r["is_max_n"] == "1" else "", "✓" if r["is_max_wn"] == "1" else "",
              r["value"]] for r in tr]  # fmt: skip
-    lines += _table(f"Bảng E4 — ví dụ gốc 3×3, {tr[0]['iterations']} iter, c = {tr[0]['c']} "
+    lines += _table(f"Bảng E4 — ví dụ gốc 3×3, {tr[0]['iterations']} iter, c = {vn(tr[0]['c'], 1)} "
                     "(`e4_roots_examples.csv`, giá trị trò chơi theo góc người đi ở gốc)",
                     ["ô", "W", "N", "W/N", "max N", "max W/N", "giá trị"], rows)  # fmt: skip
+    rows = [[r["iterations"], vn(r["n_positions"], 0), vn(float(r["differ_rate"]) * 100, 1) + " %",
+             vn(r["differ_opt_max_n"], 3), vn(r["differ_opt_max_wn"], 3)] for r in s3]  # fmt: skip
+    lines += _table(
+        f"Bảng E4 — 3×3, mọi thế ≥ 2 nước, c = {vn(s3[0]['c'], 1)}: khi nào max_n ≠ max_wn "
+        "(`e4_roots_summary.csv`)",
+        ["iter", "số thế", "max_n ≠ max_wn", "giữ giá trị — max_n", "giữ giá trị — max_wn"],
+        rows,
+    )
+    rows = [[vn(r["c"], 1), r["iterations"], f"{r['n_differ']}/{r['n_positions']}",
+             vn(r["max_wn_is_1_rate"]), vn(r["max_n_N_tie_rate"])] for r in s15]  # fmt: skip
+    lines += _table(
+        "Bảng E4 — 15×15 (h300 + tactics): số search có max_n ≠ max_wn (`e4_roots_summary.csv`)",
+        ["c", "iter", "max_n ≠ max_wn", "con max_wn có W/N = 1", "max_n hòa N với con khác"],
+        rows,
+    )
+    sp = {(r["iterations"], r["split"]): r for r in _t(td, "e4_match.csv")}
+    rows = [[r["iterations"], f"{r['wins']}/{r['draws']}/{r['losses']}",
+             f"{vn(r['score'], 3)} {ci(r['score_lo'], r['score_hi'])}",
+             vn(sp[(r["iterations"], "A=X")]["score"], 3),
+             vn(sp[(r["iterations"], "A=O")]["score"], 3)] for r in m]  # fmt: skip
+    lines += _table(
+        f"Bảng E4 — đối đầu 3×3 max_n (A) vs max_wn (B), {m[0]['n']} ván/điểm (`e4_match.csv`)",
+        ["iter", "W/D/L của max_n", "score max_n [95 %]", "score khi max_n đi trước",
+         "score khi max_n đi sau"],
+        rows,
+    )  # fmt: skip
     sens = [r for r in _t(td, "e4_roots_examples.csv") if r["example"] == "sensitivity"]
     if sens:
         pos = sens[0]["pos_id"]
@@ -416,7 +460,7 @@ def section_e4(td: Path) -> list[str]:
                  vn(r["ref_W"], 1), r["ref_N"], vn(r["ref_wn"], 3)] for r in ex]  # fmt: skip
         lines += _table(
             f"Bảng E4 — ví dụ gốc 15×15, thế {pos} ({r0['plies']} ply), {r0['iterations']} iter, "
-            f"c = {r0['c']}, so với tham chiếu {vn(r0['ref_iterations'], 0)} iter "
+            f"c = {vn(r0['c'], 1)}, so với tham chiếu {vn(r0['ref_iterations'], 0)} iter "
             "(`e4_roots_examples.csv`)",
             ["ô", "W", "N", "W/N", "max N", "max W/N", "W tham chiếu", "N tham chiếu",
              "W/N tham chiếu"], rows)  # fmt: skip
@@ -436,14 +480,73 @@ def section_e5(td: Path) -> list[str]:
         return (f"{vn(r['mean_h300'])} vs {vn(r['mean_rand'])}, hiệu {vn(r['diff'])} "
                 f"{ci(r['paired_lo'], r['paired_hi'])}")  # fmt: skip
 
-    return [
+    bench = e5.bench_rates(_t(td, "e5_bench.csv"))
+    val = _t(td, "e5_validity.csv")[0]
+    lines = [
         f"- Cùng thời gian (kết luận chính): đối đầu h300 thắng rand {h('time', '0.5')} (0,5 s), "
         f"{h('time', '2.0')} (2 s).",
         f"- Tỷ lệ thắng h300 vs rand (hiệu cặp): vs Greedy 0,5 s {d('greedy', 'time', '0.5')}; "
         f"2 s {d('greedy', 'time', '2.0')}; vs mref 2 s {d('mref', 'time', '2.0')}.",
         f"- Cùng iteration vs Greedy: 1000 iter {d('greedy', 'iter', '1000.0')}; 5000 iter "
         f"{d('greedy', 'iter', '5000.0')}.",
+        f"- Benchmark đơn luồng (`e5_bench.csv`, trung vị): rand {vn(bench['rand'], 0)} iter/s, "
+        f"h300 "
+        f"{vn(bench['h300'], 0)} iter/s, tỉ lệ rand/h300 = {vn(bench['rand'] / bench['h300'])}.",
+        f"- Kiểm tra hợp lệ mref: rand 1000 iter vs mref thắng {val['wins']}/{val['n']} "
+        f"{ci(val['win_lo'], val['win_hi'])} (chứa 0,5: "
+        f"{'có' if val['contains_half'] == '1' else 'không'}).",
     ]
+    lines += _table(
+        "Bảng E5 — cùng thời gian/nước (so sánh công bằng; 2 worker)",
+        ["đối thủ", "thời gian/nước", "rand: thắng [Wilson 95 %]", "h300: thắng [Wilson 95 %]",
+         "iteration thực tế/nước rand / h300", "hiệu cặp h300 − rand [95 %]"],
+        _e5_rows(td, "time"),
+    )  # fmt: skip
+    lines += _table(
+        "Bảng E5 — cùng số iteration (thiên vị h300; 4 worker)",
+        ["đối thủ", "iter/nước", "rand: thắng [Wilson 95 %]", "h300: thắng [Wilson 95 %]",
+         "ván rand / h300", "hiệu cặp h300 − rand [95 %]"],
+        _e5_rows(td, "iter"),
+    )  # fmt: skip
+    return lines
+
+
+def _e5_win(r: dict[str, str] | None) -> str:
+    return "—" if r is None else f"{vn(r['win_rate'])} {ci(r['win_lo'], r['win_hi'])}"
+
+
+def _e5_rows(td: Path, bt: str) -> list[list[str]]:
+    """Hàng bảng E5 theo một trục ngân sách: đối đầu, Greedy, mref (+ AB2 ở trục iteration)."""
+    pr = _t(td, "e5_paired.csv")
+    out: list[list[str]] = []
+    names = {"h2h": "đối đầu (h300 vs rand)", "greedy": "Greedy", "mref": "mref", "ab2": "AB2"}
+    for part in ("h2h", "greedy", "mref", "ab2"):
+        rows = [r for r in _t(td, f"e5_{part}.csv")
+                if r["split"] == "all" and r["budget_type"] == bt]  # fmt: skip
+        for b in sorted({float(r["budget"]) for r in rows}):
+            ro = {r["rollout"]: r for r in rows if float(r["budget"]) == b}
+            bud = f"{vn(b, 1)} s" if bt == "time" else vn(b, 0)
+            if part == "h2h":
+                r = ro["h300"]
+                its = (f"{vn(r['b_search_iterations_per_move'], 0)} / "
+                       f"{vn(r['a_search_iterations_per_move'], 0)}")  # fmt: skip
+                mid = its if bt == "time" else f"— / {r['n']}"
+                out.append([names[part], bud, "—", _e5_win(r), mid, "—"])
+                continue
+            pd = [x for x in pr if x["part"] == part and x["budget_type"] == bt
+                  and float(x["budget"]) == b]  # fmt: skip
+            diff = (f"{vn(pd[0]['diff'])} {ci(pd[0]['paired_lo'], pd[0]['paired_hi'])}"
+                    if pd else "—")  # fmt: skip
+            if bt == "time":
+                mid = " / ".join(
+                    vn(ro[k]["a_search_iterations_per_move"], 0) for k in ("rand", "h300")
+                )
+            else:
+                mid = " / ".join(ro[k]["n"] if k in ro else "—" for k in ("rand", "h300"))
+            out.append(
+                [names[part], bud, _e5_win(ro.get("rand")), _e5_win(ro.get("h300")), mid, diff]
+            )
+    return out
 
 
 def section_e6(td: Path) -> list[str]:
@@ -487,7 +590,76 @@ def section_e6(td: Path) -> list[str]:
             f"{g('h300', 5000, 'correct=0', 'refute_rate')} (5000). "
             "Kết luận: `e6_tactics.md`, D-21."
         )
-    return lines
+    return lines + _e6_tables(td, ch, pr)
+
+
+def _e6_tables(td: Path, ch: list[dict[str, str]], pr: list[dict[str, str]]) -> list[str]:
+    """Bảng E6: tỷ lệ chọn đúng khi tắt tactics, win rate tắt → bật (cặp), chi phí."""
+
+    def cell(typ: str, roll: str, it: str) -> str:
+        r = _one(ch, type=typ, rollout=roll, iter=it)
+        return f"{vn(r['correct_rate'])} {ci(r['boot_lo'], r['boot_hi'])}"
+
+    its = [str(i) for i in e6.CHECKPOINTS]
+    rows = [[it] + [cell(t, ro, it) for t in ("block", "win") for ro in ("rand", "h300")]
+            for it in its]  # fmt: skip
+    on = [vn(_one(ch, type=t, rollout="on", iter="")["correct_rate"]) for t in ("block", "win")]
+    rows.append(["bật tactics", on[0], on[0], on[1], on[1]])
+    r0 = _one(ch, type="block", rollout="rand", iter=its[0])
+    seeds = int(r0["n_runs"]) // int(r0["n_pos"])
+    out = _table(
+        f"Bảng E6 — tỷ lệ chọn đúng khi TẮT check_tactics ({r0['n_pos']} thế/loại × {seeds} seed; "
+        "trọng số pool, bootstrap 95 %; `e6_choice.csv`)",
+        ["iter", "chặn four — rand", "chặn four — h300", "thắng ngay — rand", "thắng ngay — h300"],
+        rows,
+    )  # fmt: skip
+    names = {"greedy": "h300 vs Greedy", "mref": "rand vs mref"}
+    rows = [[names[r["part"]], r["iters"], r["n"], vn(r["mean_off"]), vn(r["mean_on"]),
+             f"{vn(r['diff'])} {ci(r['paired_lo'], r['paired_hi'])}"] for r in pr]  # fmt: skip
+    out += _table(
+        "Bảng E6 — tỷ lệ thắng tắt → bật check_tactics, so cặp (`e6_paired.csv`)",
+        ["cấu hình", "iter", "ván", "tắt", "bật", "hiệu bật − tắt [95 %]"],
+        rows,
+    )  # fmt: skip
+    cost = _t(td, "e6_cost_check.csv")
+    rows = []
+    for typ, name in (("block", "đối thủ có four (chặn)"), ("win", "mình thắng ngay"),
+                      ("quiet", "yên tĩnh (không tactic)")):  # fmt: skip
+        rs = [r for r in cost if r["type"] == typ]
+        ms = [float(r["check_ms"]) for r in rs]
+        ovr = [float(r["overhead_rand"]) * 100 for r in rs if r["overhead_rand"]]
+        ovh = [float(r["overhead_h300"]) * 100 for r in rs if r["overhead_h300"]]
+        rows.append([name, str(len(rs)), vn(statistics.median(ms)), vn(max(ms)),
+                     vn(statistics.median(ovr), 1) + " %" if ovr else "—",
+                     vn(statistics.median(ovh), 1) + " %" if ovh else "—"])  # fmt: skip
+    out += _table(
+        "Bảng E6 — chi phí một lần check_tactics, đơn luồng (`e6_cost_check.csv`; overhead so với "
+        "MCTS 1000 iter tắt tactics trên cùng thế)",
+        ["loại thế", "số thế", "ms trung vị", "ms tối đa", "overhead trung vị — rand",
+         "overhead trung vị — h300"],
+        rows,
+    )  # fmt: skip
+    tr = [r for r in _t(td, "e6_tactic_rate.csv") if r["tactics"] == "on"]
+    tm = _t(td, "e6_time.csv")
+    rows = []
+    for r in tr:
+        off = [x for x in tm if x["part"] == r["part"] and x["iters"] == r["iters"]
+               and x["tactics"] == "off"]  # fmt: skip
+        onr = _one(tm, part=r["part"], iters=r["iters"], tactics="on")
+        pct = vn(float(r["pct_direct"]) * 100, 1) + " %"
+        vs = {"mref": "mref", "self": "h300 tắt (đối đầu)", "greedy": "Greedy"}[r["part"]]
+        rows.append([r["label"], vs, r["n_moves"], pct,
+                     vn(off[0]["mean_agent_time"]) if off else "—",
+                     vn(onr["mean_agent_time"]), onr["source"].upper()])  # fmt: skip
+    out += _table(
+        "Bảng E6 — nước đi thẳng nhờ check_tactics và thời gian/nước trong ván "
+        "(`e6_tactic_rate.csv`, "
+        "`e6_time.csv`)",
+        ["cấu hình (bật)", "ván với", "nước", "đi thẳng (không search)", "s/nước tắt",
+         "s/nước bật", "ván bật lấy từ"],
+        rows,
+    )  # fmt: skip
+    return out
 
 
 SECTIONS: dict[str, Callable[[Path], list[str]]] = {

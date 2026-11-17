@@ -252,7 +252,282 @@ Hầu hết thí nghiệm dùng **ngân sách iteration** (iteration ∈ {100, 2
 
 ## 5 Kết quả
 
-(Đợt (b) — chưa viết.)
+Mục này chỉ trình bày số liệu; nguyên nhân và ý nghĩa được thảo luận ở mục 6. Mọi bảng dưới đây được sinh tự động từ `results/` (Phụ lục A); khoảng trong ngoặc vuông là khoảng tin cậy 95 % theo mục 4.3 (Wilson cho tỷ lệ một điểm, khoảng cặp cho hiệu). <!-- const: D-13 -->
+
+### 5.1 Minimax và Alpha-Beta (E1, RQ1)
+
+Thiết lập: Bảng 1, dòng E1 — 3×3 tìm hết trên bàn trống và 5 thế giữa ván, 15×15 độ sâu 2 và 3 trên 5 thế cố định; số nút và thời gian cộng trên các thế.
+
+**Bảng 2.** Số nút và thời gian của Minimax và các biến thể Alpha-Beta (tổng trên các thế; `ab_evalonly` = Alpha-Beta không dùng lượng giá tăng dần, không ordering). <!-- src-table: summary_kinrow.md#Bảng E1 — số nút -->
+
+| bàn | depth | biến thể | nút | giây | giảm nút vs Minimax | giá trị = Minimax |
+|---|---|---|---|---|---|---|
+| 3x3 | full | minimax | 559 426 | 1,317 | — | 6/6 |
+| 3x3 | full | ab | 21 626 | 0,069 | 96,13 % | 6/6 |
+| 3x3 | full | ab_order | 2252 | 0,015 | 99,60 % | 6/6 |
+| 3x3 | full | ab_order_tt | 1318 | 0,009 | 99,76 % | 6/6 |
+| 15x15 | 2 | minimax | 46 825 | 7,010 | — | 5/5 |
+| 15x15 | 2 | ab_evalonly | 21 612 | 3,692 | 53,85 % | 5/5 |
+| 15x15 | 2 | ab | 21 612 | 0,247 | 53,85 % | 5/5 |
+| 15x15 | 2 | ab_order | 1416 | 0,265 | 96,98 % | 5/5 |
+| 15x15 | 3 | ab | 553 574 | 5,458 | — | — |
+| 15x15 | 3 | ab_order | 48 504 | 1,256 | — | — |
+
+- Ở mọi thế, mọi biến thể Alpha-Beta cho **cùng giá trị gốc** với Minimax (3×3: 6/6 thế; 15×15 độ sâu 2: 5/5 thế).
+- 3×3: tổng số nút giảm từ 559 426 <!-- src: summary_kinrow.md#E1 --> (Minimax) xuống 21 626 <!-- src: summary_kinrow.md#E1 --> (Alpha-Beta, giảm 96,13 % <!-- src: results/tables/e1_summary.csv | board=3x3,variant=ab | nodes_saving_vs_minimax_pooled_pct -->), 2252 <!-- src: summary_kinrow.md#E1 --> khi thêm ordering (99,60 % <!-- src: results/tables/e1_summary.csv | board=3x3,variant=ab_order | nodes_saving_vs_minimax_pooled_pct -->) và 1318 <!-- src: summary_kinrow.md#E1 --> khi thêm TT (99,76 % <!-- src: results/tables/e1_summary.csv | board=3x3,variant=ab_order_tt | nodes_saving_vs_minimax_pooled_pct -->).
+- Nước đi: Alpha-Beta không ordering chọn đúng nước của Minimax ở 6/6 thế 3×3; hai biến thể có ordering chọn trùng nước ở 3/6 thế, nhưng nước được chọn luôn có giá trị bằng giá trị gốc (tối ưu ở 6/6 thế) — chỉ khác nhau khi nhiều nước cùng giá trị.
+- 15×15 độ sâu 2: 46 825 <!-- src: summary_kinrow.md#E1 --> nút (Minimax) → 21 612 <!-- src: summary_kinrow.md#E1 --> (Alpha-Beta, giảm 53,85 % <!-- src: results/tables/e1_summary.csv | board=15x15,depth=2,variant=ab | nodes_saving_vs_minimax_pooled_pct -->) → 1416 <!-- src: summary_kinrow.md#E1 --> (thêm ordering, giảm 96,98 % <!-- src: results/tables/e1_summary.csv | board=15x15,depth=2,variant=ab_order | nodes_saving_vs_minimax_pooled_pct -->). Tuy ít nút hơn, bản ordering chạy 0,265 <!-- src: results/tables/e1_summary.csv | board=15x15,depth=2,variant=ab_order | time_sum --> s so với 0,247 <!-- src: results/tables/e1_summary.csv | board=15x15,depth=2,variant=ab | time_sum --> s của bản không ordering.
+- Cùng số nút, Alpha-Beta có lượng giá tăng dần chạy 0,247 <!-- src: results/tables/e1_summary.csv | board=15x15,depth=2,variant=ab | time_sum --> s so với 3,692 <!-- src: results/tables/e1_summary.csv | board=15x15,depth=2,variant=ab_evalonly | time_sum --> s khi lượng giá lại toàn bàn ở lá.
+- 15×15 độ sâu 3: ordering giảm số nút từ 553 574 <!-- src: summary_kinrow.md#E1 --> xuống 48 504 <!-- src: summary_kinrow.md#E1 --> và thời gian từ 5,458 <!-- src: results/tables/e1_summary.csv | board=15x15,depth=3,variant=ab | time_sum --> s xuống 1,256 <!-- src: results/tables/e1_summary.csv | board=15x15,depth=3,variant=ab_order | time_sum --> s.
+
+### 5.2 MCTS trên 3×3 có thua không (E2, RQ2)
+
+Thiết lập: Bảng 1, dòng E2 — MCTS rollout ngẫu nhiên, $c = \sqrt2$, không `check_tactics`; (a) đấu 100 ván mỗi cặp, đổi lượt; (b) vét cạn: với MCTS cố định seed, thử mọi chuỗi nước đáp của đối thủ. <!-- const: D-16 -->
+
+**Bảng 3.** W/D/L của MCTS 3×3 trước ba đối thủ (100 ván mỗi dòng). <!-- src-table: summary_kinrow.md#Bảng E2 — W/D/L --> <!-- const: D-16 -->
+
+| MCTS | đối thủ | W/D/L | không thua [Wilson 95 %] |
+|---|---|---|---|
+| mcts100 | minimax | 0/73/27 | 0,73 [0,64; 0,81] |
+| mcts100 | random | 92/5/3 | 0,97 [0,92; 0,99] |
+| mcts100 | mcts100_opp | 22/59/19 | 0,81 [0,72; 0,87] |
+| mcts250 | minimax | 0/83/17 | 0,83 [0,74; 0,89] |
+| mcts250 | random | 94/5/1 | 0,99 [0,95; 1,00] |
+| mcts250 | mcts250_opp | 11/77/12 | 0,88 [0,80; 0,93] |
+| mcts1000 | minimax | 0/98/2 | 0,98 [0,93; 0,99] |
+| mcts1000 | random | 99/1/0 | 1,00 [0,96; 1,00] |
+| mcts1000 | mcts1000_opp | 1/98/1 | 0,99 [0,95; 1,00] |
+| mcts5000 | minimax | 0/100/0 | 1,00 [0,96; 1,00] |
+| mcts5000 | random | 98/2/0 | 1,00 [0,96; 1,00] |
+| mcts5000 | mcts5000_opp | 0/100/0 | 1,00 [0,96; 1,00] |
+
+**Bảng 4.** Kiểm chứng vét cạn: số nhánh (lá) theo mọi chuỗi nước đáp của đối thủ, số nhánh MCTS thua, và số seed (trên 10) không có nhánh thua khi MCTS cầm X / cầm O. <!-- src-table: summary_kinrow.md#Bảng E2 — vét cạn -->
+
+| iter | run (seed × vai) | nhánh (lá) | nhánh thua | run có thua | seed không thua, MCTS = X | seed không thua, MCTS = O |
+|---|---|---|---|---|---|---|
+| 100 | 20 | 6247 | 279 | 13 | 7/10 | 0/10 |
+| 250 | 20 | 5967 | 84 | 10 | 10/10 | 0/10 |
+| 1000 | 20 | 5713 | 7 | 2 | 10/10 | 8/10 |
+| 5000 | 20 | 5674 | 0 | 0 | 10/10 | 10/10 |
+
+- Ở 5000 iteration: **0 nhánh thua trên 10 seed × 2 vai** (5674 <!-- src: results/tables/e2_exhaustive.csv | iterations=5000 | branches --> nhánh). Kết quả này đúng trong phạm vi các seed đã kiểm, không phải chứng minh cho mọi seed. <!-- const: D-16 | 5000 -->
+- Ở 1000 iteration vẫn còn 7 nhánh thua trên 5713 <!-- src: results/tables/e2_exhaustive.csv | iterations=1000 | branches -->, thuộc 2 run, đều khi MCTS cầm O; ở 100 iteration có 279 <!-- src: results/tables/e2_exhaustive.csv | iterations=100 | losses --> nhánh thua trên 6247 <!-- src: results/tables/e2_exhaustive.csv | iterations=100 | branches -->. <!-- const: D-16 | 1000 100 -->
+- Đấu ván ở 5000 iteration: không thua ván nào trước cả ba đối thủ — hòa Minimax 100/100 (W/D/L 0/100/0 <!-- src: results/tables/e2_play.csv | label_a=mcts5000,label_b=minimax,split=all | wins/draws/losses -->), thắng Random 98/2/0 <!-- src: results/tables/e2_play.csv | label_a=mcts5000,label_b=random,split=all | wins/draws/losses -->. <!-- const: D-16 | 5000 100 -->
+- Ở ngân sách thấp, mọi ván thua trước Minimax xảy ra khi MCTS đi sau: 100 iteration, MCTS cầm X hòa 0/50/0 <!-- src: results/tables/e2_play.csv | label_a=mcts100,label_b=minimax,split=A=X | wins/draws/losses -->, cầm O 0/23/27 <!-- src: results/tables/e2_play.csv | label_a=mcts100,label_b=minimax,split=A=O | wins/draws/losses -->. Tỷ lệ không thua trước Minimax tăng từ 0,73 [0,64; 0,81] <!-- src: summary_kinrow.md#E2 --> (100 iteration) lên 0,98 [0,93; 0,99] <!-- src: summary_kinrow.md#E2 --> (1000) và 1,00 [0,96; 1,00] <!-- src: summary_kinrow.md#E2 --> (5000). <!-- const: D-16 | 100 1000 5000 -->
+
+### 5.3 Ảnh hưởng của hằng số c (E3, RQ3)
+
+Thiết lập: Bảng 1, dòng E3 — c ∈ {0,5; 1,0; 1,4; 2,0} × iteration ∈ {100, 250, 500, 1000, 2500, 5000}, các c dùng chung dãy seed; 3×3 rollout ngẫu nhiên, 15×15 h300 + `check_tactics`. <!-- const: D-18 -->
+
+![Hình 1. E3, 3×3: tỷ lệ thắng trước Random, tỷ lệ không thua trước Random và trước Minimax theo số iteration; mỗi c một đường, thanh lỗi Wilson 95 %.](../results/figures/e3_3x3.png) <!-- const: D-18 | 95 -->
+
+![Hình 2. E3, 15×15: tỷ lệ thắng của MCTS h300 trước Greedy theo số iteration; mỗi c một đường.](../results/figures/e3_greedy.png)
+
+![Hình 3. E3, 15×15: tỷ lệ thắng của MCTS h300 trước AB2 ở 2500 và 5000 iteration (sau cổng pilot).](../results/figures/e3_ab2.png) <!-- const: D-18 | 2500 5000 -->
+
+**Bảng 5.** W/D/L của MCTS 3×3 trước Random, 200 ván mỗi ô. <!-- src-table: summary_kinrow.md#Bảng E3 — W/D/L của MCTS, 3×3 vs Random --> <!-- const: D-18 -->
+
+| iter | c = 0,5 | c = 1,0 | c = 1,4 | c = 2,0 |
+|---|---|---|---|---|
+| 100 | 191/9/0 | 183/17/0 | 186/11/3 | 183/14/3 |
+| 250 | 187/13/0 | 187/13/0 | 189/10/1 | 190/8/2 |
+| 500 | 190/10/0 | 188/12/0 | 190/9/1 | 191/9/0 |
+| 1000 | 194/6/0 | 190/10/0 | 192/8/0 | 193/7/0 |
+| 2500 | 196/4/0 | 188/12/0 | 193/7/0 | 193/7/0 |
+| 5000 | 193/7/0 | 192/8/0 | 188/12/0 | 195/5/0 |
+
+**Bảng 6.** W/D/L của MCTS 3×3 trước Minimax hoàn hảo, 100 ván mỗi ô. <!-- src-table: summary_kinrow.md#Bảng E3 — W/D/L của MCTS, 3×3 vs Minimax --> <!-- const: D-18 -->
+
+| iter | c = 0,5 | c = 1,0 | c = 1,4 | c = 2,0 |
+|---|---|---|---|---|
+| 100 | 0/70/30 | 0/76/24 | 0/76/24 | 0/77/23 |
+| 250 | 0/81/19 | 0/89/11 | 0/89/11 | 0/85/15 |
+| 500 | 0/86/14 | 0/90/10 | 0/94/6 | 0/96/4 |
+| 1000 | 0/98/2 | 0/98/2 | 0/96/4 | 0/96/4 |
+| 2500 | 0/100/0 | 0/100/0 | 0/100/0 | 0/100/0 |
+| 5000 | 0/100/0 | 0/100/0 | 0/100/0 | 0/100/0 |
+
+**Bảng 7.** W/D/L của MCTS h300 15×15 trước Greedy, 50 ván mỗi ô. <!-- src-table: summary_kinrow.md#Bảng E3 — W/D/L của MCTS, 15×15 vs Greedy -->
+
+| iter | c = 0,5 | c = 1,0 | c = 1,4 | c = 2,0 |
+|---|---|---|---|---|
+| 100 | 2/0/48 | 2/0/48 | 2/0/48 | 5/0/45 |
+| 250 | 10/0/40 | 11/0/39 | 1/0/49 | 3/0/47 |
+| 500 | 19/0/31 | 13/0/37 | 9/0/41 | 4/0/46 |
+| 1000 | 31/0/19 | 23/0/27 | 24/0/26 | 11/0/39 |
+| 2500 | 39/0/11 | 42/0/8 | 45/0/5 | 39/0/11 |
+| 5000 | 41/0/9 | 44/0/6 | 46/0/4 | 48/0/2 |
+
+**Bảng 8.** W/D/L của MCTS h300 15×15 trước AB2, 50 ván mỗi ô. <!-- src-table: summary_kinrow.md#Bảng E3 — W/D/L của MCTS, 15×15 vs AB -->
+
+| iter | c = 0,5 | c = 1,0 | c = 1,4 | c = 2,0 |
+|---|---|---|---|---|
+| 2500 | 13/2/35 | 9/0/41 | 5/0/45 | 6/0/44 |
+| 5000 | 11/2/37 | 18/0/32 | 11/2/37 | 10/0/40 |
+
+- **3×3.** Trước Random, tỷ lệ thắng nằm trong 0,915–0,980 <!-- src: summary_kinrow.md#E3 --> ở mọi điểm (Hình 1). Trước Minimax, tỷ lệ không thua là 0,70–0,77 <!-- src: summary_kinrow.md#E3 --> ở 100 iteration và đạt 1,00 <!-- src: results/tables/e3_3x3_minimax.csv | c=0.5,iterations=2500,split=all | nonloss_rate --> ở mọi c từ 2500 iteration (Bảng 6). Ở mọi số iteration, khoảng tin cậy của bốn giá trị c chồng lên nhau. <!-- const: D-18 | 100 2500 -->
+- **15×15 trước Greedy — giao cắt.** Ở ngân sách thấp, c nhỏ thắng nhiều hơn: tại 1000 iteration, c = 0,5 đạt 0,62 [0,48; 0,74] <!-- src: summary_kinrow.md#E3 --> còn c = 2,0 chỉ 0,22 [0,13; 0,35] <!-- src: summary_kinrow.md#E3 --> — đây là **cặp duy nhất** có hai khoảng tin cậy tách nhau. Ở 5000 iteration thứ tự đảo lại: c = 2,0 đạt 0,96 [0,87; 0,99] <!-- src: summary_kinrow.md#E3 -->, c = 1,4 đạt 0,92 [0,81; 0,97] <!-- src: summary_kinrow.md#E3 -->, c = 1,0 đạt 0,88 [0,76; 0,94] <!-- src: summary_kinrow.md#E3 -->, c = 0,5 đạt 0,82 [0,69; 0,90] <!-- src: summary_kinrow.md#E3 -->, các khoảng chồng nhau. Điểm giao cắt nằm giữa 1000 và 2500 iteration; tại 2500, c = 1,4 cao nhất với 45/0/5 <!-- src: results/tables/e3_greedy.csv | c=1.4,iterations=2500,split=all | wins/draws/losses -->. <!-- const: D-18 | 1000 0,5 2,0 5000 1,4 1,0 2500 -->
+- Tách theo bên đi trước, chênh lệch lớn nhất ở c = 1,4, 1000 iteration: MCTS cầm X thắng 0,72 <!-- src: results/tables/e3_greedy.csv | c=1.4,iterations=1000,split=A=X | win_rate -->, cầm O 0,24 <!-- src: results/tables/e3_greedy.csv | c=1.4,iterations=1000,split=A=O | win_rate --> (25 ván mỗi bên); ở 5000 iteration hai bên bằng nhau với c = 1,4 và c = 2,0. <!-- const: D-18 | 1,4 1000 5000 2,0 -->
+- **15×15 trước AB2.** Pilot với c = 2,0 (c tốt nhất trước Greedy ở 5000 iteration) thắng 2/20 nên qua cổng và chạy đủ (D-18). Tỷ lệ thắng nằm trong 0,10 <!-- src: results/tables/e3_ab2.csv | c=1.4,iterations=2500,split=all | win_rate -->–0,26 <!-- src: results/tables/e3_ab2.csv | c=0.5,iterations=2500,split=all | win_rate --> ở 2500 iteration và 0,20 <!-- src: results/tables/e3_ab2.csv | c=2.0,iterations=5000,split=all | win_rate -->–0,36 <!-- src: results/tables/e3_ab2.csv | c=1.0,iterations=5000,split=all | win_rate --> ở 5000; cao nhất là c = 1,0 với 0,36 [0,24; 0,50] <!-- src: summary_kinrow.md#E3 -->. Mọi khoảng tin cậy chồng nhau; c tốt nhất trước Greedy (2,0) không phải c tốt nhất trước AB2. <!-- const: D-18 | 2,0 5000 2500 1,0 -->
+
+### 5.4 Chọn nước theo N hay theo W/N (E4, RQ4)
+
+Thiết lập: Bảng 1, dòng E4 — so nước `max_n` và `max_wn` trên cùng một cây ở gốc; 3×3 so với giá trị trò chơi (thắng / hòa / thua) tính bằng Minimax; 15×15 so với cây tham chiếu 20 000 iteration; đối đầu hai tiêu chí chỉ trên 3×3. <!-- const: D-19 -->
+
+**Bảng 9.** 3×3 (c = 1,4, mọi thế có ít nhất 2 nước): tỷ lệ thế mà hai tiêu chí chọn khác nhau, và trong các thế đó, tỷ lệ nước chọn giữ được giá trị trò chơi. <!-- src-table: summary_kinrow.md#Bảng E4 — 3×3, mọi thế -->
+
+| iter | số thế | max_n ≠ max_wn | giữ giá trị — max_n | giữ giá trị — max_wn |
+|---|---|---|---|---|
+| 10 | 4298 | 4,4 % | 0,606 | 0,809 |
+| 20 | 4298 | 2,6 % | 0,752 | 0,788 |
+| 50 | 4298 | 1,3 % | 0,818 | 0,836 |
+| 100 | 4298 | 2,3 % | 0,948 | 0,928 |
+| 250 | 4298 | 2,6 % | 1,000 | 0,982 |
+| 1000 | 4298 | 2,6 % | 1,000 | 1,000 |
+
+**Bảng 10.** Ví dụ W, N, W/N của các con ở gốc một thế 3×3 (100 iteration, c = 1,4); cột "giá trị" là giá trị trò chơi của nước theo góc người đi ở gốc (1 thắng, 0 hòa, −1 thua). <!-- src-table: summary_kinrow.md#Bảng E4 — ví dụ gốc 3×3 --> <!-- const: D-19 | 100 1,4 -->
+
+| ô | W | N | W/N | max N | max W/N | giá trị |
+|---|---|---|---|---|---|---|
+| 4 | 17,5 | 24 | 0,729 |  | ✓ | 0 |
+| 8 | 3,5 | 10 | 0,350 |  |  | -1 |
+| 3 | 11,0 | 18 | 0,611 |  |  | 0 |
+| 0 | 18,0 | 25 | 0,720 | ✓ |  | 0 |
+| 1 | 16,5 | 23 | 0,717 |  |  | 1 |
+
+**Bảng 11.** Đối đầu 3×3 giữa MCTS chọn `max_n` (A) và MCTS chọn `max_wn` (B), cùng số iteration, 200 ván mỗi dòng; score = (W + D/2)/n của `max_n`. <!-- src-table: summary_kinrow.md#Bảng E4 — đối đầu --> <!-- const: D-19 -->
+
+| iter | W/D/L của max_n | score max_n [95 %] | score khi max_n đi trước | score khi max_n đi sau |
+|---|---|---|---|---|
+| 10 | 89/26/85 | 0,510 [0,45; 0,57] | 0,705 | 0,315 |
+| 20 | 76/42/82 | 0,485 [0,42; 0,55] | 0,725 | 0,245 |
+| 50 | 54/92/54 | 0,500 [0,45; 0,55] | 0,730 | 0,270 |
+| 100 | 37/129/34 | 0,507 [0,47; 0,55] | 0,660 | 0,355 |
+| 250 | 21/155/24 | 0,492 [0,46; 0,53] | 0,590 | 0,395 |
+
+![Hình 4. E4, đối đầu 3×3: score của MCTS chọn N lớn nhất trước MCTS chọn W/N lớn nhất theo số iteration.](../results/figures/e4_match.png)
+
+**Bảng 12.** 15×15 (h300 + `check_tactics`, 10 thế × 5 seed): số lần tìm kiếm mà hai tiêu chí chọn khác nhau; tỷ lệ con `max_wn` có W/N = 1; tỷ lệ con `max_n` hòa N với một con khác. <!-- src-table: summary_kinrow.md#Bảng E4 — 15×15 (h300 --> <!-- const: D-19 -->
+
+| c | iter | max_n ≠ max_wn | con max_wn có W/N = 1 | max_n hòa N với con khác |
+|---|---|---|---|---|
+| 1,4 | 50 | 0/50 | 1,00 | 1,00 |
+| 1,4 | 250 | 0/50 | 0,98 | 0,92 |
+| 1,4 | 1000 | 0/50 | 0,80 | 0,76 |
+| 0,5 | 50 | 0/50 | 1,00 | 1,00 |
+| 0,5 | 250 | 2/50 | 0,80 | 0,70 |
+| 0,5 | 1000 | 1/50 | 0,64 | 0,54 |
+
+**Bảng 13.** Ví dụ một thế 15×15 (c = 0,5, 250 iteration) mà hai tiêu chí chọn khác nhau: W, N, W/N của các con ở gốc so với chính các con đó trong cây tham chiếu 20 000 iteration (ô đánh số hàng × 15 + cột, từ 0). <!-- src-table: summary_kinrow.md#Bảng E4 — ví dụ gốc 15×15 --> <!-- const: D-19 -->
+
+| ô | W | N | W/N | max N | max W/N | W tham chiếu | N tham chiếu | W/N tham chiếu |
+|---|---|---|---|---|---|---|---|---|
+| 67 | 11,0 | 12 | 0,917 | ✓ |  | 185,0 | 409 | 0,452 |
+| 97 | 11,0 | 11 | 1,000 |  | ✓ | 90,0 | 213 | 0,423 |
+| 127 | 11,0 | 11 | 1,000 |  |  | 290,0 | 621 | 0,467 |
+| 85 | 11,0 | 11 | 1,000 |  |  | 102,0 | 238 | 0,429 |
+| 202 | 9,0 | 10 | 0,900 |  |  | 90,0 | 213 | 0,423 |
+
+- **3×3, tần suất.** Hai tiêu chí chọn khác nhau ở 1,3–4,4 <!-- src: summary_kinrow.md#E4 --> % số thế, tùy số iteration (Bảng 9).
+- **3×3, chất lượng khi khác nhau.** Ở 10 iteration, nước `max_wn` giữ giá trị trò chơi thường hơn (0,809 <!-- src: results/tables/e4_roots_summary.csv | board=3x3,set=all,iterations=10 | differ_opt_max_wn --> so với 0,606 <!-- src: results/tables/e4_roots_summary.csv | board=3x3,set=all,iterations=10 | differ_opt_max_n -->); ở 100 iteration `max_n` nhỉnh hơn (0,948 <!-- src: results/tables/e4_roots_summary.csv | board=3x3,set=all,iterations=100 | differ_opt_max_n --> so với 0,928 <!-- src: results/tables/e4_roots_summary.csv | board=3x3,set=all,iterations=100 | differ_opt_max_wn -->) và ở 250 iteration (1,000 <!-- src: results/tables/e4_roots_summary.csv | board=3x3,set=all,iterations=250 | differ_opt_max_n --> so với 0,982 <!-- src: results/tables/e4_roots_summary.csv | board=3x3,set=all,iterations=250 | differ_opt_max_wn -->); ở 1000 iteration cả hai đều giữ giá trị ở mọi thế khác nhau. <!-- const: D-19 | 100 250 1000 -->
+- **Ví dụ 3×3 (Bảng 10).** `max_n` chọn ô 0 (N = 25, W/N = 0,720 <!-- src: summary_kinrow.md#E4 -->), `max_wn` chọn ô 4 (N = 24, W/N = 0,729 <!-- src: summary_kinrow.md#E4 -->); cả hai đều là nước hòa, trong khi ô 1 là nước thắng (giá trị 1) với W/N = 0,717 <!-- src: summary_kinrow.md#E4 -->.
+- **Đối đầu 3×3 (Bảng 11, Hình 4).** Score của `max_n` nằm trong 0,485 <!-- src: results/tables/e4_match.csv | iterations=20,split=all | score -->–0,510 <!-- src: results/tables/e4_match.csv | iterations=10,split=all | score --> và mọi khoảng tin cậy chứa 0,5. Bên đi trước có lợi thế rõ ở cả hai tiêu chí: score của `max_n` khi đi trước là 0,590 <!-- src: results/tables/e4_match.csv | iterations=250,split=A=X | score -->–0,730 <!-- src: results/tables/e4_match.csv | iterations=50,split=A=X | score -->, khi đi sau 0,245 <!-- src: results/tables/e4_match.csv | iterations=20,split=A=O | score -->–0,395 <!-- src: results/tables/e4_match.csv | iterations=250,split=A=O | score -->. <!-- const: D-19 | 0,5 -->
+- **15×15 (Bảng 12).** Với c = 1,4, hai tiêu chí chọn cùng một nước ở 50/50 lần tìm kiếm ở cả ba mức iteration; với c = 0,5 chỉ khác ở 2/50 (250 iteration) và 1/50 (1000). Con `max_wn` có W/N đúng bằng 1 ở 1,00 <!-- src: results/tables/e4_roots_summary.csv | board=15x15,c=1.4,iterations=50 | max_wn_is_1_rate --> số lần tìm kiếm ở 50 iteration và 0,80 <!-- src: results/tables/e4_roots_summary.csv | board=15x15,c=1.4,iterations=1000 | max_wn_is_1_rate --> ở 1000 iteration (c = 1,4). <!-- const: D-19 | 0,5 250 1000 1,4 -->
+- **Ví dụ 15×15 (Bảng 13).** Ở 250 iteration, `max_wn` chọn ô 97 với W/N = 1,000 <!-- src: summary_kinrow.md#E4 --> (11/11), `max_n` chọn ô 67 với W/N = 0,917 <!-- src: summary_kinrow.md#E4 --> (11/12). Trong cây tham chiếu 20 000 iteration, W/N của năm con này chỉ còn 0,423 <!-- src: summary_kinrow.md#E4 -->–0,467 <!-- src: summary_kinrow.md#E4 -->; ô 67 có W/N 0,452 <!-- src: summary_kinrow.md#E4 --> và N = 409 <!-- src: summary_kinrow.md#E4 -->, ô 97 có W/N 0,423 <!-- src: summary_kinrow.md#E4 --> và N = 213 <!-- src: summary_kinrow.md#E4 -->. <!-- const: D-19 | 250 20000 -->
+
+### 5.5 Rollout ngẫu nhiên và rollout heuristic (E5, RQ5)
+
+Thiết lập: Bảng 1, dòng E5 — hai cấu hình MCTS chỉ khác rollout (rand, h300), c = 1,4, bật `check_tactics`, 50 ván mỗi điểm; **kết luận chính dựa trên phần cùng thời gian/nước**, phần cùng iteration là phụ (mục 4.4). <!-- const: D-20 -->
+
+**Bảng 14.** Cùng thời gian mỗi nước: tỷ lệ thắng của rand và h300 trước cùng đối thủ, số iteration thực tế mỗi nước (chỉ nước có tìm kiếm), và hiệu cặp theo ván (cùng seed đối thủ, cùng lượt). <!-- src-table: summary_kinrow.md#Bảng E5 — cùng thời gian -->
+
+| đối thủ | thời gian/nước | rand: thắng [Wilson 95 %] | h300: thắng [Wilson 95 %] | iteration thực tế/nước rand / h300 | hiệu cặp h300 − rand [95 %] |
+|---|---|---|---|---|---|
+| đối đầu (h300 vs rand) | 0,5 s | — | 0,90 [0,79; 0,96] | 1398 / 1322 | — |
+| đối đầu (h300 vs rand) | 2,0 s | — | 1,00 [0,93; 1,00] | 5680 / 4006 | — |
+| Greedy | 0,5 s | 0,00 [0,00; 0,07] | 0,62 [0,48; 0,74] | 1457 / 1206 | 0,62 [0,48; 0,76] |
+| Greedy | 2,0 s | 0,10 [0,04; 0,21] | 0,86 [0,74; 0,93] | 5831 / 4331 | 0,76 [0,63; 0,89] |
+| mref | 0,5 s | 0,50 [0,37; 0,63] | 0,98 [0,90; 1,00] | 1399 / 1305 | 0,48 [0,34; 0,62] |
+| mref | 2,0 s | 0,92 [0,81; 0,97] | 1,00 [0,93; 1,00] | 5531 / 3829 | 0,08 [0,00; 0,16] |
+
+![Hình 5. E5, cùng thời gian/nước: hàng trên — tỷ lệ thắng theo thời gian/nước trước Greedy, trước mref và đối đầu; hàng dưới — cùng tỷ lệ thắng theo số iteration thực tế/nước, và số iteration thực tế của từng bên trong đối đầu.](../results/figures/e5_time.png)
+
+**Bảng 15.** Cùng số iteration mỗi nước (phụ; thiên vị h300 vì một iteration heavy đắt hơn). Điểm h300 trước Greedy và AB2 lấy lại từ E3; AB2 chỉ có pilot 20 ván cho rand. <!-- src-table: summary_kinrow.md#Bảng E5 — cùng số iteration --> <!-- const: D-20 -->
+
+| đối thủ | iter/nước | rand: thắng [Wilson 95 %] | h300: thắng [Wilson 95 %] | ván rand / h300 | hiệu cặp h300 − rand [95 %] |
+|---|---|---|---|---|---|
+| đối đầu (h300 vs rand) | 250 | — | 0,96 [0,87; 0,99] | — / 50 | — |
+| đối đầu (h300 vs rand) | 1000 | — | 0,90 [0,79; 0,96] | — / 50 | — |
+| đối đầu (h300 vs rand) | 5000 | — | 0,98 [0,90; 1,00] | — / 50 | — |
+| Greedy | 100 | 0,00 [0,00; 0,07] | 0,04 [0,01; 0,13] | 50 / 50 | 0,04 [-0,01; 0,09] |
+| Greedy | 250 | 0,00 [0,00; 0,07] | 0,02 [0,00; 0,10] | 50 / 50 | 0,02 [-0,02; 0,06] |
+| Greedy | 500 | 0,00 [0,00; 0,07] | 0,18 [0,10; 0,31] | 50 / 50 | 0,18 [0,07; 0,29] |
+| Greedy | 1000 | 0,02 [0,00; 0,10] | 0,48 [0,35; 0,61] | 50 / 50 | 0,46 [0,32; 0,60] |
+| Greedy | 2500 | 0,00 [0,00; 0,07] | 0,90 [0,79; 0,96] | 50 / 50 | 0,90 [0,82; 0,98] |
+| Greedy | 5000 | 0,08 [0,03; 0,19] | 0,92 [0,81; 0,97] | 50 / 50 | 0,84 [0,72; 0,96] |
+| mref | 250 | 0,20 [0,11; 0,33] | 0,74 [0,60; 0,84] | 50 / 50 | 0,54 [0,37; 0,71] |
+| mref | 1000 | 0,50 [0,37; 0,63] | 0,90 [0,79; 0,96] | 50 / 50 | 0,40 [0,24; 0,56] |
+| mref | 5000 | 0,88 [0,76; 0,94] | 1,00 [0,93; 1,00] | 50 / 50 | 0,12 [0,03; 0,21] |
+| AB2 | 5000 | 0,00 [0,00; 0,16] | 0,22 [0,13; 0,35] | 20 / 50 | 0,15 [-0,01; 0,31] |
+
+![Hình 6. E5, cùng số iteration/nước: tỷ lệ thắng trước Greedy, trước mref và đối đầu theo số iteration.](../results/figures/e5_iter.png)
+
+- **Đối đầu cùng thời gian.** h300 thắng rand 0,90 [0,79; 0,96] <!-- src: summary_kinrow.md#E5 --> ở 0,5 s/nước và 50/50 ván ở 2 s/nước (1,00 [0,93; 1,00] <!-- src: summary_kinrow.md#E5 -->). Ở 0,5 s, h300 thắng mọi ván khi cầm X và 0,80 <!-- src: results/tables/e5_h2h.csv | budget_type=time,budget=0.5,split=A=O | win_rate --> khi cầm O. <!-- const: D-20 | 0,5 -->
+- **Trước Greedy, cùng thời gian.** rand thắng 0/50 ở 0,5 s và 0,10 <!-- src: results/tables/e5_greedy.csv | budget_type=time,budget=2.0,rollout=rand,split=all | win_rate --> ở 2 s; h300 thắng 0,62 <!-- src: results/tables/e5_greedy.csv | budget_type=time,budget=0.5,rollout=h300,split=all | win_rate --> và 0,86 <!-- src: results/tables/e5_greedy.csv | budget_type=time,budget=2.0,rollout=h300,split=all | win_rate -->. Hiệu cặp h300 − rand: 0,62 [0,48; 0,76] <!-- src: summary_kinrow.md#E5 --> (0,5 s) và 0,76 [0,63; 0,89] <!-- src: summary_kinrow.md#E5 --> (2 s). <!-- const: D-20 | 0,5 -->
+- **Trước mref, cùng thời gian.** Ở 0,5 s: rand 0,50 <!-- src: results/tables/e5_mref.csv | budget_type=time,budget=0.5,rollout=rand,split=all | win_rate -->, h300 0,98 <!-- src: results/tables/e5_mref.csv | budget_type=time,budget=0.5,rollout=h300,split=all | win_rate -->, hiệu 0,48 [0,34; 0,62] <!-- src: results/tables/e5_paired.csv | part=mref,budget_type=time,budget=0.5 | diff,paired_lo,paired_hi -->. Ở 2 s: rand 0,92 <!-- src: results/tables/e5_mref.csv | budget_type=time,budget=2.0,rollout=rand,split=all | win_rate -->, h300 1,00, hiệu 0,08 [0,00; 0,16] <!-- src: summary_kinrow.md#E5 -->. <!-- const: D-20 | 0,5 -->
+- **Số iteration thực tế.** Ở 0,5 s/nước hai rollout có số iteration gần nhau (đối đầu: rand 1398 <!-- src: results/tables/e5_h2h.csv | budget_type=time,budget=0.5,split=all | b_search_iterations_per_move -->, h300 1322 <!-- src: results/tables/e5_h2h.csv | budget_type=time,budget=0.5,split=all | a_search_iterations_per_move -->); ở 2 s rand nhiều hơn (5680 <!-- src: results/tables/e5_h2h.csv | budget_type=time,budget=2.0,split=all | b_search_iterations_per_move --> so với 4006 <!-- src: results/tables/e5_h2h.csv | budget_type=time,budget=2.0,split=all | a_search_iterations_per_move -->). Benchmark đơn luồng: rand 3606 <!-- src: summary_kinrow.md#E5 --> iteration/giây, h300 2409 <!-- src: summary_kinrow.md#E5 -->, tỉ lệ 1,50 <!-- src: summary_kinrow.md#E5 -->. <!-- const: D-20 | 0,5 -->
+- **Cùng iteration (phụ).** Trước Greedy, rand thắng nhiều nhất 0,08 <!-- src: results/tables/e5_greedy.csv | budget_type=iter,budget=5000,rollout=rand,split=all | win_rate --> ở mọi mức iteration, còn h300 đạt 0,48 <!-- src: results/tables/e5_greedy.csv | budget_type=iter,budget=1000,rollout=h300,split=all | win_rate --> ở 1000 và 0,92 <!-- src: results/tables/e5_greedy.csv | budget_type=iter,budget=5000,rollout=h300,split=all | win_rate --> ở 5000. Trước mref, rand đạt 0,20 <!-- src: results/tables/e5_mref.csv | budget_type=iter,budget=250,rollout=rand,split=all | win_rate -->, 0,50 <!-- src: results/tables/e5_mref.csv | budget_type=iter,budget=1000,rollout=rand,split=all | win_rate -->, 0,88 <!-- src: results/tables/e5_mref.csv | budget_type=iter,budget=5000,rollout=rand,split=all | win_rate --> và h300 đạt 0,74 <!-- src: results/tables/e5_mref.csv | budget_type=iter,budget=250,rollout=h300,split=all | win_rate -->, 0,90 <!-- src: results/tables/e5_mref.csv | budget_type=iter,budget=1000,rollout=h300,split=all | win_rate -->, 1,00 <!-- src: results/tables/e5_mref.csv | budget_type=iter,budget=5000,rollout=h300,split=all | win_rate --> ở 250 / 1000 / 5000 iteration (Bảng 15). <!-- const: D-20 | 1000 5000 250 -->
+- **AB2 và kiểm tra hợp lệ.** Pilot rand 5000 iteration trước AB2 thắng 0/20 nên không qua cổng (D-20); h300 ở cùng mức (lấy từ E3) thắng 0,22 <!-- src: results/tables/e5_ab2.csv | rollout=h300,split=all | win_rate -->. Đối thủ mref hợp lệ: rand 1000 iteration thắng mref 25/50, tức 0,50 [0,37; 0,63] <!-- src: results/tables/e5_validity.csv | - | win_rate,win_lo,win_hi -->, khoảng chứa 0,5. <!-- const: D-20 | 5000 1000 0,5 -->
+
+### 5.6 Kiểm tra thắng ngay / chặn ngay (E6, RQ6)
+
+Thiết lập: Bảng 1, dòng E6 — (a) bộ thế cờ thật trích từ ván E3/E5: 45 thế đối thủ có four (phải chặn) và 45 thế mình thắng ngay, MCTS **tắt** `check_tactics`, 10 seed mỗi thế; (b) tỷ lệ thắng tắt và bật trên cùng seed; (c) chi phí đo đơn luồng. <!-- const: D-21 -->
+
+**Bảng 16.** Tỷ lệ chọn đúng khi tắt `check_tactics` (trọng số theo pool thế, khoảng bootstrap 95 % theo cụm thế); dòng cuối là kiểm tra khi bật. <!-- src-table: summary_kinrow.md#Bảng E6 — tỷ lệ chọn đúng --> <!-- const: D-21 -->
+
+| iter | chặn four — rand | chặn four — h300 | thắng ngay — rand | thắng ngay — h300 |
+|---|---|---|---|---|
+| 100 | 0,03 [0,01; 0,06] | 0,50 [0,40; 0,61] | 0,05 [0,03; 0,07] | 0,27 [0,17; 0,40] |
+| 500 | 0,08 [0,05; 0,11] | 0,22 [0,12; 0,34] | 0,74 [0,66; 0,81] | 0,28 [0,17; 0,40] |
+| 1000 | 0,12 [0,08; 0,16] | 0,14 [0,06; 0,24] | 0,97 [0,95; 0,99] | 0,28 [0,17; 0,40] |
+| 2500 | 0,26 [0,20; 0,33] | 0,13 [0,05; 0,24] | 1,00 [1,00; 1,00] | 0,29 [0,18; 0,41] |
+| 5000 | 0,38 [0,30; 0,46] | 0,48 [0,36; 0,61] | 1,00 [1,00; 1,00] | 0,39 [0,26; 0,54] |
+| bật tactics | 1,00 | 1,00 | 1,00 | 1,00 |
+
+![Hình 7. E6: tỷ lệ chọn đúng ô chặn four và ô thắng ngay khi tắt check_tactics, theo số iteration, rollout ngẫu nhiên và h300.](../results/figures/e6_choice.png)
+
+**Bảng 17.** Tỷ lệ thắng khi tắt và khi bật `check_tactics`, so cặp trên cùng seed (50 ván mỗi dòng). <!-- src-table: summary_kinrow.md#Bảng E6 — tỷ lệ thắng tắt -->
+
+| cấu hình | iter | ván | tắt | bật | hiệu bật − tắt [95 %] |
+|---|---|---|---|---|---|
+| rand vs mref | 1000 | 50 | 0,46 | 0,50 | 0,04 [-0,10; 0,18] |
+| h300 vs Greedy | 1000 | 50 | 0,10 | 0,48 | 0,38 [0,23; 0,53] |
+| h300 vs Greedy | 5000 | 50 | 0,30 | 0,92 | 0,62 [0,47; 0,77] |
+
+![Hình 8. E6: tỷ lệ thắng khi tắt và bật check_tactics.](../results/figures/e6_match.png)
+
+**Bảng 18.** Chi phí một lần gọi `check_tactics` (đơn luồng), và overhead so với một lần MCTS 1000 iteration tắt `check_tactics` trên cùng thế yên tĩnh. <!-- src-table: summary_kinrow.md#Bảng E6 — chi phí --> <!-- const: D-21 | 1000 -->
+
+| loại thế | số thế | ms trung vị | ms tối đa | overhead trung vị — rand | overhead trung vị — h300 |
+|---|---|---|---|---|---|
+| đối thủ có four (chặn) | 45 | 13,30 | 56,45 | — | — |
+| mình thắng ngay | 45 | 0,15 | 0,43 | — | — |
+| yên tĩnh (không tactic) | 42 | 27,36 | 98,49 | 7,3 % | 4,4 % |
+
+**Bảng 19.** Tỷ lệ nước đi thẳng (không tìm kiếm) nhờ `check_tactics` trong ván, và thời gian trung bình mỗi nước khi tắt / bật; các ván bật trước Greedy lấy từ E3 (chạy ở thời điểm khác, 4 worker). <!-- src-table: summary_kinrow.md#Bảng E6 — nước đi thẳng -->
+
+| cấu hình (bật) | ván với | nước | đi thẳng (không search) | s/nước tắt | s/nước bật | ván bật lấy từ |
+|---|---|---|---|---|---|---|
+| rand_i1000 | mref | 672 | 6,1 % | 0,46 | 0,44 | E5 |
+| h300_i1000 | h300 tắt (đối đầu) | 274 | 17,2 % | 0,66 | 0,61 | E6 |
+| h300_i1000 | Greedy | 371 | 21,3 % | 0,69 | 1,18 | E3 |
+| h300_i5000 | Greedy | 491 | 31,0 % | 3,33 | 3,28 | E3 |
+
+- **Chặn four khi tắt kiểm tra (Bảng 16, Hình 7).** Với rollout ngẫu nhiên, tỷ lệ chặn đúng tăng đều từ 0,03 <!-- src: summary_kinrow.md#E6 --> (100 iteration) lên 0,38 <!-- src: summary_kinrow.md#E6 --> (5000). Với h300, tỷ lệ có dạng chữ U: 0,50 <!-- src: summary_kinrow.md#E6 --> ở 100 iteration, giảm còn 0,14 <!-- src: summary_kinrow.md#E6 --> (1000) và 0,13 <!-- src: summary_kinrow.md#E6 --> (2500), rồi tăng lại 0,48 <!-- src: summary_kinrow.md#E6 --> ở 5000. Không cấu hình nào vượt một nửa số thế ở 5000 iteration. <!-- const: D-21 | 100 1000 2500 5000 -->
+- **Thắng ngay khi tắt kiểm tra.** Rollout ngẫu nhiên chọn ô thắng ở 0,05 <!-- src: results/tables/e6_choice.csv | type=win,rollout=rand,iter=100,stratum=all | correct_rate --> số lần chạy ở 100 iteration, 0,97 <!-- src: results/tables/e6_choice.csv | type=win,rollout=rand,iter=1000,stratum=all | correct_rate --> ở 1000 và mọi lần từ 2500; h300 ở trong 0,27 <!-- src: results/tables/e6_choice.csv | type=win,rollout=h300,iter=100,stratum=all | correct_rate -->–0,39 <!-- src: results/tables/e6_choice.csv | type=win,rollout=h300,iter=5000,stratum=all | correct_rate --> ở mọi mức iteration. <!-- const: D-21 | 100 1000 2500 -->
+- **Khi bật**, mọi thế của cả hai loại được xử lý đúng (dòng cuối Bảng 16).
+- **Tỷ lệ thắng (Bảng 17, Hình 8).** Với h300 trước Greedy, bật kiểm tra nâng tỷ lệ thắng từ 0,10 <!-- src: results/tables/e6_paired.csv | part=greedy,iters=1000 | mean_off --> lên 0,48 <!-- src: results/tables/e6_paired.csv | part=greedy,iters=1000 | mean_on --> ở 1000 iteration (hiệu 0,38 [0,23; 0,53] <!-- src: summary_kinrow.md#E6 -->) và từ 0,30 <!-- src: results/tables/e6_paired.csv | part=greedy,iters=5000 | mean_off --> lên 0,92 <!-- src: results/tables/e6_paired.csv | part=greedy,iters=5000 | mean_on --> ở 5000 iteration (hiệu 0,62 [0,47; 0,77] <!-- src: summary_kinrow.md#E6 -->). Với rand trước mref, hiệu 0,04 [-0,10; 0,18] <!-- src: summary_kinrow.md#E6 --> có khoảng chứa 0. Trong đối đầu h300 1000 iteration, bản tắt kiểm tra thắng bản bật 0,32 <!-- src: results/tables/e6_match.csv | part=self,tactics=off,split=all | win_rate --> số ván. <!-- const: D-21 | 1000 5000 -->
+- **Chi phí (Bảng 18, 19).** Trên thế yên tĩnh, một lần kiểm tra mất trung vị 27,36 <!-- src: summary_kinrow.md#E6 --> ms (tối đa 98,49 <!-- src: summary_kinrow.md#E6 --> ms), tức overhead trung vị 7,3 <!-- src: summary_kinrow.md#E6 --> % so với MCTS rand 1000 iteration và 4,4 <!-- src: summary_kinrow.md#E6 --> % so với h300. Trong ván, tỷ lệ nước đi thẳng không tìm kiếm là 6,1 <!-- src: summary_kinrow.md#E6 --> % (rand trước mref) đến 31,0 <!-- src: summary_kinrow.md#E6 --> % (h300 5000 iteration trước Greedy). <!-- const: D-21 | 1000 5000 -->
 
 ## 6 Thảo luận
 

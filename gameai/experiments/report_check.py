@@ -149,8 +149,24 @@ def expected_text(raw: str, before: str, transforms: list[str]) -> str:
 # ---------------------------------------------------------------- từng loại comment
 
 
-def check_src(body: str, before: str, read: dict[Path, str]) -> re.Match[str] | None:
-    """Kiểm `src:`; trả token số được phủ (để không báo 'số trần')."""
+_N = r"-?(?:\d{1,3}(?: \d{3})+|\d+)(?:,\d+)?"
+# đoạn được một comment neo summary phủ: `x [lo; hi]` hoặc khoảng giá trị `a–b`
+CI_TAIL = re.compile(rf"({_N} \[[^\[\]]*\]|{_N}–{_N})$")
+
+
+def ci_text(raw: str, before: str) -> str:
+    """Cột `x,lo,hi` → chuỗi `x [lo; hi]`, số chữ số thập phân theo token cuối trước comment."""
+    vals = [float(v) for v in raw.split(",")]
+    if len(vals) != 3:
+        raise SourceError("cột dạng khoảng cần đúng 3 cột: giá trị,cận dưới,cận trên")
+    tok = last_number(before).group(0)
+    d = len(tok.split(",")[1]) if "," in tok else 0
+    return f"{vn(vals[0], d)} [{vn(vals[1], d)}; {vn(vals[2], d)}]"
+
+
+def check_src(body: str, before: str, read: dict[Path, str]) -> int | None:
+    """Kiểm `src:`; trả vị trí bắt đầu đoạn được phủ (mọi số từ đó tới comment không bị báo
+    'số trần'). Đoạn = một số, hoặc `x [lo; hi]` (khoảng tin cậy) nếu văn bản kết thúc bằng `]`."""
     parts = [s.strip() for s in body[len("src:") :].split("|")]
     path, _, anchor = parts[0].partition("#")
     p = resolve(path)
@@ -159,21 +175,26 @@ def check_src(body: str, before: str, read: dict[Path, str]) -> re.Match[str] | 
     if not in_results(p):
         raise SourceError(f"nguồn ngoài results/: {parts[0]}")
     if anchor:
-        tok = last_number(before)
+        b = norm(before)
+        m = CI_TAIL.search(b)
+        span = (m.group(1), m.start(1)) if m else (last_number(before).group(0),
+                                                     last_number(before).start())  # fmt: skip
         text = read.setdefault(p, p.read_text(encoding="utf-8"))
-        if tok.group(0) not in norm("\n".join(find_section(text, anchor))):
-            raise SourceError(f"'{tok.group(0)}' không có trong mục '#{anchor}'")
-        return tok
+        if span[0] not in norm("\n".join(find_section(text, anchor))):
+            raise SourceError(f"'{span[0]}' không có trong mục '#{anchor}'")
+        return span[1]
     if len(parts) < 3:
         raise SourceError("cần 'file | lọc | cột'")
-    raw = csv_value(p, parts[1], parts[2])
+    cols = [c.strip() for c in parts[2].split(",")]
+    raws = [csv_value(p, parts[1], c) for c in cols]
     tf = [t.strip() for t in parts[3].split(",")] if len(parts) > 3 else []
-    exp, b = norm(expected_text(raw, before, tf)), norm(before)
+    raw = ",".join(raws)
+    exp = ci_text(raw, before) if len(cols) > 1 else expected_text(raw, before, tf)
+    exp, b = norm(exp), norm(before)
     ok = b.endswith(exp) and (len(b) == len(exp) or not re.match(r"[\d,]", b[-len(exp) - 1]))
     if not ok:
         raise SourceError(f"cần '{exp}' ngay trước comment (nguồn: {raw})")
-    toks = list(NUM.finditer(b))
-    return toks[-1] if toks else None
+    return len(b) - len(exp)
 
 
 def check_table(body: str, lines: list[str], i: int, read: dict[Path, str]) -> tuple[int, int]:
@@ -201,9 +222,40 @@ def check_example(body: str) -> list[str]:
     return [f"example: không có file {p}" for p in paths if not (ROOT / p).exists()]
 
 
-def check_const(body: str, decisions: str) -> list[str]:
-    return [f"const: {d} không có trong DECISIONS" for d in re.findall(r"D-\d+", body)
-            if not re.search(rf"^#+ {d} ", decisions, re.M)]  # fmt: skip
+def decision_text(decisions: str, d: str) -> str | None:
+    """Nội dung mục `### D-xx` (tới tiêu đề kế tiếp); None nếu không có."""
+    m = re.search(rf"^#+ {d} .*?(?=^#+ |\Z)", decisions, re.M | re.S)
+    return m.group(0) if m else None
+
+
+def _values(text: str) -> set[float]:
+    """Mọi số trong văn bản (dấu chấm hoặc phẩy thập phân, nhóm nghìn bằng khoảng trắng)."""
+    out = set()
+    for t in re.findall(r"\d+(?:[  ]\d{3})*(?:[.,]\d+)?", text):
+        out.add(float(t.replace(" ", "").replace(" ", "").replace(",", ".")))
+    return out
+
+
+def check_const(body: str, decisions: str) -> tuple[list[str], set[str] | None]:
+    """`const: D-xx …` (cả dòng) hoặc `const: D-xx … | tok tok` (chỉ các token liệt kê; mỗi token
+    phải có trong văn bản của một D-xx đã nêu). Trả (lỗi, token được miễn; None = cả dòng)."""
+    head, sep, toks = body[len("const:") :].partition("|")
+    ids = re.findall(r"D-\d+", head)
+    errs, texts = [], []
+    for d in ids:
+        t = decision_text(decisions, d)
+        if t is None:
+            errs.append(f"const: {d} không có trong DECISIONS")
+        else:
+            texts.append(t)
+    if not sep:
+        return errs, None
+    allowed = set(toks.split())
+    vals = set().union(*(_values(t) for t in texts)) if texts else set()
+    for tok in allowed:
+        if float(norm(tok).replace(" ", "").replace(",", ".")) not in vals:
+            errs.append(f"const: '{tok}' không có trong {', '.join(ids)}")
+    return errs, allowed
 
 
 # ---------------------------------------------------------------- quét file
@@ -265,30 +317,38 @@ def check_text(
                 issues.append(Issue(n, f"ảnh thiếu caption 'Hình …': {img}"))
         if i in skip:
             continue
-        const_line, covered = False, []
+        const_line, covered, exempt = False, [], set()
         for cm in COMMENT.finditer(line):
             body = cm.group(1).strip()
             before = line[: cm.start()].rstrip().removesuffix("%").rstrip()
             try:
                 if body.startswith("const:"):
-                    const_line = True
-                    issues += [Issue(n, e) for e in check_const(body, decisions)]
+                    errs, allowed = check_const(body, decisions)
+                    issues += [Issue(n, e) for e in errs]
+                    if allowed is None:
+                        const_line = True
+                    else:
+                        exempt |= allowed
                 elif body.startswith("example:"):
                     const_line = True
                     issues += [Issue(n, e) for e in check_example(body)]
                 elif body.startswith("src-table:"):
                     skip.update(range(*check_table(body, lines, i, read)))
                 elif body.startswith("src:"):
-                    tok = check_src(body, before, read)
-                    if tok:
-                        covered.append(tok.start())
+                    start = check_src(body, before, read)
+                    if start is not None:
+                        covered.append((start, cm.start()))
             except (SourceError, OSError) as e:
                 issues.append(Issue(n, f"{body[:50]}…: {e}"))
         if const_line:
             continue
         masked = norm(mask(line))
         for m in NUM.finditer(masked):
-            if is_strict(m.group(0), masked[m.end() :]) and m.start() not in covered:
+            if m.group(0).replace(" ", "") in exempt:  # token liệt kê viết liền: 20000
+                continue
+            if is_strict(m.group(0), masked[m.end() :]) and not any(
+                a <= m.start() < b for a, b in covered
+            ):
                 issues.append(Issue(n, f"số '{m.group(0)}' không có nguồn (src/const)"))
     words = abstract_words(text)
     if words > MAX_ABSTRACT_WORDS:
