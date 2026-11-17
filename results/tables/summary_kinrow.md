@@ -18,7 +18,7 @@
 - 3×3 (6 thế): giá trị gốc AB = Minimax 6/6; nút gộp 559 426 → 21 626 (−96,13 %) → 2252 (+ordering, −99,60 %) → 1318 (+TT, −99,76 %).
 - 15×15 depth 2 (5 thế): 46 825 → 21 612 (−53,85 %) → 1416 (ordering, −96,98 %), nhưng thời gian ordering 0,265 s vs 0,247 s; depth 3: 553 574 → 48 504 nút, 5,46 → 1,26 s.
 
-Bảng cho báo cáo (tổng trên các thế, `e1_summary.csv`):
+### Bảng E1 — số nút và thời gian (tổng trên các thế, `e1_summary.csv`)
 
 | bàn | depth | biến thể | nút | giây | giảm nút vs Minimax | giá trị = Minimax |
 |---|---|---|---|---|---|---|
@@ -40,7 +40,7 @@ Nguồn: `results/tables/e1_summary.csv`, `results/tables/e1_nodes.csv`, `result
 - Vét cạn (mọi chuỗi nước đối thủ): 5000 iter → 0 nhánh thua / 5674 (20 run = seed × vai); 100 iter 279/6247; 250 iter 84/5967; 1000 iter 7/5713.
 - Đấu 5000 iter (100 ván/cặp, đổi lượt): vs minimax W/D/L 0/100/0, vs random W/D/L 98/2/0, vs mcts5000_opp W/D/L 0/100/0.
 
-Bảng cho báo cáo (W/D/L của MCTS, `e2_play.csv`):
+### Bảng E2 — W/D/L của MCTS 3×3 (`e2_play.csv`)
 
 | MCTS | đối thủ | W/D/L | không thua [Wilson 95 %] |
 |---|---|---|---|
@@ -65,7 +65,7 @@ Nguồn: `results/tables/e2_play.csv`, `results/tables/e2_exhaustive.csv`, `resu
 - 15×15 vs Greedy (h300 + tactics): c=0.5 1000 iter 0,62 [0,48; 0,74]; c=1.0 1000 iter 0,46 [0,33; 0,60]; c=1.4 1000 iter 0,48 [0,35; 0,61]; c=2.0 1000 iter 0,22 [0,13; 0,35]; c=0.5 5000 iter 0,82 [0,69; 0,90]; c=1.0 5000 iter 0,88 [0,76; 0,94]; c=1.4 5000 iter 0,92 [0,81; 0,97]; c=2.0 5000 iter 0,96 [0,87; 0,99].
 - AB depth 2: pilot c=2.0 thắng 2/20; tốt nhất c=1.0 5000 iter 0,36 [0,24; 0,50].
 
-Bảng cho báo cáo (tỷ lệ thắng vs Greedy 15×15, `e3_greedy.csv`):
+### Bảng E3 — tỷ lệ thắng vs Greedy 15×15 (`e3_greedy.csv`)
 
 | iter | c = 0.5 | c = 1.0 | c = 1.4 | c = 2.0 |
 |---|---|---|---|---|
@@ -76,6 +76,46 @@ Bảng cho báo cáo (tỷ lệ thắng vs Greedy 15×15, `e3_greedy.csv`):
 | 2500 | 0,78 | 0,84 | 0,90 | 0,78 |
 | 5000 | 0,82 | 0,88 | 0,92 | 0,96 |
 
+### Bảng E3 — W/D/L của MCTS, 3×3 vs Random, 200 ván/điểm (`e3_3x3_random.csv`)
+
+| iter | c = 0.5 | c = 1.0 | c = 1.4 | c = 2.0 |
+|---|---|---|---|---|
+| 100 | 191/9/0 | 183/17/0 | 186/11/3 | 183/14/3 |
+| 250 | 187/13/0 | 187/13/0 | 189/10/1 | 190/8/2 |
+| 500 | 190/10/0 | 188/12/0 | 190/9/1 | 191/9/0 |
+| 1000 | 194/6/0 | 190/10/0 | 192/8/0 | 193/7/0 |
+| 2500 | 196/4/0 | 188/12/0 | 193/7/0 | 193/7/0 |
+| 5000 | 193/7/0 | 192/8/0 | 188/12/0 | 195/5/0 |
+
+### Bảng E3 — W/D/L của MCTS, 3×3 vs Minimax, 100 ván/điểm (`e3_3x3_minimax.csv`)
+
+| iter | c = 0.5 | c = 1.0 | c = 1.4 | c = 2.0 |
+|---|---|---|---|---|
+| 100 | 0/70/30 | 0/76/24 | 0/76/24 | 0/77/23 |
+| 250 | 0/81/19 | 0/89/11 | 0/89/11 | 0/85/15 |
+| 500 | 0/86/14 | 0/90/10 | 0/94/6 | 0/96/4 |
+| 1000 | 0/98/2 | 0/98/2 | 0/96/4 | 0/96/4 |
+| 2500 | 0/100/0 | 0/100/0 | 0/100/0 | 0/100/0 |
+| 5000 | 0/100/0 | 0/100/0 | 0/100/0 | 0/100/0 |
+
+### Bảng E3 — W/D/L của MCTS, 15×15 vs Greedy, 50 ván/điểm (`e3_greedy.csv`)
+
+| iter | c = 0.5 | c = 1.0 | c = 1.4 | c = 2.0 |
+|---|---|---|---|---|
+| 100 | 2/0/48 | 2/0/48 | 2/0/48 | 5/0/45 |
+| 250 | 10/0/40 | 11/0/39 | 1/0/49 | 3/0/47 |
+| 500 | 19/0/31 | 13/0/37 | 9/0/41 | 4/0/46 |
+| 1000 | 31/0/19 | 23/0/27 | 24/0/26 | 11/0/39 |
+| 2500 | 39/0/11 | 42/0/8 | 45/0/5 | 39/0/11 |
+| 5000 | 41/0/9 | 44/0/6 | 46/0/4 | 48/0/2 |
+
+### Bảng E3 — W/D/L của MCTS, 15×15 vs AB depth 2, 50 ván/điểm (`e3_ab2.csv`)
+
+| iter | c = 0.5 | c = 1.0 | c = 1.4 | c = 2.0 |
+|---|---|---|---|---|
+| 2500 | 13/2/35 | 9/0/41 | 5/0/45 | 6/0/44 |
+| 5000 | 11/2/37 | 18/0/32 | 11/2/37 | 10/0/40 |
+
 Nguồn: `results/figures/e3_3x3.png`, `results/figures/e3_greedy.png`, `results/figures/e3_ab2.png`, `results/tables/e3_3x3_random.csv`, `results/tables/e3_3x3_minimax.csv`, `results/tables/e3_greedy.csv`, `results/tables/e3_ab2_pilot.csv`, `results/tables/e3_ab2.csv`
 
 ## E4 — Chọn nước N lớn nhất vs W/N lớn nhất: W, N, W/N ở gốc; đối đầu (mục 5.4)
@@ -84,7 +124,7 @@ Nguồn: `results/figures/e3_3x3.png`, `results/figures/e3_greedy.png`, `results
 - 15×15: số search có max_n ≠ max_wn: c=1.4 50 iter 0/50, c=1.4 250 iter 0/50, c=1.4 1000 iter 0/50, c=0.5 50 iter 0/50, c=0.5 250 iter 2/50, c=0.5 1000 iter 1/50.
 - Đối đầu 3×3 max_n vs max_wn (200 ván/điểm): score 10 iter 0,510 [0,45; 0,57], 20 iter 0,485 [0,42; 0,55], 50 iter 0,500 [0,45; 0,55], 100 iter 0,507 [0,47; 0,55], 250 iter 0,492 [0,46; 0,53].
 
-Bảng cho báo cáo (ví dụ trace 3×3, 100 iter, c = 1.4, `e4_roots_examples.csv`; giá trị trò chơi theo góc người đi ở gốc):
+### Bảng E4 — ví dụ gốc 3×3, 100 iter, c = 1.4 (`e4_roots_examples.csv`, giá trị trò chơi theo góc người đi ở gốc)
 
 | ô | W | N | W/N | max N | max W/N | giá trị |
 |---|---|---|---|---|---|---|
@@ -93,6 +133,16 @@ Bảng cho báo cáo (ví dụ trace 3×3, 100 iter, c = 1.4, `e4_roots_examples
 | 3 | 11,0 | 18 | 0,611 |  |  | 0 |
 | 0 | 18,0 | 25 | 0,720 | ✓ |  | 0 |
 | 1 | 16,5 | 23 | 0,717 |  |  | 1 |
+
+### Bảng E4 — ví dụ gốc 15×15, thế 3 (12 ply), 250 iter, c = 0.5, so với tham chiếu 20 000 iter (`e4_roots_examples.csv`)
+
+| ô | W | N | W/N | max N | max W/N | W tham chiếu | N tham chiếu | W/N tham chiếu |
+|---|---|---|---|---|---|---|---|---|
+| 67 | 11,0 | 12 | 0,917 | ✓ |  | 185,0 | 409 | 0,452 |
+| 97 | 11,0 | 11 | 1,000 |  | ✓ | 90,0 | 213 | 0,423 |
+| 127 | 11,0 | 11 | 1,000 |  |  | 290,0 | 621 | 0,467 |
+| 85 | 11,0 | 11 | 1,000 |  |  | 102,0 | 238 | 0,429 |
+| 202 | 9,0 | 10 | 0,900 |  |  | 90,0 | 213 | 0,423 |
 
 Nguồn: `results/figures/e4_match.png`, `results/tables/e4_roots_examples.csv`, `results/tables/e4_roots_summary.csv`, `results/tables/e4_match.csv`
 
