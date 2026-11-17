@@ -229,5 +229,5 @@
 - **Branch:** `master` = bản ổn định / nộp được, **chỉ merge từ `develop` ở mốc**, không commit thẳng. `develop` = tích hợp. Mỗi task một branch `feat/<task-id>` (vd. `feat/P6.1`) tạo từ `develop`; merge về `develop` sau khi `pytest` + `ruff` xanh và spec-reviewer PASS. Branch `xiangqi` (D-22/D-26) đã xóa local — P8.1 tạo `feat/P8.1` từ `develop`. Tag `kinrow-final` giữ nguyên (số liệu E1–E6 khóa).
 - **Commit:** `<TaskID>: <mô tả ngắn>`, không trailer (CLAUDE.md).
 - **PROGRESS.md:** mỗi người chỉ sửa dòng task của mình (cột Owner); session log chỉ thêm, không sửa dòng người khác.
-- **Dữ liệu chạy thử:** `results/**/*quick*` và `results/*.log` vào `.gitignore` (file đã track từ trước vẫn track, không xóa).
+- **Dữ liệu chạy thử:** `results/**/*quick*` và `results/*.log` vào `.gitignore`; ngoại lệ `!results/*_full.log` (log chạy full được track — `e6_full.log` là nguồn trích dẫn D-21). Cập nhật 2026-11-17: file quick đã track trước đó được bỏ track (`git rm --cached`, vẫn giữ trên đĩa).
 - **Bất biến:** `tests/test_regression_kinrow.py` phải xanh; không sửa `agents/` khi chưa ghi DECISIONS (D-22).
