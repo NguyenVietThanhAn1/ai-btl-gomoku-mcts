@@ -101,3 +101,11 @@ def test_images_captions_abstract(src: Path):
 
 def test_references_section_ignored(src: Path):
     assert run("## Tài liệu tham khảo\n\n1. Kocsis 2006, 282–293.\n", src) == []
+
+
+def test_fenced_code_and_example_marker(src: Path):
+    assert run("```\nUCT = 1 + 1,414·1,048 = 2,48\n```\n", src) == []
+    (src / "ex.md").write_text("x", encoding="utf-8")
+    assert run("UCT(X2) = 2,48 <!-- example: ex.md -->", src) == []
+    assert any("không có file" in m for m in run("2,48 <!-- example: none.md -->", src))
+    assert any("thiếu đường dẫn" in m for m in run("2,48 <!-- example: -->", src))

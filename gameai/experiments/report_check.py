@@ -7,6 +7,8 @@ Cú pháp (comment HTML, pandoc bỏ qua) — chi tiết trong `report_check.md`
 - `0,62 <!-- src: summary_kinrow.md#E5 -->`: token có nguyên văn trong mục có tiêu đề bắt đầu `E5`.
 - `<!-- src-table: summary_kinrow.md#Bảng E1 -->` + bảng ngay sau: giống byte bảng đầu của mục.
 - `<!-- const: D-18 -->`: số trên dòng là hằng số thiết kế (D-xx phải có trong DECISIONS).
+- `<!-- example: gameai/agents/mcts.md -->`: số trên dòng thuộc ví dụ tính tay lấy từ file `.md` đó
+  (không phải số liệu đo); file phải tồn tại. Khối code ``` bỏ qua hoàn toàn.
 
     python -m gameai.experiments.report_check            # report/report.md
     python -m gameai.experiments.report_check FILE.md
@@ -191,6 +193,13 @@ def check_table(body: str, lines: list[str], i: int, read: dict[Path, str]) -> t
     return gs, ge
 
 
+def check_example(body: str) -> list[str]:
+    paths = body[len("example:") :].split()
+    if not paths:
+        return ["example: thiếu đường dẫn file .md nguồn"]
+    return [f"example: không có file {p}" for p in paths if not (ROOT / p).exists()]
+
+
 def check_const(body: str, decisions: str) -> list[str]:
     return [f"const: {d} không có trong DECISIONS" for d in re.findall(r"D-\d+", body)
             if not re.search(rf"^#+ {d} ", decisions, re.M)]  # fmt: skip
@@ -224,8 +233,14 @@ def check_text(
     skip: set[int] = set()
     section = ""
     captions = {"Hình": 0, "Bảng": 0}
+    fence = False
     for i, line in enumerate(lines):
         n = i + 1
+        if line.lstrip().startswith("```"):
+            fence = not fence
+            continue
+        if fence:
+            continue
         if m := HEADING.match(line):
             section = m.group(2)
             continue
@@ -248,6 +263,9 @@ def check_text(
                 if body.startswith("const:"):
                     const_line = True
                     issues += [Issue(n, e) for e in check_const(body, decisions)]
+                elif body.startswith("example:"):
+                    const_line = True
+                    issues += [Issue(n, e) for e in check_example(body)]
                 elif body.startswith("src-table:"):
                     skip.update(range(*check_table(body, lines, i, read)))
                 elif body.startswith("src:"):
@@ -288,8 +306,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  x {it}")
     n_src = len(re.findall(r"<!--\s*src:", text))
     n_tab = len(re.findall(r"<!--\s*src-table:", text))
-    print(f"[report_check] {n_src} số có nguồn, {n_tab} bảng src-table, Tóm tắt {words} từ, "
-          f"{len(issues)} lỗi")  # fmt: skip
+    n_ex = len(re.findall(r"<!--\s*example:", text))
+    n_const = len(re.findall(r"<!--\s*const:", text))
+    print(f"[report_check] {n_src} số có nguồn, {n_tab} bảng src-table, {n_const} dòng const, "
+          f"{n_ex} dòng ví dụ tay, Tóm tắt {words} từ, {len(issues)} lỗi")  # fmt: skip
     return 1 if issues else 0
 
 

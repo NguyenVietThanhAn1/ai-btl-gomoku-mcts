@@ -23,11 +23,12 @@ In từng lỗi `L<dòng>: …` + dòng tổng `N số có nguồn, M bảng src
 | `0,62 <!-- src: summary_kinrow.md#E5 -->` | Token số cuối trước comment phải có **nguyên văn** trong mục có tiêu đề **bắt đầu bằng** `E5` (tới tiêu đề cùng cấp/cao hơn kế tiếp); neo phải khớp đúng 1 tiêu đề. Không neo theo số dòng. |
 | `<!-- src-table: summary_kinrow.md#Bảng E3 — W/D/L của MCTS, 3×3 vs Random -->` | Khối bảng md ngay sau comment phải **giống byte** khối bảng đầu tiên của mục đó. Số trong bảng không bị quét "số trần". |
 | `<!-- const: D-18 -->` | Mọi số trên dòng là hằng số thiết kế (lưới c, số ván, iteration); mọi `D-xx` phải là tiêu đề trong `docs/DECISIONS.md`. |
+| `<!-- example: gameai/agents/mcts.md -->` | Số trên dòng thuộc **ví dụ tính tay** chép từ mục "Giải thích cho báo cáo" của file `.md` đó (không phải số đo); file phải tồn tại. Đếm riêng ở dòng tổng để người duyệt thấy. |
 
 Tên trần `summary_kinrow.md` → `results/tables/`; nguồn phải nằm trong `results/` (raw hoặc tables).
 
 ## Quy tắc "số trần"
-Số **bắt buộc có nguồn**: có phẩy thập phân, hoặc ≥ 100, hoặc theo sau là `%`. Bỏ qua: dòng tiêu đề, code `` `…` ``,
+Khối code ``` (pseudocode, trace) bỏ qua hoàn toàn. Số **bắt buộc có nguồn**: có phẩy thập phân, hoặc ≥ 100, hoặc theo sau là `%`. Bỏ qua: dòng tiêu đề, code `` `…` ``,
 công thức `$…$`, comment, đích link/ảnh, bảng `src-table`, mục "Tài liệu tham khảo", token dính chữ/dấu chấm (E3, h300,
 D-18, P7.2, 3×3 vẫn là số < 100 nên không bị báo). Số nhỏ không thập phân (k = 5, 15×15, 4 bước) không cần nguồn.
 
@@ -46,7 +47,7 @@ D-18, P7.2, 3×3 vẫn là số < 100 nên không bị báo). Số nhỏ không 
 ## Test
 `tests/test_report_check.py` (ROOT giả trong tmp): khớp / lệch CSV, lọc 0 hoặc ≥ 2 hàng, `x100`, nhóm nghìn, W/D/L, chuỗi,
 không khớp một phần (10,92 ≠ 0,92), neo summary đúng / sai / không tồn tại, bảng giống byte / khác, số trần (3 lỗi đúng
-chỗ), const D-xx có / không, code + công thức + link bỏ qua, ảnh thiếu, caption nhảy số, Tóm tắt > 200 từ, mục Tài liệu
+chỗ), const D-xx có / không, khối ``` và `example:` (file có / không / thiếu), code + công thức + link bỏ qua, ảnh thiếu, caption nhảy số, Tóm tắt > 200 từ, mục Tài liệu
 tham khảo bỏ qua.
 
 ## Hạn chế
