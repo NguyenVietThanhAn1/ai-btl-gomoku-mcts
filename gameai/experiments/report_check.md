@@ -28,13 +28,15 @@ In từng lỗi `L<dòng>: …` + dòng tổng `N số có nguồn, M bảng src
 Tên trần `summary_kinrow.md` → `results/tables/`; nguồn phải nằm trong `results/` (raw hoặc tables).
 
 ## Quy tắc "số trần"
-Khối code ``` (pseudocode, trace) bỏ qua hoàn toàn. Số **bắt buộc có nguồn**: có phẩy thập phân, hoặc ≥ 100, hoặc theo sau là `%`. Bỏ qua: dòng tiêu đề, code `` `…` ``,
+Khối code ``` (pseudocode, trace) bỏ qua hoàn toàn — **quy tắc viết: không đặt số đo từ `results/` trong khối code** (An, 2026-11-18). Số **bắt buộc có nguồn**: có phẩy thập phân, hoặc ≥ 100, hoặc theo sau là `%`. Bỏ qua: dòng tiêu đề, code `` `…` ``,
 công thức `$…$`, comment, đích link/ảnh, bảng `src-table`, mục "Tài liệu tham khảo", token dính chữ/dấu chấm (E3, h300,
 D-18, P7.2, 3×3 vẫn là số < 100 nên không bị báo). Số nhỏ không thập phân (k = 5, 15×15, 4 bước) không cần nguồn.
 
 ## Kiểm thêm
 - Ảnh `![…](đường dẫn)` tồn tại (tương đối thư mục của file report).
-- Caption `**Hình n.**` / `**Bảng n.**` đánh số liên tiếp từ 1 (pandoc không có crossref — D-30).
+- Caption hình = **alt text kiểu pandoc** `![Hình n. Mô tả.](đường dẫn)` (một caption trong docx); dòng `**Hình …**` in đậm bị
+  báo lỗi (caption đôi); ảnh không có alt bắt đầu bằng "Hình " bị báo lỗi. Bảng: dòng `**Bảng n.** …` ngay trên bảng.
+  `Hình n.` / `Bảng n.` đánh số liên tiếp từ 1 (pandoc không có crossref — D-30); phụ lục dùng `Hình B.n.` (không đếm).
 - Tóm tắt (mục có tiêu đề bắt đầu "Tóm tắt", bỏ comment) ≤ 200 từ (tách theo khoảng trắng).
 
 ## Public API
@@ -47,7 +49,7 @@ D-18, P7.2, 3×3 vẫn là số < 100 nên không bị báo). Số nhỏ không 
 ## Test
 `tests/test_report_check.py` (ROOT giả trong tmp): khớp / lệch CSV, lọc 0 hoặc ≥ 2 hàng, `x100`, nhóm nghìn, W/D/L, chuỗi,
 không khớp một phần (10,92 ≠ 0,92), neo summary đúng / sai / không tồn tại, bảng giống byte / khác, số trần (3 lỗi đúng
-chỗ), const D-xx có / không, khối ``` và `example:` (file có / không / thiếu), code + công thức + link bỏ qua, ảnh thiếu, caption nhảy số, Tóm tắt > 200 từ, mục Tài liệu
+chỗ), const D-xx có / không, khối ``` và `example:` (file có / không / thiếu), code + công thức + link bỏ qua, ảnh thiếu, caption hình trong alt + nhảy số + thiếu alt + dòng **Hình** bị cấm, Hình B.n không đếm, Tóm tắt > 200 từ, mục Tài liệu
 tham khảo bỏ qua.
 
 ## Hạn chế

@@ -90,10 +90,13 @@ def test_bare_numbers_and_const(src: Path):
 
 def test_images_captions_abstract(src: Path):
     (src / "a.png").write_bytes(b"")
-    assert run("![x](a.png)\n\n**Hình 1.** a\n\n**Hình 2.** b", src) == []
-    msgs = run("![x](none.png)\n\n**Hình 1.** a\n\n**Hình 3.** b", src)
+    assert run("![Hình 1. a](a.png)\n\n![Hình 2. b](a.png)\n\n**Bảng 1.** t", src) == []
+    assert run("![Hình B.1. phụ lục](a.png)", src) == []  # phụ lục: không đánh số chung
+    msgs = run("![Hình 1. a](none.png)\n\n![Hình 3. b](a.png)\n\n**Bảng 2.** t", src)
     assert any("ảnh không tồn tại" in m for m in msgs)
-    assert any("không liên tiếp" in m for m in msgs)
+    assert sum("không liên tiếp" in m for m in msgs) == 2
+    assert any("thiếu caption" in m for m in run("![x](a.png)", src))
+    assert any("không dùng dòng" in m for m in run("**Hình 1.** a", src))
     text = "## Tóm tắt\n\n" + "từ " * 201 + "<!-- bỏ -->\n\n## 1 Giới thiệu\n"
     issues, words = rc.check_text(text, decisions=DEC, base=src)
     assert words == 201 and any("Tóm tắt" in str(i) for i in issues)

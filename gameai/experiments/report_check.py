@@ -37,7 +37,8 @@ COMMENT = re.compile(r"<!--(.*?)-->", re.S)
 NUM = re.compile(r"(?<![\w.,/-])-?(?:\d{1,3}(?: \d{3})+|\d+)(?:,\d+)?(?![\w,]|\.\d)")
 HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
 CAPTION = re.compile(r"^\*\*(Hình|Bảng) (\d+)\.\*\*")
-IMAGE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)")
+FIG_CAPTION = re.compile(r"!\[Hình (\d+)\. ")  # caption hình = alt text kiểu pandoc
+IMAGE = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)")
 CODE = re.compile(r"`[^`]*`")
 MATH = re.compile(r"\$[^$]*\$")
 LINK_TARGET = re.compile(r"\]\([^)]*\)")
@@ -246,13 +247,22 @@ def check_text(
             continue
         if section.startswith(REFS_HEADING):
             continue
-        if m := CAPTION.match(line):
-            kind, k = m.group(1), int(m.group(2))
+        found = [("Bảng", int(m.group(2)))] if (m := CAPTION.match(line)) else []
+        if m and m.group(1) == "Hình":
+            issues.append(
+                Issue(n, "caption hình đặt trong ![Hình n. …](…), không dùng dòng **Hình**")
+            )
+            found = []
+        found += [("Hình", int(k)) for k in FIG_CAPTION.findall(line)]
+        for kind, k in found:
             if k != captions[kind] + 1:
                 issues.append(Issue(n, f"{kind} {k}: số thứ tự không liên tiếp"))
             captions[kind] = k
-        issues += [Issue(n, f"ảnh không tồn tại: {img}") for img in IMAGE.findall(line)
-                   if not (base / img).exists()]  # fmt: skip
+        for alt, img in IMAGE.findall(line):
+            if not (base / img).exists():
+                issues.append(Issue(n, f"ảnh không tồn tại: {img}"))
+            if not alt.startswith("Hình "):
+                issues.append(Issue(n, f"ảnh thiếu caption 'Hình …': {img}"))
         if i in skip:
             continue
         const_line, covered = False, []
