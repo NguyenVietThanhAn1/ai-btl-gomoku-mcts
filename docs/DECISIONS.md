@@ -224,3 +224,10 @@
 - **Thứ tự mới** (An quyết): `P8.0 → P7.1 → P6.1 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4 → P7.2–P7.4`. Lý do: khép phần k-in-row (bảng/hình báo cáo, GUI k-in-row) khi còn nhớ chi tiết, trước khối việc lớn cờ tướng.
 - **Tách P6:** P6.1 = khung GUI + lớp view theo game + view k-in-row (gộp ✂ P4.3); P6.2 = view cờ tướng, sau P8.3.
 - **Git:** `xiangqi` fast-forward vào `master` (`faf5577`); P7.1 / P6.1 làm trên `master`; tới P8.1 tạo lại branch `xiangqi` từ master. Tag `kinrow-final` giữ nguyên; golden k-in-row vẫn là điều kiện mọi sửa agent.
+
+### D-27 (2026-11-17) — Làm việc nhóm: quy ước git và PROGRESS
+- **Branch:** `master` = bản ổn định / nộp được, **chỉ merge từ `develop` ở mốc**, không commit thẳng. `develop` = tích hợp. Mỗi task một branch `feat/<task-id>` (vd. `feat/P6.1`) tạo từ `develop`; merge về `develop` sau khi `pytest` + `ruff` xanh và spec-reviewer PASS. Branch `xiangqi` (D-22/D-26) đã xóa local — P8.1 tạo `feat/P8.1` từ `develop`. Tag `kinrow-final` giữ nguyên (số liệu E1–E6 khóa).
+- **Commit:** `<TaskID>: <mô tả ngắn>`, không trailer (CLAUDE.md).
+- **PROGRESS.md:** mỗi người chỉ sửa dòng task của mình (cột Owner); session log chỉ thêm, không sửa dòng người khác.
+- **Dữ liệu chạy thử:** `results/**/*quick*` và `results/*.log` vào `.gitignore` (file đã track từ trước vẫn track, không xóa).
+- **Bất biến:** `tests/test_regression_kinrow.py` phải xanh; không sửa `agents/` khi chưa ghi DECISIONS (D-22).
