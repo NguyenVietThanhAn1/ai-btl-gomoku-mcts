@@ -149,11 +149,29 @@ win rand "không mất thắng": 0,24 / 0,87 / 1,00 / 1,00 / 1,00.
   0,44–0,47 → h300 chọn một nước thắng chắc khác (D-11). `n_mine = 1`: thắng ngay 0,12 (100–1000 iter), 0,17 (2500),
   0,49 (5000); "không mất thắng" 0,15–0,53 — nhưng `keeps_win` chỉ là điều kiện đủ nên **không** kết luận được h300
   đánh rơi thắng ở các thế này.
-- **block h300 không đơn điệu** (0,50 → 0,14 → 0,48). Giải thích khả dĩ (chưa kiểm riêng): ở 100 iter gốc chưa mở rộng
-  hết (`expanded_rate` 0,94, trung vị N con đúng = 2), max_n hòa N → phá theo W; sau nước không chặn, rollout heavy cho
-  đối thủ thắng ngay → W = 0, nên con chặn thường thắng. Khi cây sâu thêm, con không chặn được mở rộng nước đáp trả
-  ngẫu nhiên của đối thủ (hiếm khi đúng ô thắng); từ nút đó rollout heavy tới lượt ta → ta tự chặn → nước sai trông
-  lại tốt (cơ chế "che đe dọa" của D-14), tới khi đủ lượt thăm để mở rộng ô thắng (5000 iter, tầng < 60: 0,97).
+- **block h300 không đơn điệu** (0,50 → 0,14 → 0,48) — đã kiểm chứng bằng chạy lại cây, xem mục "Kiểm chứng cơ chế"
+  bên dưới (`e6_mechanism.py`).
+
+## Kiểm chứng cơ chế block h300 (P7.1, 2026-11-17; `e6_mechanism.py`)
+Chạy lại đúng 900 cây block (45 thế × 10 seed × rand/h300), **khớp `e6_choice.csv` 100 %** (4 500 checkpoint), không
+ván mới; dự đoán ghi ở D-21 trước khi chạy, áp dụng chính cho nhóm **chọn sai** (`correct = 0`). Số: trung bình
+[bootstrap cụm thế 95 %], `results/tables/e6_mechanism.csv`, hình `results/figures/e6_mechanism.png`.
+
+| Bước | Dự đoán | Số đo (h300, trừ khi ghi khác) | Kết luận |
+|---|---|---|---|
+| 100 iter (a) | rollout heavy phạt nước không chặn: tỷ lệ con sai có W = 0 cao (≥ ~0,8), cao hơn rõ rand | mọi lần chạy 0,73 [0,64; 0,82] vs rand 0,55 [0,53; 0,57]; nhóm chọn sai 0,81, chọn đúng 0,66 | **một phần**: cao hơn rand rõ (khoảng tách), nhưng dưới ngưỡng 0,8 ở số gộp |
+| 100 iter (b) | lần chọn sai: nước sai "thoát phạt" (W/N > 0), ô chặn ít lượt (N ≤ 2); lần chọn đúng: N ô chặn > N mọi con sai | chọn sai: W/N > 0 chỉ 61 % (W/N TB 0,31 [0,23; 0,39]); N ô chặn trung vị 1, **W/N ô chặn 0,17** [0,11; 0,24]. Chọn đúng: N ô chặn > max N con sai 68 %, W/N ô chặn 0,95 | **một phần**: lần sai ở 100 iter chủ yếu do **rollout đầu tiên của chính ô chặn thua** (W/N ≈ 0 → không được thăm lại), không phải do nước sai thoát phạt |
+| 1000 iter | nước sai được chọn W/N ≈ 0,6 (0,5–0,7) và ≥ W/N ô chặn; ô thắng của đối thủ hiếm khi đã mở (< ~0,3) | W/N nước sai được chọn **0,90** [0,86; 0,93]; ≥ W/N ô chặn ở 100 % lần (ô chặn 0,65 [0,58; 0,71]); đã mở ô thắng 0,20 [0,11; 0,29] | **khớp cơ chế, không khớp độ lớn**: nước sai trông còn tốt hơn dự đoán (~0,9 chứ không ~0,6) |
+| 5000 iter | ô thắng đối thủ được mở dưới nước sai (tăng rõ so với 1000); khi đã mở, W/N nước sai thấp hơn | đã mở 0,20 → **0,97** [0,91; 1,00] (chọn sai), gộp 0,16 → 0,96; W/N nút sai top khi đã mở 0,69 vs chưa mở 0,94; W/N nước sai được chọn 0,90 → 0,70 | **khớp** |
+
+Đọc thêm: tỷ lệ đã mở tăng mạnh từ 2 500 iter (0,76 ở nhóm chọn sai) nhưng tỷ lệ đúng vẫn 0,13 — nút bác bỏ mới có
+trung vị 2 lượt, W/N nước sai mới giảm về 0,83; ở 5 000 iter (trung vị 3) W/N nước sai 0,70 vẫn > ô chặn 0,60 trong
+nhóm chọn sai → việc bác bỏ mới bắt đầu, nên chỉ ~½ lần chọn đúng. Rand có quỹ đạo mở ô thắng tương tự (0,21 → 0,83)
+nhưng W/N ô chặn ≈ 0,47–0,49 ở mọi iter (rollout random không phân biệt) → chỉ cây mới sửa được, tăng đơn điệu chậm.
+**Kết luận cho báo cáo:** đường chữ U của h300 = (100 iter) rollout heavy đánh giá đúng ngay từ 1–2 lượt thăm (phạt nước
+không chặn, thưởng ô chặn) → (500–2 500) cây con của nước sai mở các nước đáp **không** phải ô thắng, rollout heavy từ
+đó cho ta tự chặn → nước sai W/N ≈ 0,9, hút lượt thăm → (5 000) ô thắng của đối thủ được mở dưới nước sai, W/N của nó
+giảm. `check_tactics` bỏ qua cả quá trình này bằng một phép kiểm O(|C|²).
 
 **(b) Win rate** (50 ván, Wilson 95 %; so cặp theo `game_id`, d = bật − tắt):
 

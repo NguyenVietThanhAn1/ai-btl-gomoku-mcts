@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P7.1 (plots/bảng báo cáo k-in-row + kiểm chứng cơ chế E6), branch `master` (D-26)
-- **Việc đang dở:** P7.1 đang làm
-- **Bước tiếp theo:** xong P7.1 → P6.1 (khung GUI + k-in-row) → P8.1 (tạo lại branch `xiangqi`). Thứ tự: D-26.
+- **Task hiện tại:** P7.1 ✅ → tiếp P6.1, branch `master` (D-26)
+- **Việc đang dở:** —
+- **Bước tiếp theo:** P6.1 khung GUI pygame + lớp view theo game + view k-in-row (PLAN P6.1); xong → P8.1 (tạo lại branch `xiangqi` từ master). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md` (sinh bằng `python -m gameai.experiments.plots`).
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -37,7 +37,7 @@
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
 | P6.1 | GUI: khung + view k-in-row | ⬜ | An | | sau P7.1 (D-26) |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
-| P7.1 | Plots/tables | 🔄 | An | 2026-11-17 | D-26 |
+| P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ⬜ | An | | |
 | P7.3 | report.docx | ⬜ | An | | |
 | P7.4 | Video demo (script + quay) | ⬜ | An | | |
@@ -55,10 +55,18 @@
 - **E4:** 3×3 (4 298 thế ≥ 2 nước): max_n ≠ max_wn ở 1,3–4,4 % thế; trong các thế đó tỉ lệ giữ giá trị trò chơi max_n / max_wn = 0,606 / 0,809 (10 iter), 0,948 / 0,928 (100), 1,000 / 0,982 (250), 1 / 1 (1000) → max_n chỉ hơn ở vùng giữa. 15×15 h300 c = 1.4: 0/150 search khác (W/N lớn nhất = 1,0 ở 80–100 %, max_wn phá hòa theo N); c = 0.5: 3/150. Đối đầu 3×3 max_n vs max_wn: score 0,485–0,510, mọi CI chứa 0,5. `results/tables/e4_{roots_summary,roots_examples,match}.csv`, `figures/e4_match.png`.
 - **E3:** 3×3 vs Random win 0,915–0,980, vs Minimax non-loss 0,70–0,77 (100 iter) → 1,00 (≥ 2500) — mọi c chồng CI ở mọi iter. 15×15 vs Greedy: giao cắt — 1000 iter c=0.5 0,62 [0,482; 0,741] vs c=2.0 0,22 [0,128; 0,352] (tách); 5000 iter c=2.0 0,96 [0,865; 0,989], c=1.4 0,92, c=1.0 0,88, c=0.5 0,82 (chồng). AB2: pilot c=2.0 2/20 → qua cổng; tốt nhất c=1.0/5000 0,36 [0,241; 0,499], mọi c chồng. Hình `results/figures/e3_{3x3,greedy,ab2}.png`; bảng `results/tables/e3_{3x3_random,3x3_minimax,greedy,ab2_pilot,ab2}.csv`.
 - **E2:** (b) vét cạn 0 nhánh thua trên 10 seed × 2 vai ở 5000 iter (5674 nhánh); 1000 iter 7/5713 thua; 100 iter 279/6247. (a) 5000 iter 0 thua/100 ván vs Minimax, Random, MCTS. `results/tables/e2_*.csv`.
+- **E6:** tắt tactics, chặn four đúng (trọng số pool) rand 0,03 → 0,38, h300 0,50 → 0,14 → 0,48 (100 → 1000 → 5000 iter); bật 1,00. Win rate tắt → bật vs Greedy +0,38 (1000), +0,62 (5000); vs mref +0,04 (CI chứa 0). Cơ chế chữ U (chạy lại cây, khớp raw 100 %): 100 iter một phần, 1000 khớp cơ chế (W/N nước sai 0,90, không phải ~0,6), 5000 khớp (ô thắng đối thủ đã mở 0,20 → 0,97). `results/tables/e6_*.csv`, `figures/e6_{choice,match,mechanism}.png`.
+- **Tổng hợp cho báo cáo:** `results/tables/summary_kinrow.md` (sinh tự động, bản đồ hình/bảng → mục 5).
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-17 — P7.1 (xong)
+- Đổi thứ tự (An, D-26): `xiangqi` fast-forward vào master; P7.1 → P6.1 → P8.1…; tách P6.1 / P6.2. Commit `e98dc49`.
+- `experiments/plots.py` (+`.md`): sinh lại bảng/hình E2–E6 từ raw bằng đúng hàm tóm tắt của từng E (E1 + bench/sanity/cost/positions_summary là bảng đo trực tiếp). `--check` so với bản đã commit: **24/24 bảng giống byte**, 0 khác; chạy ghi đè: mọi PNG cũ cũng giống byte. Sinh `results/tables/summary_kinrow.md` (số chính mỗi E + bản đồ → mục 5.1–5.6 + bảng md cho báo cáo).
+- Cơ chế E6: dự đoán ghi vào D-21 trước khi chạy (yêu cầu An: bảng tách nhóm correct = 1 / 0, dự đoán áp cho nhóm chọn sai). `experiments/e6_mechanism.py` (+`.md`) chạy lại 900 cây block (rand + h300) — `CODE_PATHS` không đổi so với tag, **khớp `e6_choice.csv` 100 %**, 589 s, AC → `raw/e6_mechanism.csv`, `tables/e6_mechanism.csv`, `figures/e6_mechanism.png`. Kết luận: 100 iter một phần, 1000 iter khớp cơ chế / sai độ lớn, 5000 iter khớp (`e6_tactics.md`, D-21).
+- Test: `tests/test_plots.py`, `tests/test_e6_mechanism.py` (11 test); full suite xanh, ruff sạch. Đã xem 9 hình; `e5_time.png` có tiêu đề panel dưới-giữa tràn sang phải (có từ E5, chưa sửa).
 
 ### 2026-11-17 — P8.0 (xong)
 - Lập plan P8 (An duyệt + 4 bổ sung: hạn chế TT/lặp thế, kiểm tỉ lệ ván phân thắng thua trước khi fit scale, 50 ván/điểm E7 c/d (≥ 20 nếu quá đắt), đánh dấu lõi / ✂).

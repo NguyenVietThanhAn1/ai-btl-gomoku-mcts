@@ -1,0 +1,104 @@
+"""Test P7.1 plots: so byte, lọc cặp pilot, tóm tắt E2 từ raw, định dạng số, summary_kinrow."""
+
+from __future__ import annotations
+
+import csv
+import re
+import shutil
+from pathlib import Path
+
+import pytest
+
+from gameai.experiments import e2_never_lose as e2
+from gameai.experiments import plots
+from gameai.experiments.common import read_rows
+
+TABLES = plots.TABLE_DIR
+
+
+def test_vn_format():
+    assert plots.vn(0.5) == "0,50"
+    assert plots.vn(549946, 0) == "549 946"
+    assert plots.vn(2252, 0) == "2252"
+    assert plots.vn(0.12345, 3) == "0,123"
+    assert plots.ci(0.1, 0.25) == "[0,10; 0,25]"
+
+
+def test_one_requires_unique():
+    rows = [{"a": "1", "b": "x"}, {"a": "1", "b": "y"}]
+    assert plots._one(rows, a=1, b="y")["b"] == "y"
+    with pytest.raises(KeyError):
+        plots._one(rows, a=1)
+    with pytest.raises(KeyError):
+        plots._one(rows, a=2)
+
+
+def test_compare(tmp_path: Path):
+    new = tmp_path / "new"
+    new.mkdir()
+    (new / "same.csv").write_bytes(b"a,b\r\n1,2\r\n")
+    (new / "diff.csv").write_bytes(b"a,b\n1,3\n")
+    (new / "fresh.csv").write_bytes(b"a\n")
+    ref = {"same.csv": b"a,b\n1,2\n", "diff.csv": b"a,b\n1,2\n"}
+    bad = dict(plots.compare(new, tmp_path, ["same.csv", "diff.csv", "fresh.csv"],
+                             ref=lambda p: ref.get(p.name)))  # fmt: skip
+    assert "same.csv" not in bad
+    assert bad["diff.csv"].startswith("khác từ dòng 2")
+    assert bad["fresh.csv"].startswith("mới")
+
+
+def _write(path: Path, rows: list[dict]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
+
+
+def test_match_keeps_first_pairs(tmp_path: Path):
+    raw = tmp_path / "x.csv"
+    _write(raw, [{"game_id": f"g{i}", "pair_seed": i // 2} for i in range(10)])
+    _write(tmp_path / "x_moves.csv", [{"game_id": f"g{i}", "ply": 0} for i in range(10)])
+    rows, moves = plots._match(raw, n_pairs=2)
+    assert [r["game_id"] for r in rows] == ["g0", "g1", "g2", "g3"]
+    assert {m["game_id"] for m in moves} == {"g0", "g1", "g2", "g3"}
+    assert len(plots._match(raw)[0]) == 10
+
+
+def test_e2_mistakes_from_raw_strings():
+    """Tóm tắt từ raw (chuỗi đã ép int) = tóm tắt từ dòng gốc (int) — gồm thứ tự sắp xếp."""
+    src = [
+        {"iterations": it, "mcts_player": p, "ply": ply, "move_type": mt, "opp_last_type": ot,
+         "losing_leaves": n}
+        for it, p, ply, mt, ot, n in ((1000, 1, 2, "edge", "corner", 3), (100, -1, 1, "center",
+                                      "edge", 5), (100, 1, 3, "edge", "edge", 1))
+    ]  # fmt: skip
+    as_str = [{k: str(v) for k, v in r.items()} for r in src]
+    conv = [{**m, **{k: int(m[k]) for k in ("iterations", "mcts_player", "ply", "losing_leaves")}}
+            for m in as_str]  # fmt: skip
+    assert e2.summarize_mistakes(conv) == e2.summarize_mistakes(src)
+
+
+needs_tables = pytest.mark.skipif(
+    not (TABLES / "e1_summary.csv").exists() or not (TABLES / "e6_paired.csv").exists(),
+    reason="cần results/tables đầy đủ",
+)
+
+
+@needs_tables
+def test_summary_numbers_come_from_csv(tmp_path: Path):
+    for f in TABLES.glob("*.csv"):
+        shutil.copy2(f, tmp_path / f.name)
+    path = plots.write_summary_md(tmp_path, plots.FIG_DIR)
+    text = path.read_text(encoding="utf-8")
+    for e in ("E1", "E2", "E3", "E4", "E5", "E6"):
+        assert f"## {e} —" in text
+    s = read_rows(TABLES / "e1_summary.csv")
+    mm = plots._one(s, board="3x3", variant="minimax")
+    assert plots.vn(mm["nodes_sum"], 0) in text
+    e2t = max(read_rows(TABLES / "e2_exhaustive.csv"), key=lambda r: int(r["iterations"]))
+    assert f"{e2t['iterations']} iter → {e2t['losses']} nhánh" in text
+    gp = plots._one(read_rows(TABLES / "e6_paired.csv"), part="greedy", iters=5000)
+    assert f"hiệu {plots.vn(gp['diff'])}" in text
+    # mọi tên file được nhắc tới đều tồn tại
+    for name in re.findall(r"`(e\d_[a-z0-9_]+\.(?:csv|png))`", text):
+        assert (tmp_path / name).exists() or (plots.FIG_DIR / name).exists(), name

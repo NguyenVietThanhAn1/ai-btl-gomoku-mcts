@@ -1,0 +1,3 @@
+step,n_tasks,workers,cpu,logical_cpus,power,battery_pct,started,finished,wall_s,git_commit,git_dirty,note
+run,2,1,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,56,2026-11-17T11:40:34,2026-11-17T11:40:37,3.2,e98dc49cd7425be7cee21a13f66bf89cadf1b735,1,khớp 100 %
+run,898,4,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,59,2026-11-17T11:40:52,2026-11-17T11:50:40,588.7,e98dc49cd7425be7cee21a13f66bf89cadf1b735,1,khớp 100 %
