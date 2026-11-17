@@ -277,3 +277,116 @@ def test_app_draws_headless_with_overlay():
     app.tick()
     app.handle_key(pygame.K_ESCAPE)
     assert not app.running
+
+
+# ---------------------------------------------------------------- P6.3: undo / đầu hàng / xem lại
+HUMAN_MCTS3 = PRESETS["3x3_human_mcts"]  # người X vs MCTS 1000
+
+
+def test_undo_human_vs_ai_two_plies():
+    ctrl = GameController(HUMAN_MCTS3, seed=0)
+    assert not ctrl.can_undo  # chưa có nước người
+    empty_key = ctrl.game.key()
+    assert ctrl.submit_human_move(4)
+    ctrl.run_until_idle()
+    assert ctrl.ply == 2 and ctrl.can_undo
+    gid, old_agent = ctrl.game_id, ctrl.agents[P2]
+    assert ctrl.undo()
+    assert ctrl.ply == 0 and ctrl.game.key() == empty_key and ctrl.is_human_turn()
+    assert ctrl.game_id == gid + 1 and ctrl.agents[P2] is not old_agent
+
+
+def test_undo_when_human_is_o_keeps_ai_opening():
+    ctrl = GameController(swap_sides(HUMAN_MCTS3), seed=0)
+    ctrl.run_until_idle()
+    assert ctrl.ply == 1 and not ctrl.can_undo and not ctrl.undo()
+    free = next(m for m in range(9) if ctrl.game.board[m] == 0)
+    assert ctrl.submit_human_move(free)
+    ctrl.run_until_idle()
+    assert ctrl.ply == 3 and ctrl.undo()
+    assert ctrl.ply == 1 and ctrl.history[0].by_ai and ctrl.is_human_turn()
+
+
+def test_undo_disabled_while_ai_thinking_and_stale_result_dropped():
+    ctrl = GameController(Preset("t", "t", GAME3, None, SLOW), seed=0)
+    gate = sys.modules[type(ctrl.agents[P2]).__module__].GATE
+    gate.clear()
+    assert ctrl.submit_human_move(4)
+    ctrl.update()
+    assert ctrl.thinking and not ctrl.can_undo and not ctrl.undo() and ctrl.ply == 1
+    gate.set()
+    ctrl.run_until_idle(5)
+    assert [m.move for m in ctrl.history] == [4, 0]
+    # undo rồi người đi lại: chỉ nhận kết quả của thread mới (ply 1 trùng ply cũ)
+    assert ctrl.undo() and ctrl.ply == 0
+    assert ctrl.submit_human_move(8)
+    ctrl.run_until_idle(5)
+    assert [m.move for m in ctrl.history] == [8, 0]
+
+
+def test_stale_result_same_ply_dropped_by_game_id():
+    """Kết quả cũ trùng `ply` nhưng khác `game_id` (đã undo) không được áp."""
+    from gameai.gui.controller import AIResult
+
+    ctrl = GameController(Preset("t", "t", GAME3, None, None), seed=0)
+    assert ctrl.submit_human_move(4) and ctrl.submit_human_move(0)
+    old_id = ctrl.game_id
+    assert ctrl.undo() and ctrl.ply == 1
+    ctrl._results.put(AIResult(old_id, 1, P2, 8, {}, [], 0.1))
+    ctrl.update()
+    assert ctrl.ply == 1
+
+
+def test_undo_two_players_one_ply_and_after_win():
+    ctrl = GameController(Preset("t", "t", GAME3, None, None), seed=0)
+    for m in (0, 3, 1, 4, 2):  # X thắng hàng trên
+        assert ctrl.submit_human_move(m)
+    assert ctrl.over and ctrl.outcome == P1
+    assert ctrl.undo()
+    assert ctrl.ply == 4 and not ctrl.over and ctrl.game.current_player() == P1
+
+
+def test_undo_ai_vs_ai_disabled():
+    ctrl = GameController(Preset("t", "t", GAME3, MCTS200, MCTS200), seed=0)
+    ctrl.run_until_idle()
+    assert not ctrl.can_undo and not ctrl.undo() and ctrl.over
+
+
+def test_resign_human_vs_ai_drops_late_result():
+    ctrl = GameController(Preset("t", "t", GAME3, None, SLOW), seed=0)
+    gate = sys.modules[type(ctrl.agents[P2]).__module__].GATE
+    gate.clear()
+    assert ctrl.submit_human_move(4)
+    ctrl.update()
+    assert ctrl.thinking and ctrl.resign_side() == P1
+    assert ctrl.resign()
+    assert ctrl.over and ctrl.outcome == P2 and ctrl.winner is None
+    assert ctrl.result_text() == "X đầu hàng — O thắng"
+    gate.set()
+    time.sleep(0.05)
+    ctrl.update()
+    assert ctrl.ply == 1 and not ctrl.undo() and not ctrl.resign()
+
+
+def test_resign_two_players_current_side_and_ai_vs_ai_none():
+    ctrl = GameController(Preset("t", "t", GAME3, None, None), seed=0)
+    assert ctrl.submit_human_move(4)
+    assert ctrl.resign_side() == P2 and ctrl.resign() and ctrl.outcome == P1
+    aiai = GameController(Preset("t", "t", GAME3, MCTS200, MCTS200), seed=0, delay=100)
+    assert aiai.resign_side() is None and not aiai.resign(P1)
+
+
+def test_position_at_does_not_touch_game_and_human_time():
+    ctrl = GameController(HUMAN_MCTS3, seed=2)
+    play_human_random(ctrl, random.Random(2))
+    key, n = ctrl.game.key(), ctrl.ply
+    assert ctrl.position_at(n).key() == key
+    assert ctrl.position_at(0).key() == GameController(HUMAN_MCTS3).game.key()
+    g1 = ctrl.position_at(1)
+    assert g1.board[ctrl.history[0].move] == 1 and sum(1 for v in g1.board if v) == 1
+    assert ctrl.game.key() == key and ctrl.ply == n
+    with pytest.raises(ValueError):
+        ctrl.position_at(n + 1)
+    assert all(m.time >= 0 for m in ctrl.history)
+    total = sum(m.time for m in ctrl.history)
+    assert ctrl.side_time(P1) + ctrl.side_time(P2) == pytest.approx(total)

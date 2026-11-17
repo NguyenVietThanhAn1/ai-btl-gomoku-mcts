@@ -7,8 +7,8 @@
 ## Đang ở đâu (đọc mục này trước tiên)
 
 - **Task hiện tại:** P6.3 🔄 trên branch `feat/P6.3` (từ `develop` sau khi merge `feat/P6.1`, chưa push)
-- **Việc đang dở:** phiên 1/3 — controller (undo/đầu hàng/`position_at`) + bảng độ khó (D-29) + đo thời gian/nước từng mức.
-- **Bước tiếp theo:** báo An bảng thời gian/nước; An duyệt → phiên 2 (widgets, scenes, play_scene). Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
+- **Việc đang dở:** phiên 1/3 xong phần code (controller undo/đầu hàng/`position_at`, bảng độ khó, `game_config`, test); **đo thời gian 15×15 chưa dùng được** — máy chạy pin (MCTS Khó 4,6–5,6 s/nước có vẽ, 14,5 s không vẽ, P6.1 cắm sạc 2,1 s).
+- **Bước tiếp theo:** cắm sạc, chạy lại script đo (log phiên 2026-11-17) → điền bảng thời gian/nước vào D-29 → báo An; Khó > ~5 s thì An quyết trước khi đổi. An duyệt → phiên 2 (widgets, scenes, play_scene). Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -63,6 +63,12 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-17 — P6.3 phiên 1/3 (dừng chờ đo lại thời gian)
+- Git: `develop` merge `--no-ff` `feat/P6.1` (local, `5747e08`, chưa push), tạo `feat/P6.3`. D-29 + PLAN P6.3 (commit `a953986`); An duyệt plan + 4 chỉnh (undo khóa khi AI nghĩ, nhãn tọa độ, Esc theo màn, độ trễ AI vs AI + nút đầu hàng theo chế độ).
+- Code: `gui/controller.py` (`undo`/`can_undo`, `resign`/`resign_side`/`can_resign`, `outcome`, `side_time`, `position_at`, thời gian nghĩ của người, bỏ kết quả AI khi ván đã dừng), `gui/presets.py` (`DIFFICULTY` 12 ô, `Level`, 3 spec AB riêng, `side_label` AB), `gui/game_config.py` mới. `.md` cập nhật. Không sửa `agents/`, `games/`, `heuristics/`.
+- Test: +9 test controller, `tests/test_gui_config.py` mới (20 case); full suite xanh (1 xfail chủ ý), golden xanh, ruff sạch.
+- Đo thời gian/nước (script scratchpad `time_levels.py`: App trên Surface headless 30 fps, người = nước ngẫu nhiên trong candidate có seed; 3×3 5 ván/mức; 15×15 3 ván + 1 ván vs AB2/mức). 3×3 (mean / max s): MCTS 0,004 / 0,013 · 0,036 / 0,065 · 0,143 / 0,243; AB 0,000 · 0,000 · 0,005 / 0,020. 15×15 **trên pin, không dùng làm số chốt**: MCTS Dễ 0,31 / 0,52, Vừa 0,92–1,25 / 1,86, Khó 4,65–5,63 / 9,33; AB Dễ 0,003, Vừa 0,05–0,08 / 0,14, Khó 0,25–0,34 / 0,52. Kiểm chéo không vẽ (controller, seed 0) MCTS Khó 14,5 s/nước → chậm do pin, không do GUI.
 
 ### 2026-11-17 — Setup git + P6.1 (xong)
 - Git: `.gitignore` giữ `!results/*_full.log`; bỏ track 77 file quick (`git rm --cached`, còn trên đĩa); track `results/e3_full.log`; D-27 cập nhật. Commit `13f4f94` trên `develop`, merge `--no-ff` vào `master` (`51dfbb8`, mốc tài liệu), push cả hai. Tạo `feat/P6.1` từ `develop`.

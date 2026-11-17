@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from gameai.agents.registry import AgentSpec, GameSpec
+from gameai.experiments.e1_nodes import VARIANTS_3, variants_15
 from gameai.experiments.e2_never_lose import mcts_spec as e2_mcts_spec
 from gameai.experiments.e3_c_sweep import AB2, GAME3, GAME15
 from gameai.experiments.e3_c_sweep import mcts_spec as e3_mcts_spec
@@ -40,6 +41,52 @@ PRESETS: dict[str, Preset] = {
     )
 }
 PRESET_ORDER: list[str] = list(PRESETS)
+
+
+# ---------------------------------------------------------------- độ khó (D-29)
+LEVELS = ("easy", "medium", "hard")
+LEVEL_NAMES = {"easy": "Dễ", "medium": "Vừa", "hard": "Khó"}
+AI_KINDS = ("mcts", "alphabeta")
+OWN_CONFIG = "cấu hình riêng của chế độ chơi, không có trong thí nghiệm"
+
+
+@dataclass(frozen=True)
+class Level:
+    """Một mức độ khó: spec + nguồn (`"E1"`… hoặc None = cấu hình riêng)."""
+
+    spec: AgentSpec
+    source: str | None
+
+    @property
+    def source_text(self) -> str:
+        return OWN_CONFIG if self.source is None else f"cấu hình {self.source}"
+
+
+# Cấu hình riêng (An cho phép, D-29): chỉ dùng tham số có sẵn của AlphaBetaAgent.
+AB3_D1 = AgentSpec("alphabeta", {"depth": 1, "eval": "evaluate"}, label="play_ab3_d1")
+AB3_D2 = AgentSpec("alphabeta", {"depth": 2, "eval": "evaluate"}, label="play_ab3_d2")
+AB15_D1 = AgentSpec("alphabeta", {"depth": 1, "eval": "evaluate", "delta": "delta_eval",
+                                  "order": "move_score"}, label="play_ab15_d1")  # fmt: skip
+
+DIFFICULTY: dict[tuple[int, str, str], Level] = {
+    (3, "mcts", "easy"): Level(e2_mcts_spec(100), "E2"),
+    (3, "mcts", "medium"): Level(e2_mcts_spec(1000), "E2"),
+    (3, "mcts", "hard"): Level(e2_mcts_spec(5000), "E2"),
+    (3, "alphabeta", "easy"): Level(AB3_D1, None),
+    (3, "alphabeta", "medium"): Level(AB3_D2, None),
+    (3, "alphabeta", "hard"): Level(VARIANTS_3["ab_order_tt"], "E1"),
+    (15, "mcts", "easy"): Level(e3_mcts_spec(15, 1.4, 250), "E3"),
+    (15, "mcts", "medium"): Level(e3_mcts_spec(15, 1.4, 1000), "E3"),
+    (15, "mcts", "hard"): Level(e3_mcts_spec(15, 1.4, 5000), "E3"),
+    (15, "alphabeta", "easy"): Level(AB15_D1, None),
+    (15, "alphabeta", "medium"): Level(AB2, "E3/E5"),
+    (15, "alphabeta", "hard"): Level(variants_15(3)["ab_order"], "E1"),
+}
+
+
+def level_for(board: int, ai_kind: str, level: str) -> Level:
+    """Mức độ khó của (bàn 3 / 15, loại AI, mức); KeyError nếu không có."""
+    return DIFFICULTY[(board, ai_kind, level)]
 
 
 def swap_sides(preset: Preset) -> Preset:
@@ -78,5 +125,10 @@ def side_label(spec: AgentSpec | None) -> str:
         tac = ", tactics" if p.get("check_tactics") else ""
         return f"MCTS {roll} {p.get('iterations')} iter, c={p.get('c', 1.41):g}{tac}"
     if spec.kind == "alphabeta":
-        return f"Alpha-Beta depth {spec.params.get('depth')}"
+        p = spec.params
+        depth = p.get("depth")
+        text = "Alpha-Beta " + ("đầy đủ" if depth is None else f"depth {depth}")
+        text += ", ordering" if p.get("order") else ""
+        text += ", TT" if p.get("use_tt") else ""
+        return text
     return spec.name
