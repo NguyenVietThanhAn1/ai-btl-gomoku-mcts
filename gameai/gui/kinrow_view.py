@@ -60,6 +60,7 @@ class KInRowView(GameView):
             self.rect.y + FRAME_PAD + (avail_h - side) // 2,
         )
         self.win_progress = 1.0  # 0→1: đường thắng vẽ dần (animation ở scene)
+        self.anim_move: tuple[int, float, int] | None = None  # (ô, scale, alpha) quân đang đặt
         self._static: tuple[str, pygame.Surface] | None = None
 
     # ------------------------------------------------------------ hình học
@@ -89,6 +90,21 @@ class KInRowView(GameView):
     def col_label(self, c: int) -> str:
         """Cột: a–c khi bàn nhỏ (n ≤ 5), A–O khi bàn lớn."""
         return chr(ord("a" if self.n <= 5 else "A") + c)
+
+    @property
+    def stones(self) -> bool:
+        """Bàn lớn vẽ quân Đen/Trắng; bàn nhỏ (≤ 5) vẽ X/O."""
+        return self.n > 5
+
+    def side_name(self, player: int) -> str:
+        if self.stones:
+            return "Đen" if player == 1 else "Trắng"
+        return "X" if player == 1 else "O"
+
+    def side_symbol(self, player: int) -> str:
+        if self.stones:
+            return "●" if player == 1 else "○"
+        return self.side_name(player)
 
     def move_label(self, move: Move) -> str:
         r, c = divmod(int(move), self.n)
@@ -173,18 +189,24 @@ class KInRowView(GameView):
         t = current_theme()
         surf.blit(self.static_layer(t), (self.rect.x - SHADOW_PAD, self.rect.y - SHADOW_PAD))
         ranked = top_k(overlay_info.root_stats) if (opts.show and overlay_info is not None) else []
-        for rank, move, _n, _wn in ranked:  # nền overlay dưới quân
+        for rank, move, _n, _wn in ranked:  # nền overlay (chỉ ô trống) dưới quân
+            if game.board[int(move)]:
+                continue
             rc = self.cell_rect(int(move)).inflate(-4, -4)
-            alpha = 215 - 20 * (rank - 1)
+            alpha = (215 - 20 * (rank - 1)) if self.stones else (120 - 12 * (rank - 1))
             surf.blit(render.rounded_rect(rc.w, rc.h, 6, (*t.heat, alpha)), rc)
         for m, v in enumerate(game.board):
             if v:
-                self.draw_piece(surf, m, v)
+                am = self.anim_move
+                if am is not None and am[0] == m:
+                    self.draw_piece(surf, m, v, scale=am[1], alpha=am[2])
+                else:
+                    self.draw_piece(surf, m, v)
         self._draw_win_line(surf, game, last, t)
-        if ranked:
-            self._draw_ranks(surf, ranked, game, opts.show_wn, t)
         if last is not None:
             self.draw_last_marker(surf, int(last.move), t)
+        if ranked:  # sau vòng nước cuối: badge "#k" ở góc ô có quân không bị che
+            self._draw_ranks(surf, ranked, game, opts.show_wn, t)
         for m in self.highlights(game):
             rc = self.cell_rect(int(m)).inflate(-2, -2)
             surf.blit(render.rounded_rect(rc.w, rc.h, 6, (*t.accent, 90)), rc)
@@ -244,13 +266,18 @@ class KInRowView(GameView):
     def _draw_ranks(
         self, surf: pygame.Surface, ranked: list, game: KInRow, show_wn: bool, t: Theme
     ) -> None:
-        size = 12 if self.n > 5 else 22
+        size = 12 if self.stones else 22
         step = size + 1
         for rank, move, n, wn in ranked:
             rc = self.cell_rect(int(move))
-            occupied = game.board[int(move)] != 0
-            dark_stone = occupied and game.board[int(move)] == 1 and self.n > 5
-            ink = (255, 255, 255) if dark_stone else (24, 20, 16)
+            if game.board[int(move)]:  # ô đã có quân (thường #1 = nước AI vừa đi): chỉ badge ở góc
+                badge = pygame.Rect(0, 0, 26 if self.stones else 44, 16 if self.stones else 26)
+                badge.topright = (rc.right - 1, rc.top + 1)
+                surf.blit(render.rounded_rect(badge.w, badge.h, badge.h // 2, t.heat), badge)
+                draw_text(surf, f"#{rank}", badge.center, 11 if self.stones else 16, (24, 20, 16),
+                          weight="bold", anchor="center")  # fmt: skip
+                continue
+            ink = (24, 20, 16) if self.stones else (40, 30, 20)
             lines = [f"#{rank}", str(n)] + ([f"{wn:.2f}".lstrip("0")] if show_wn else [])
             y = rc.centery - step * len(lines) // 2
             for i, line in enumerate(lines):

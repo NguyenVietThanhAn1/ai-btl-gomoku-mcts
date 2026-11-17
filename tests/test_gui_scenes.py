@@ -136,10 +136,14 @@ def test_setup_modes_show_right_controls():
     assert {"ai_kind", "ai_o_kind", "delay"} <= set(s.controls) and "side" not in s.controls
     click(app, s.controls["delay"].plus.rect.center)
     assert s.cfg.delay == pytest.approx(0.75)
-    assert len(s.ai_lines()) == 2 and s.ai_lines()[0].startswith("X: ")
+    assert len(s.ai_lines()) == 2 and s.ai_lines()[0].startswith("Đen: ")  # 15×15: Đen/Trắng
+    assert s.ai_lines()[1].startswith("Trắng: ")
     app.tick()
     click(app, s.controls["mode"].rect_of("two_players").center)
     assert "ai_kind" not in s.controls and "delay" not in s.controls
+    assert "seed" not in s.controls  # seed nằm trong "Tùy chọn nâng cao" (thu gọn mặc định)
+    click(app, s.controls["advanced"].rect.center)
+    assert "seed" in s.controls
     click(app, s.controls["seed"].plus.rect.center)
     assert s.cfg.seed == 1
     click(app, s.start.rect.center)
@@ -229,7 +233,7 @@ def test_end_modal_win_line_replay_and_restart():
         click_cell(app, m)
     assert app.ctrl.over and p.modal.open
     title, lines, _ = p.result_view()
-    assert title == "X thắng" and "5 nước" in lines[1]
+    assert title == "X thắng" and "5 nước" in lines[-1] and "X thắng" not in lines
     assert sorted(p.view.winning_cells(app.ctrl.game, app.ctrl.last)) == [0, 1, 2]
     click(app, p.modal.buttons[0].rect.center)  # Chơi lại
     app.tick()

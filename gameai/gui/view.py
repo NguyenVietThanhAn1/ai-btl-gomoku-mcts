@@ -105,6 +105,14 @@ class GameView(ABC):
         """Tên nước đi để hiện trên panel."""
 
     # ---- P6.3: hook có mặc định (view cờ tướng không bắt buộc cài)
+    def side_name(self, player: int) -> str:
+        """Tên bên trong lời văn ("X"/"O"; k-in-row 15×15: "Đen"/"Trắng")."""
+        return "X" if player == 1 else "O"
+
+    def side_symbol(self, player: int) -> str:
+        """Ký hiệu bên trong lịch sử (mặc định = `side_name`)."""
+        return self.side_name(player)
+
     def preview(self, pos: tuple[int, int], game: Game) -> Move | None:
         """Nước sẽ đi nếu click ở `pos` (để vẽ quân mờ khi hover). Không đổi trạng thái input."""
         return None

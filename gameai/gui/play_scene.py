@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 import pygame
 
 from gameai.core.game import DRAW, P1, P2, Game
-from gameai.gui import render
-from gameai.gui.controller import SIDE_TAG, GameController, MoveInfo
+from gameai.gui import anim, render
+from gameai.gui.controller import GameController, MoveInfo
 from gameai.gui.game_config import AI_NAMES, GameConfig
 from gameai.gui.icons import icon
 from gameai.gui.presets import (
@@ -50,9 +50,9 @@ CARD_BOTTOM = pygame.Rect(PANEL_X, 624, PANEL_W, 72)  # bên đi trước (X)
 STATUS_Y = 112
 HISTORY_CARD = pygame.Rect(PANEL_X, 144, PANEL_W, 200)
 HISTORY_RECT = HISTORY_CARD.inflate(0, -16)
-BUTTON_Y, BUTTON_H, BUTTON_W, GAP = 360, 48, 126, 8
-ANALYSIS_CARD = pygame.Rect(PANEL_X, 424, PANEL_W, 184)
-MODAL_RECT = pygame.Rect(PANEL_X + 16, 196, PANEL_W - 32, 300)  # trên panel, không che bàn
+BUTTON_Y, BUTTON_H, BUTTON_W, GAP = 352, 48, 126, 8
+ANALYSIS_CARD = pygame.Rect(PANEL_X, 412, PANEL_W, 200)
+MODAL_RECT = pygame.Rect(PANEL_X + 16, 232, PANEL_W - 32, 200)  # trên panel, không che bàn
 HISTORY_COLUMNS = (0, 48, 84, 160, 260)  # số nước, bên, nước, thời gian, ghi chú
 DELAY_STEP = 0.25
 TOP_K = 5  # dòng trong card Phân tích (bàn hiện top-8)
@@ -111,6 +111,10 @@ class PlayScene(Scene):
         self.history = ScrollList(HISTORY_RECT, row_h=23, on_click=self.on_history_click,
                                   columns=HISTORY_COLUMNS)  # fmt: skip
         self.history.muted_cols = {0, 3, 4}
+        self.history.symbols = {
+            "●": lambda: self.symbol_sprite(P1),
+            "○": lambda: self.symbol_sprite(P2),
+        }
         x = [PANEL_X + i * (BUTTON_W + GAP) for i in range(4)]
         bh = (BUTTON_W, BUTTON_H)
         self.b_undo = Button((x[0], BUTTON_Y, *bh), "Đi lại", self.on_undo, icon="undo")
@@ -148,6 +152,9 @@ class PlayScene(Scene):
         self.review: int | None = None
         self._review_game: Game | None = None
         self._was_over = False
+        self._seen_ply = self.ctrl.ply
+        self._place: tuple[int, anim.Tween] | None = None  # (ô, tween 0→1) quân vừa đặt
+        self._win: anim.Tween | None = None  # đường thắng vẽ dần
         self.modal.close()
         self.view.reset_input()
         self.history.set_rows([])
@@ -201,22 +208,53 @@ class PlayScene(Scene):
 
     # ------------------------------------------------------------ kết thúc + xem lại
     def result_view(self) -> tuple[str, list[str], tuple[int, int, int]]:
-        """(tiêu đề, dòng phụ, màu) của modal theo góc nhìn: 'Bạn thắng' khi người vs AI."""
+        """(tiêu đề, dòng phụ, màu) của modal theo góc nhìn: 'Bạn thắng' khi người vs AI.
+
+        Dòng phụ = kết quả (nếu khác tiêu đề) + "N nước · seed S"."""
         c, t = self.ctrl, T()
-        detail = [c.result_text() or "", f"{c.ply} nước · seed {c.seed}"]
-        if c.error is not None:
-            return "Lỗi", detail, t.lose
-        out = c.outcome
+        moves = f"{c.ply} nước · seed {c.seed}"
+        res = self.result_text()
         human = self.single_human
-        if out == DRAW:
-            return "Hòa", detail, t.ink
-        if human is not None:
-            if out == human:
-                return "Bạn thắng!", detail, t.win
-            return ("Bạn đã đầu hàng" if c.resigned == human else "Bạn thua"), detail, t.lose
+        out = c.outcome
+        if c.error is not None:
+            title, color = "Lỗi", t.lose
+        elif out == DRAW:
+            title, color = "Hòa", t.ink
+        elif human is not None:
+            won = out == human
+            title = (
+                "Bạn thắng!" if won else ("Bạn đã đầu hàng" if c.resigned == human else "Bạn thua")
+            )
+            color = t.win if won else t.lose
+        elif c.resigned is not None:
+            title, color = f"{self.side(c.resigned)} đầu hàng", t.ink
+        else:
+            title, color = f"{self.side(out)} thắng", t.win
+        detail = ([res] if res and res != title else []) + [moves]
+        return title, detail, color
+
+    def side(self, player: int) -> str:
+        """Tên bên trong lời văn: 15×15 "Đen"/"Trắng", 3×3 "X"/"O" (theo view)."""
+        return self.view.side_name(player)
+
+    def result_text(self) -> str:
+        """Như `ctrl.result_text()` nhưng dùng tên bên của view."""
+        c = self.ctrl
+        if c.error is not None:
+            return c.error
         if c.resigned is not None:
-            return f"{SIDE_TAG[c.resigned]} đầu hàng", detail, t.ink
-        return f"{SIDE_TAG[out]} thắng", detail, t.win
+            return f"{self.side(c.resigned)} đầu hàng — {self.side(-c.resigned)} thắng"
+        w = c.game.winner()
+        if w is None:
+            return ""
+        return "Hòa" if w == DRAW else f"{self.side(w)} thắng"
+
+    def symbol_sprite(self, player: int) -> pygame.Surface:
+        """Chấm Đen/Trắng trong lịch sử 15×15 (sprite cache theo theme)."""
+        t = T()
+        if player == P1:
+            return render.stone(14, t.stone_dark, t.stone_dark_hi, (0, 0, 0))
+        return render.stone(14, t.stone_light, t.stone_light_hi, (150, 146, 140))
 
     def open_result(self) -> None:
         title, lines, color = self.result_view()
@@ -312,26 +350,52 @@ class PlayScene(Scene):
             self.ctrl.paused = not self.ctrl.paused
 
     # ------------------------------------------------------------ frame
-    def update(self) -> None:
+    def update(self, dt: float = 0.0) -> None:
         c = self.ctrl
         c.update()
         if not c.is_human_turn():
             self.view.reset_input()
+        if c.ply > self._seen_ply and c.last is not None:  # quân mới → scale + fade-in
+            self._place = (int(c.last.move), anim.Tween(0.0, 1.0, anim.PLACE))
+        self._seen_ply = c.ply
         if c.over and not self._was_over:
             self.exit_review()
             self.open_result()
+            self._win = anim.Tween(0.0, 1.0, anim.WIN_LINE)
         self._was_over = c.over
+        self._step_animations(dt)
+        super().update(dt)
+        self.modal.update(dt)
         self.history.set_rows(self.history_rows(), follow=self.review is None)
         if self.review is None:
             self.history.selected = c.ply - 1 if c.ply else None
         self._sync_buttons()
+
+    def _step_animations(self, dt: float) -> None:
+        view = self.view
+        if self._place is not None:
+            move, tw = self._place
+            tw.update(dt)
+            p = float(tw.value)
+            if tw.done or self.review is not None:
+                self._place = None
+            elif hasattr(view, "anim_move"):
+                view.anim_move = (move, 0.6 + 0.4 * p, int(255 * p))
+        if self._place is None and hasattr(view, "anim_move"):
+            view.anim_move = None
+        if hasattr(view, "win_progress"):
+            if self._win is not None and self.review is None:
+                self._win.update(dt)
+                view.win_progress = float(self._win.value)
+            else:
+                view.win_progress = 1.0
 
     def history_rows(self) -> list[tuple[str, ...]]:
         """Mỗi nước một dòng: (số, bên, nước, thời gian, ghi chú)."""
         rows = []
         for i, m in enumerate(self.ctrl.history):
             note = "tactic" if m.by_ai and m.is_tactic else ("AI" if m.by_ai else "")
-            rows.append((f"{i + 1}.", SIDE_TAG[m.player], self.view.move_label(m.move),
+            rows.append((f"{i + 1}.", self.view.side_symbol(m.player), self.view.move_label(m.move),
                          fmt_s(m.time), note))  # fmt: skip
         return rows
 
@@ -374,7 +438,7 @@ class PlayScene(Scene):
             self.b_resign.danger, self.b_resign.icon = True, "flag"
             self.b_resign.enabled = side is not None
             named = len(c.human_sides) == 2 and side is not None
-            self.b_resign.text = f"{SIDE_TAG[side]} đầu hàng" if named else "Đầu hàng"
+            self.b_resign.text = f"{self.side(side)} đầu hàng" if named else "Đầu hàng"
         self.t_analysis.value, self.t_wn.value = self.state.overlay.show, self.state.overlay.show_wn
         self.t_analysis.enabled = self.t_wn.enabled = self.has_mcts
 
@@ -388,7 +452,7 @@ class PlayScene(Scene):
         if spec is None:
             if self.single_human is not None:
                 return "Bạn", "Người chơi"
-            return f"Người chơi {SIDE_TAG[side]}", "2 người cùng máy"
+            return f"Người chơi {self.side(side)}", "2 người cùng máy"
         found = find_level(spec, self.board_n)
         detail = side_label(spec)
         if found is not None:
@@ -514,14 +578,16 @@ class PlayScene(Scene):
                 anchor="topright",
             )
         if to_move and (c.thinking or c.is_human_turn()):
-            label = (
-                "Đang nghĩ" + "." * (1 + int(time.monotonic() * 3) % 3)
-                if c.thinking
-                else "Đến lượt"
-            )
+            label = "Đang nghĩ…" if c.thinking else "Đến lượt"
             pill = pygame.Rect(0, 0, 112, 28)
             pill.midright = (right - 96, rect.y + 24)
-            surf.blit(render.rounded_rect(pill.w, pill.h, 14, t.accent), pill)
+            if c.thinking:  # pulse: độ đậm dao động (tint mặt nạ, không thêm cache)
+                a = int(150 + 105 * anim.pulse(time.monotonic()))
+                surf.blit(
+                    render.tint(render.rounded_mask(pill.w, pill.h, 14), (*t.accent, a)), pill
+                )
+            else:
+                surf.blit(render.rounded_rect(pill.w, pill.h, 14, t.accent), pill)
             draw_text(
                 surf,
                 label,
@@ -537,9 +603,9 @@ class PlayScene(Scene):
         if self.review is not None:
             text, color = f"Xem lại · nước {self.review} / {c.ply}", t.ink
         elif c.over:
-            text, color = c.result_text() or "", t.accent
+            text, color = self.result_text(), t.accent
         else:
-            who = SIDE_TAG[c.game.current_player()]
+            who = self.side(c.game.current_player())
             if c.thinking:
                 text = f"Lượt {who} · AI đang nghĩ…"
             elif c.paused and c.is_ai_turn():
@@ -564,10 +630,10 @@ class PlayScene(Scene):
                        last: MoveInfo | None) -> None:  # fmt: skip
         t = T()
         r = ANALYSIS_CARD
-        x, y = r.x + space(2), r.y + space(6)
-        surf.blit(render.rounded_rect(r.w - space(4), 1, 0, t.border), (x, y - space(1)))
+        x, y = r.x + space(2), r.y + 52
+        surf.blit(render.rounded_rect(r.w - space(4), 1, 0, t.border), (x, r.y + 44))
         if last is not None:
-            text = f"Nước cuối: {SIDE_TAG[last.player]} {self.view.move_label(last.move)}"
+            text = f"Nước cuối: {self.side(last.player)} {self.view.move_label(last.move)}"
             if last.by_ai:
                 if last.is_tactic:
                     kind = "thắng ngay" if last.tactic == 1 else "chặn ngay"
@@ -579,7 +645,7 @@ class PlayScene(Scene):
                     if last.nodes is not None:
                         text += f" · {last.nodes} nút"
             draw_text(surf, text, (x, y), CAPTION, t.muted, max_width=r.w - space(4))
-        y += 24
+        y += 22
         if not self.has_mcts:
             draw_text(surf, "Ván này không có AI MCTS — không có thống kê gốc (N, W/N).", (x, y),
                       CAPTION, t.faint)  # fmt: skip
@@ -600,7 +666,7 @@ class PlayScene(Scene):
         cols = (0, 44, 120, 220)
         for j, head in enumerate(("#", "Nước", "N", "W/N")):
             draw_text(surf, head, (x + cols[j], y), CAPTION, t.faint, weight="semibold")
-        y += 20
+        y += 18
         ranked = sorted(overlay_info.root_stats, key=lambda s: -s[2])[:TOP_K]
         for rank, (move, _w, n, wn) in enumerate(ranked, start=1):
             chosen = move == overlay_info.move

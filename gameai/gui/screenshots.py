@@ -18,6 +18,7 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 import pygame  # noqa: E402
 
+from gameai.gui import anim  # noqa: E402
 from gameai.gui.game_config import AIChoice, GameConfig, build_preset  # noqa: E402
 from gameai.gui.play_scene import AppState  # noqa: E402
 from gameai.gui.pygame_app import WINDOW, App  # noqa: E402
@@ -114,6 +115,8 @@ SHOTS: dict[str, Callable[[pygame.Surface], App]] = {
 def capture(names: list[str], out: Path, theme: str = DEFAULT_THEME) -> list[Path]:
     """Sinh ảnh cho các màn `names` vào `out`; trả danh sách file."""
     set_theme(theme)
+    was = anim.ENABLED
+    anim.set_enabled(False)  # trạng thái cuối ngay → ảnh tất định
     pygame.init()
     out.mkdir(parents=True, exist_ok=True)
     surf = pygame.Surface(WINDOW)
@@ -125,6 +128,7 @@ def capture(names: list[str], out: Path, theme: str = DEFAULT_THEME) -> list[Pat
         path = out / f"{name}.png"
         pygame.image.save(surf, str(path))
         paths.append(path)
+    anim.set_enabled(was)
     return paths
 
 

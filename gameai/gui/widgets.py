@@ -11,7 +11,7 @@ from typing import Any
 
 import pygame
 
-from gameai.gui import render
+from gameai.gui import anim, render
 from gameai.gui.icons import icon
 from gameai.gui.view import get_font
 
@@ -137,6 +137,23 @@ def draw_text(surf: pygame.Surface, text: str, pos: tuple[int, int], size: int =
     return rect
 
 
+def wrap_text(text: str, size: int, width: int, weight: str = "regular") -> list[str]:
+    """Gói `text` thành các dòng rộng ≤ `width` px (theo từ)."""
+    font = get_font(size, weight=weight)
+    lines: list[str] = []
+    cur = ""
+    for word in text.split():
+        cand = f"{cur} {word}".strip()
+        if cur and font.size(cand)[0] > width:
+            lines.append(cur)
+            cur = word
+        else:
+            cur = cand
+    if cur:
+        lines.append(cur)
+    return lines
+
+
 def panel(surf: pygame.Surface, rect: pygame.Rect, color: Color | None = None,
           radius: int | None = None, shadow: bool = False) -> None:  # fmt: skip
     """Card bo góc (+ bóng đổ mềm)."""
@@ -171,6 +188,9 @@ class Widget:
             self.hover = self.rect.collidepoint(ev.pos)
         return False
 
+    def update(self, dt: float) -> None:  # noqa: B027 — mặc định không có tween
+        """Cập nhật tween (gọi mỗi frame)."""
+
     def draw(self, surf: pygame.Surface) -> None:  # pragma: no cover — lớp con vẽ
         pass
 
@@ -188,6 +208,7 @@ class Button(Widget):
         self.enabled = enabled
         self.hint = hint  # dòng chữ nhỏ dưới nhãn
         self.icon = icon
+        self._bg_tween: anim.Tween | None = None  # màu nền hover (RGBA)
 
     def handle_event(self, ev: pygame.event.Event) -> bool:
         super().handle_event(ev)
@@ -196,6 +217,17 @@ class Button(Widget):
         if self.enabled and self.on_click is not None:
             self.on_click()
         return True
+
+    def _target_rgba(self) -> tuple[float, ...]:
+        bg = self.colors()[0]
+        return (*T().surface3, 0.0) if bg is None else (*bg, 255.0)
+
+    def update(self, dt: float) -> None:
+        target = self._target_rgba()
+        if self._bg_tween is None:
+            self._bg_tween = anim.Tween(target, target, 0.0)
+        self._bg_tween.retarget(target, anim.HOVER)
+        self._bg_tween.update(dt)
 
     def colors(self) -> tuple[Color | None, Color]:
         t = T()
@@ -210,11 +242,19 @@ class Button(Widget):
         if not self.visible:
             return
         bg, ink = self.colors()
-        if bg is not None:
+        r = T().radius
+        tw = self._bg_tween
+        if tw is not None and not tw.done:  # đang chuyển màu hover: tint mặt nạ (không thêm cache)
+            rgba = tuple(int(round(c)) for c in tw.value)
+            if rgba[3] > 0:
+                surf.blit(
+                    render.tint(render.rounded_mask(self.rect.w, self.rect.h, r), rgba), self.rect
+                )
+        elif bg is not None:
             if self.primary and self.enabled:
                 panel(surf, self.rect, bg, shadow=True)
             else:
-                surf.blit(render.rounded_rect(self.rect.w, self.rect.h, T().radius, bg), self.rect)
+                surf.blit(render.rounded_rect(self.rect.w, self.rect.h, r, bg), self.rect)
         cy = self.rect.centery - (9 if self.hint else 0)
         label_w = get_font(self.size, weight="semibold").size(self.text)[0] if self.text else 0
         icon_size = self.size + 4
@@ -415,14 +455,32 @@ class Modal(Widget):
         self.dim_rect = dim_rect
         self.open = False
 
+    SLIDE = 24  # px trượt lên khi mở
+
     def show(self, title: str, lines: Sequence[str], buttons: Sequence[Button],
              title_color: Color | None = None) -> None:  # fmt: skip
         self.title, self.lines, self.title_color = title, list(lines), title_color
         self.buttons = list(buttons)
         self.open = True
+        self._tween = anim.Tween(0.0, 1.0, anim.MODAL)
 
     def close(self) -> None:
         self.open = False
+
+    @property
+    def progress(self) -> float:
+        """0 → 1 khi đang mở (fade + slide); 1 khi animation tắt."""
+        tw = getattr(self, "_tween", None)
+        return 1.0 if tw is None else float(tw.value)
+
+    def update(self, dt: float) -> None:
+        if not self.open:
+            return
+        tw = getattr(self, "_tween", None)
+        if tw is not None:
+            tw.update(dt)
+        for b in self.buttons:
+            b.update(dt)
 
     def handle_event(self, ev: pygame.event.Event) -> bool:
         if not self.open:
@@ -436,19 +494,35 @@ class Modal(Widget):
         if not self.open:
             return
         t = T()
+        p = self.progress
         dim = self.dim_rect or surf.get_rect()
-        surf.blit(render.solid(dim.w, dim.h, (*t.bg, t.dim_alpha)), dim)
-        panel(surf, self.rect, t.surface1, radius=14, shadow=True)
-        y = self.rect.y + space(4)
-        r = draw_text(surf, self.title, (self.rect.centerx, y), DISPLAY, self.title_color or t.ink,
-                      weight="bold", anchor="midtop", max_width=self.rect.w - 32)  # fmt: skip
+        surf.blit(render.solid(dim.w, dim.h, (*t.bg, int(t.dim_alpha * p))), dim)
+        if p >= 0.999:
+            self._draw_card(surf, 0)
+            return
+        layer = pygame.Surface(surf.get_size(), pygame.SRCALPHA)  # chỉ trong ~0,2 s khi mở
+        self._draw_card(layer, int(round((1 - p) * self.SLIDE)))
+        layer.set_alpha(int(255 * p))
+        surf.blit(layer, (0, 0))
+
+    def _draw_card(self, surf: pygame.Surface, dy: int) -> None:
+        t = T()
+        card = self.rect.move(0, dy)
+        panel(surf, card, t.surface1, radius=14, shadow=True)
+        accent = self.title_color or t.accent
+        surf.blit(render.rounded_rect(card.w - 48, 4, 2, accent), (card.x + 24, card.y + 12))
+        y = card.y + space(4)
+        r = draw_text(surf, self.title, (card.centerx, y), DISPLAY, self.title_color or t.ink,
+                      weight="bold", anchor="midtop", max_width=card.w - 32)  # fmt: skip
         y = r.bottom + space(1.5)
         for line in self.lines:
-            r = draw_text(surf, line, (self.rect.centerx, y), BODY, t.muted, anchor="midtop",
-                          max_width=self.rect.w - 32)  # fmt: skip
+            r = draw_text(surf, line, (card.centerx, y), BODY, t.muted, anchor="midtop",
+                          max_width=card.w - 32)  # fmt: skip
             y = r.bottom + 4
         for b in self.buttons:
+            b.rect.move_ip(0, dy)
             b.draw(surf)
+            b.rect.move_ip(0, -dy)
 
 
 class ScrollList(Widget):
@@ -468,6 +542,7 @@ class ScrollList(Widget):
         self.offset = 0  # chỉ số dòng đầu đang hiện
         self.selected: int | None = None
         self.muted_cols: set[int] = set()  # cột vẽ màu phụ
+        self.symbols: dict[str, Callable[[], pygame.Surface]] = {}  # ô = ký hiệu → vẽ sprite
 
     @property
     def visible_rows(self) -> int:
@@ -533,6 +608,10 @@ class ScrollList(Widget):
             for j, cell in enumerate(cells):
                 x0 = xs[min(j, len(xs) - 1)]
                 x1 = xs[j + 1] if j + 1 < len(xs) else r.w - 24
+                if cell in self.symbols:
+                    sprite = self.symbols[cell]()
+                    surf.blit(sprite, sprite.get_rect(midleft=(r.x + 12 + x0, r.centery)))
+                    continue
                 color = t.muted if (j in self.muted_cols and not sel) else t.ink
                 draw_text(surf, cell, (r.x + 12 + x0, r.centery), BODY, color,
                           weight="semibold" if sel else "regular", anchor="midleft",
@@ -542,6 +621,36 @@ class ScrollList(Widget):
             h = max(16, int(self.rect.h * self.visible_rows / len(self.rows)))
             y = self.rect.y + int((self.rect.h - h) * self.offset / self.max_offset)
             surf.blit(render.rounded_rect(4, h, 2, t.border), (self.rect.right - 6, y))
+
+
+class Disclosure(Widget):
+    """Dòng tiêu đề thu gọn / mở rộng (vd. "Tùy chọn nâng cao"): chevron › / ⌄ + nhãn."""
+
+    def __init__(self, rect, label: str, open_: bool = False,
+                 on_toggle: Callable[[bool], Any] | None = None) -> None:  # fmt: skip
+        super().__init__(rect)
+        self.label, self.open, self.on_toggle = label, open_, on_toggle
+
+    def handle_event(self, ev: pygame.event.Event) -> bool:
+        super().handle_event(ev)
+        if not self.visible or not is_click(ev) or not self.rect.collidepoint(ev.pos):
+            return False
+        self.open = not self.open
+        if self.on_toggle is not None:
+            self.on_toggle(self.open)
+        return True
+
+    def draw(self, surf: pygame.Surface) -> None:
+        if not self.visible:
+            return
+        t = T()
+        color = t.ink if self.hover else t.muted
+        img = icon("chevron_right", 18, color)
+        if self.open:
+            img = pygame.transform.rotate(img, -90)
+        surf.blit(img, img.get_rect(midleft=(self.rect.x, self.rect.centery)))
+        draw_text(surf, self.label, (self.rect.x + 26, self.rect.centery), BODY, color,
+                  weight="medium", anchor="midleft")  # fmt: skip
 
 
 class Tooltip(Widget):

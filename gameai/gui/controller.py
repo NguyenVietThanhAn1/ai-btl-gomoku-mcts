@@ -5,6 +5,7 @@ from __future__ import annotations
 import queue
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -67,7 +68,10 @@ def _think(agent: Agent, game: Game, game_id: int, ply: int, out: queue.Queue) -
 class GameController:
     """Điều phối một ván: người đi qua `submit_human_move`, AI nghĩ trong thread trên `clone()`."""
 
-    def __init__(self, preset: Preset, seed: int = 0, delay: float | None = None) -> None:
+    def __init__(self, preset: Preset, seed: int = 0, delay: float | None = None,
+                 clock: Callable[[], float] = time.monotonic) -> None:  # fmt: skip
+        """`clock` = đồng hồ (giây) cho độ trễ AI + thời gian nghĩ của người; tiêm được cho test."""
+        self.clock = clock
         self.preset = preset
         self.seed = seed
         self.delay = preset.delay if delay is None else delay
@@ -91,7 +95,7 @@ class GameController:
         self.error: str | None = None
         self.resigned: int | None = None  # bên đã đầu hàng
         self.thinking = False
-        self._last_move_at = time.monotonic()
+        self._last_move_at = self.clock()
 
     def _make_agents(self) -> None:
         """Agent mới cho mỗi bên AI (seed suy từ `seed` + bên)."""
@@ -150,7 +154,7 @@ class GameController:
         """Người đi `move`. False (không đổi gì) nếu sai lượt / AI đang nghĩ / nước không hợp lệ."""
         if self.thinking or not self.is_human_turn() or move not in self.game.legal_moves():
             return False
-        spent = time.monotonic() - self._last_move_at
+        spent = self.clock() - self._last_move_at
         self._apply(MoveInfo(move, self.game.current_player(), by_ai=False, time=spent))
         return True
 
@@ -177,7 +181,7 @@ class GameController:
                 break
         self.game_id += 1
         self._make_agents()
-        self._last_move_at = time.monotonic()
+        self._last_move_at = self.clock()
         return True
 
     @property
@@ -203,7 +207,7 @@ class GameController:
 
     def update(self, now: float | None = None) -> None:
         """Gọi mỗi frame: nhận kết quả AI, rồi khởi thread AI nếu tới lượt AI."""
-        now = time.monotonic() if now is None else now
+        now = self.clock() if now is None else now
         while True:
             try:
                 res = self._results.get_nowait()
@@ -244,7 +248,7 @@ class GameController:
         assert not self.thinking, "không mutate ván khi AI đang nghĩ"
         self.game.play(info.move)
         self.history.append(info)
-        self._last_move_at = time.monotonic()
+        self._last_move_at = self.clock()
 
     # ------------------------------------------------------------ tiện ích
     def result_text(self) -> str | None:

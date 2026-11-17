@@ -15,7 +15,7 @@ import time
 
 import pygame
 
-from gameai.gui import brand
+from gameai.gui import anim, brand
 from gameai.gui.controller import GameController
 from gameai.gui.play_scene import BOARD_RECT, AppState, PlayScene
 from gameai.gui.presets import PRESET_ORDER
@@ -106,9 +106,9 @@ class App:
     def handle_event(self, ev: pygame.event.Event) -> None:
         self.manager.handle_event(ev)
 
-    def tick(self) -> None:
-        """Một frame: update + vẽ màn hiện tại."""
-        self.manager.tick()
+    def tick(self, dt: float = 1 / FPS) -> None:
+        """Một frame: update(dt) + vẽ màn hiện tại."""
+        self.manager.tick(dt)
 
 
 # ---------------------------------------------------------------- chạy
@@ -129,14 +129,15 @@ def run(state: AppState | None, autoplay: bool = False, max_frames: int | None =
     clock = pygame.time.Clock()
     rng = random.Random(state.seed if state is not None else 0)
     frames, t0 = 0, time.monotonic()
+    dt = 1 / FPS
     while app.running:
         for ev in pygame.event.get():
             app.handle_event(ev)
         if autoplay:
             autoplay_move(app, rng)
-        app.tick()
+        app.tick(dt)
         pygame.display.flip()
-        clock.tick(FPS)
+        dt = min(0.1, clock.tick(FPS) / 1000)  # giây thật từ frame trước (kẹp khi máy khựng)
         frames += 1
         if autoplay and app.in_play and app.ctrl.over:
             app.running = False
@@ -162,8 +163,10 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--max-frames", type=int, default=None)
     ap.add_argument("--timeout", type=float, default=None)
     ap.add_argument("--theme", choices=sorted(THEMES), default=DEFAULT_THEME, help="bảng màu")
+    ap.add_argument("--no-anim", action="store_true", help="tắt chuyển động")
     args = ap.parse_args(argv)
     set_theme(args.theme)
+    anim.set_enabled(not args.no_anim)
     preset = args.preset if args.preset is not None or not args.autoplay else PRESET_ORDER[0]
     state = None
     if preset is not None:

@@ -30,6 +30,7 @@ from gameai.core.game import P1, P2  # noqa: E402
 from gameai.experiments.common import git_info, read_rows  # noqa: E402
 from gameai.experiments.e5_rollout import _append_csv, _write, bench, cpu_name  # noqa: E402
 from gameai.experiments.e6_tactics import power_status  # noqa: E402
+from gameai.gui import anim  # noqa: E402
 from gameai.gui.controller import MoveInfo  # noqa: E402
 from gameai.gui.presets import AB2, DIFFICULTY, GAME3, GAME15, Level, Preset, side_label  # noqa: E402
 
@@ -45,16 +46,19 @@ BENCH_PLIES = (8, 16, 24)  # như bench E6 (D-21)
 BENCH_SEEDS = (0,)
 
 TIMING_COLUMNS = ["board", "kind", "level", "source", "config", "opponent", "games", "ai_moves",
-                  "search_moves", "mean_s", "median_s", "max_s", "power", "note"]  # fmt: skip
+                  "search_moves", "mean_s", "median_s", "max_s", "power", "animations",
+                  "note"]  # fmt: skip
 RUNINFO_COLUMNS = ["started", "finished", "wall_s", "boards", "quick", "cpu", "logical_cpus",
                    "power", "battery_pct", "power_plan", "bench_speed_vs_e5", "git_commit",
-                   "git_dirty", "note"]  # fmt: skip
+                   "git_dirty", "animations", "note"]  # fmt: skip
 BENCH_COLUMNS = ["rollout", "plies", "seed", "iterations", "agent_time", "iter_per_s",
                  "e5_iter_per_s", "speed_vs_e5", "power"]  # fmt: skip
 
 
 def prefix(quick: bool) -> str:
-    return "p63quick_" if quick else "p63_"
+    """p63_ / p63quick_ (animation tắt, bảng gốc D-29); p63anim_ / p63animquick_ (animation bật)."""
+    tag = "p63anim" if anim.ENABLED else "p63"
+    return f"{tag}quick_" if quick else f"{tag}_"
 
 
 def power_plan() -> str:
@@ -96,13 +100,14 @@ def play_gui_game(preset: Preset, seed: int, surface: pygame.Surface) -> list[Mo
     app = App(AppState(None, seed, delay=0.0, base=preset), surface=surface)
     rng = random.Random(seed)
     clock = pygame.time.Clock()
+    dt = 1 / FPS
     t0 = time.monotonic()
     while not app.ctrl.over:
         if time.monotonic() - t0 > GAME_TIMEOUT:
             raise TimeoutError(f"ván quá {GAME_TIMEOUT} s")
         autoplay_move(app, rng)
-        app.tick()
-        clock.tick(FPS)
+        app.tick(dt)
+        dt = min(0.1, clock.tick(FPS) / 1000)
     if app.ctrl.error:
         raise RuntimeError(app.ctrl.error)
     return app.ctrl.history
@@ -130,7 +135,8 @@ def measure_level(board: int, key: tuple[int, str, str], lv: Level, opponent: st
         "config": side_label(lv.spec), "opponent": opponent, "games": len(seeds),
         "ai_moves": len(times), "search_moves": len(search),
         "mean_s": round(statistics.mean(st), 3), "median_s": round(statistics.median(st), 3),
-        "max_s": round(max(times, default=0.0), 3), "power": power, "note": NOTE,
+        "max_s": round(max(times, default=0.0), 3), "power": power,
+        "animations": int(anim.ENABLED), "note": NOTE,
     }  # fmt: skip
 
 
@@ -162,7 +168,8 @@ def run(boards: list[int], quick: bool, table_dir: Path = TABLE_DIR) -> list[dic
         "wall_s": round(time.perf_counter() - t0, 1), "boards": " ".join(map(str, boards)),
         "quick": int(quick), "cpu": cpu_name(), "logical_cpus": os.cpu_count(), "power": power,
         "battery_pct": pct, "power_plan": power_plan(), "bench_speed_vs_e5": speed,
-        "git_commit": commit, "git_dirty": int(dirty), "note": NOTE,
+        "git_commit": commit, "git_dirty": int(dirty), "animations": int(anim.ENABLED),
+        "note": NOTE,
     })  # fmt: skip
     return rows
 
@@ -174,10 +181,12 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--boards", type=int, nargs="+", choices=(3, 15), default=[3, 15])
     ap.add_argument("--quick", action="store_true", help="1 ván/mức, file p63quick_*")
     ap.add_argument("--allow-battery", action="store_true", help="cho chạy khi không cắm sạc")
+    ap.add_argument("--no-anim", action="store_true", help="tắt animation (bảng gốc p63_*)")
     args = ap.parse_args(argv)
     power, _ = power_status()
     if power != "AC" and not args.allow_battery:
         raise SystemExit(f"Nguồn = {power}: D-21 yêu cầu cắm sạc (dùng --allow-battery để bỏ qua).")
+    anim.set_enabled(not args.no_anim)
     run(args.boards, args.quick)
     pygame.quit()
 
