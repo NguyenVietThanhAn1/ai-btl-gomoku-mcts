@@ -6,9 +6,9 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-- **Task hiện tại:** P7.1 ✅ → tiếp P6.1, branch `master` (D-26)
+- **Task hiện tại:** P6.1 ✅ trên branch `feat/P6.1` (chưa merge về `develop`)
 - **Việc đang dở:** —
-- **Bước tiếp theo:** P6.1 khung GUI pygame + lớp view theo game + view k-in-row (PLAN P6.1); xong → P8.1 (tạo lại branch `xiangqi` từ master). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md` (sinh bằng `python -m gameai.experiments.plots`).
+- **Bước tiếp theo:** An tự chơi thử 1 ván mỗi preset trên cửa sổ thật (`python -m gameai.gui.pygame_app --preset ...`, phím ở `gameai/gui/pygame_app.md`), rồi merge `feat/P6.1` → `develop`; sau đó P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -28,14 +28,14 @@
 | P4.1 | Arena + runner song song/CSV/resume | ✅ | An | 2026-11-10 | spec-reviewer PASS; D-13; gộp phần runner của P4.2 cũ |
 | P3.3 | Quét sơ bộ T / rollout_limit / scale (heavy) | ✅ | An | 2026-11-10 | spec-reviewer PASS; chọn h300 (sơ bộ); D-12, D-14 |
 | P4.2 | Cờ dòng lệnh chung (`--quick`, …) | ✅ | An | 2026-11-10 | `--quick` trong `add_runner_args`; cột `*_search_*` ở `summarize` (D-15); phần runner ở P4.1 (D-13) |
-| P4.3 | CLI | ⬜ (hoãn) | An | 2026-11-10 | hoãn, gộp với P6 (yêu cầu của An); D-17 |
+| P4.3 | CLI | ✂ (cắt) | An | 2026-11-17 | thay bằng preset + cờ dòng lệnh của GUI (D-28) |
 | E1 | Nodes Minimax vs AB | ✅ | An | 2026-11-10 | full 59 s; D-17; `e1_*.csv` |
 | E2 | 3×3 never lose | ✅ | An | 2026-11-10 | spec-reviewer PASS; full xong; D-16 |
 | E3 | c sweep | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-18; full 226 phút; AB2 qua cổng (2/20) |
 | E4 | N vs W/N | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-19; full 174 s; bỏ đối đầu 15×15 |
 | E5 | Random vs heuristic rollout | ✅ | An | 2026-11-11 | spec-reviewer PASS; D-20; full 79 phút; AB2 không qua cổng (0/20) |
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
-| P6.1 | GUI: khung + view k-in-row | ⬜ | An | | sau P7.1 (D-26) |
+| P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; chờ An chơi thử bằng tay |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ⬜ | An | | |
@@ -62,6 +62,15 @@
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
 ## Session log (mới nhất ở trên)
+
+### 2026-11-17 — Setup git + P6.1 (xong)
+- Git: `.gitignore` giữ `!results/*_full.log`; bỏ track 77 file quick (`git rm --cached`, còn trên đĩa); track `results/e3_full.log`; D-27 cập nhật. Commit `13f4f94` trên `develop`, merge `--no-ff` vào `master` (`51dfbb8`, mốc tài liệu), push cả hai. Tạo `feat/P6.1` từ `develop`.
+- P6.1 (D-28): `gui/presets.py`, `gui/controller.py`, `gui/view.py`, `gui/kinrow_view.py`, `gui/pygame_app.py` (+ `.md` mỗi file). Preset 15×15 dùng h300 5000 iter (bổ sung của An). Không sửa `agents/`, `games/`, `heuristics/`.
+- Test: `tests/test_gui_controller.py` 26 test (controller headless, view, font tiếng Việt + đúng font hệ thống, App trên Surface, AI vs AI 15×15 h300 50 iter vs AB2); full suite xanh (golden xanh), ruff sạch.
+- Autoplay headless (`SDL_VIDEODRIVER=dummy`, người = nước ngẫu nhiên có seed): 3×3 người vs MCTS seed 1 (O thắng, 6 nước) và đổi bên seed 2 (X = MCTS thắng, 5 nước); 15×15 người vs h300 5000 seed 3 (MCTS thắng, 10 nước, 10,6 s); 15×15 h300 5000 vs AB2 delay 0 seed 0 (**AB2 thắng**, 26 nước, 24,3 s — khớp E3: h300 5000 vs AB2 chỉ 0,22). 3×3 AI vs AI: test controller. Không lỗi.
+- Đo ngoài GUI: h300 5000 iter ≈ 2,1 s/nước (thế 5 quân); AB2 ≈ 0,01 s.
+- spec-reviewer: **PASS**; đã sửa 3 góp ý nhỏ (test font đúng font hệ thống, test 15×15 hết ván, ghi chú overlay chỉ sau nước AI).
+- Chưa làm: chơi thử bằng chuột trên cửa sổ thật (cần An).
 
 ### 2026-11-17 — P7.1 (xong)
 - Đổi thứ tự (An, D-26): `xiangqi` fast-forward vào master; P7.1 → P6.1 → P8.1…; tách P6.1 / P6.2. Commit `e98dc49`.

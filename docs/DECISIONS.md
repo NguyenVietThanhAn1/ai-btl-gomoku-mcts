@@ -231,3 +231,12 @@
 - **PROGRESS.md:** mỗi người chỉ sửa dòng task của mình (cột Owner); session log chỉ thêm, không sửa dòng người khác.
 - **Dữ liệu chạy thử:** `results/**/*quick*` và `results/*.log` vào `.gitignore`; ngoại lệ `!results/*_full.log` (log chạy full được track — `e6_full.log` là nguồn trích dẫn D-21). Cập nhật 2026-11-17: file quick đã track trước đó được bỏ track (`git rm --cached`, vẫn giữ trên đĩa).
 - **Bất biến:** `tests/test_regression_kinrow.py` phải xanh; không sửa `agents/` khi chưa ghi DECISIONS (D-22).
+
+### D-28 (2026-11-17) — Thiết kế GUI P6.1 (An duyệt plan + 4 bổ sung)
+- **Tách controller / view:** `gui/controller.py` (không import pygame) giữ ván, lượt, lịch sử, gọi AI; test headless (`SDL_VIDEODRIVER=dummy`). `gui/view.py` = lớp `GameView` chung (`draw`, `hit_test(pos) → Move | None`, `reset_input`, `highlights`, `move_label`) + registry theo `GameSpec.kind`; `gui/kinrow_view.py` = view k-in-row.
+- **Input là máy trạng thái trong view:** controller chỉ nhận nước hoàn chỉnh. K-in-row 1 click = 1 nước; cờ tướng (P6.2) giữ "đã chọn quân" trong view → không sửa controller.
+- **AI trong thread** trên `game.clone()`; ván thật chỉ mutate ở luồng GUI khi không có AI đang nghĩ. Ván mới → `game_id += 1`, kết quả cũ (kiểm `game_id` + `ply`) bị bỏ; không kill thread.
+- **Cấu hình = `AgentSpec`** của registry, cùng spec với thí nghiệm: 3×3 = `e2_never_lose.mcts_spec(1000)`; 15×15 = `e3_c_sweep.mcts_spec(15, 1.4, 5000)` (E3: 0,92 vs Greedy ở 5000 iter, 0,48 ở 1000 — An chọn 5000 để AI không trông yếu trong video), đối thủ `e3_c_sweep.AB2`. Seed agent = `arena.derive_seed(seed, "X"/"O")`, seed hiện và chỉnh được → quay lại đúng ván (ngân sách iteration).
+- **Video:** cửa sổ cố định 1280×720, `SetProcessDpiAware` (win32), 30 fps, font Segoe UI → Arial (tiếng Việt), phím `S` đổi bên người/AI (quay MCTS 3×3 ở cả hai vai như E2). Thời gian/nước trên GUI chậm hơn thí nghiệm (GIL với vòng vẽ) → chỉ minh họa.
+- **Overlay:** `last_root_stats()` của nước AI vừa đi; tô theo N/maxN, thêm W/N khi bật; nước đi thẳng nhờ tactics (tactic 1/2) ghi "tactic", không overlay.
+- **P4.3 CLI (✂) cắt:** thay bằng preset + cờ dòng lệnh của GUI (`--preset --seed --delay --iterations --swap --autoplay`); match chạy bằng script thí nghiệm.
