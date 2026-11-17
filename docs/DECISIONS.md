@@ -254,4 +254,14 @@
 | 15×15 | MCTS | `e3.mcts_spec(15, 1.4, 250)` — E3 | `e3.mcts_spec(15, 1.4, 1000)` — E3 | `e3.mcts_spec(15, 1.4, 5000)` — E3 |
 | 15×15 | AB | depth 1 + eval + delta + ordering — riêng | `e3.AB2` — E3/E5 | `e1.variants_15(3)["ab_order"]` — E1 |
 
-  MCTS đủ 3 mức trong thí nghiệm → không thêm cấu hình MCTS. Eval k-in-row tổng quát theo k (`win_score(k)`) → dùng được cho AB 3×3 độ sâu giới hạn. Spec E1 có `seeded=False` → AB Khó tất định, giữ nguyên cho đúng "cấu hình E1". Thời gian/nước từng mức: đo ở phiên 1 (bảng bên dưới); mức Khó > ~5 s/nước → báo An trước khi đổi.
+  MCTS đủ 3 mức trong thí nghiệm → không thêm cấu hình MCTS. Eval k-in-row tổng quát theo k (`win_score(k)`) → dùng được cho AB 3×3 độ sâu giới hạn. Spec E1 có `seeded=False` → AB Khó tất định, giữ nguyên cho đúng "cấu hình E1". Luật: MCTS Khó 15×15 trung bình ≤ 5 s/nước → giữ; tối đa > 5 s chấp nhận được (có chỉ báo "đang nghĩ…").
+- **Thời gian/nước đo được (2026-11-17, `gameai/experiments/p63_gui_timing.py`, commit `52108cb`; số minh họa GUI, không dùng cho báo cáo thí nghiệm):** cắm sạc (AC, pin 57 %), power plan Balanced, i9-12900H, máy rảnh; bench ngắn = **0,996×** `e5_bench.csv` (rand 3 443, h300 2 396 iter/s). App trên Surface headless 30 fps; người = nước ngẫu nhiên (3×3 5 ván, 15×15 3 ván) + 1 ván vs AB2 cho 15×15. Trung bình nước có search / tối đa (s), `results/tables/p63_gui_timing.csv`:
+
+| Trò | AI | Dễ | Vừa | Khó |
+|---|---|---|---|---|
+| 3×3 | MCTS | 0,002 / 0,003 | 0,011 / 0,017 | 0,052 / 0,090 |
+| 3×3 | AB | 0,000 | 0,000 | 0,001 / 0,005 |
+| 15×15 | MCTS | 0,12–0,13 / 0,19 | 0,35–0,50 / 0,72 | **1,85–2,38 / 3,60** |
+| 15×15 | AB | 0,001 / 0,003 | 0,02–0,03 / 0,05 | 0,09–0,13 / 0,20 |
+
+  → MCTS Khó 15×15 đạt luật (trung bình ≤ 5 s), giữ cấu hình. Lần đo trước trên pin (MCTS Khó 4,6–5,6 s, không vẽ 14,5 s) bỏ, không dùng.

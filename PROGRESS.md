@@ -7,8 +7,8 @@
 ## Đang ở đâu (đọc mục này trước tiên)
 
 - **Task hiện tại:** P6.3 🔄 trên branch `feat/P6.3` (từ `develop` sau khi merge `feat/P6.1`, chưa push)
-- **Việc đang dở:** phiên 1/3 xong phần code (controller undo/đầu hàng/`position_at`, bảng độ khó, `game_config`, test); **đo thời gian 15×15 chưa dùng được** — máy chạy pin (MCTS Khó 4,6–5,6 s/nước có vẽ, 14,5 s không vẽ, P6.1 cắm sạc 2,1 s).
-- **Bước tiếp theo:** cắm sạc, chạy lại script đo (log phiên 2026-11-17) → điền bảng thời gian/nước vào D-29 → báo An; Khó > ~5 s thì An quyết trước khi đổi. An duyệt → phiên 2 (widgets, scenes, play_scene). Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
+- **Việc đang dở:** phiên 2/3 — widgets, scene manager, Home/Setup/Demo/Help, PlayScene (panel, modal, xem lại), nhãn tọa độ, sửa `pygame_app`.
+- **Bước tiếp theo:** hết phiên 2 → gửi An ảnh chụp headless các màn (Home, Setup, Play, modal, xem lại), chờ duyệt rồi mới sang phiên 3. Sau P6.3: P8.1 trên `feat/P8.1` từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ## Bảng trạng thái
@@ -64,7 +64,12 @@
 
 ## Session log (mới nhất ở trên)
 
-### 2026-11-17 — P6.3 phiên 1/3 (dừng chờ đo lại thời gian)
+### 2026-11-17 — P6.3 phiên 1/3 (xong) — đo lại thời gian
+- An: chuyển script đo vào repo → `gameai/experiments/p63_gui_timing.{py,md}` (+ `tests/test_p63_gui_timing.py`), CSV `results/tables/p63_gui_{timing,runinfo}.csv` + `p63_bench.csv`, cột `note` = minh họa GUI; dừng nếu không AC. `git branch -u origin/develop develop`.
+- Đo cắm sạc (D-21: AC, Balanced, máy rảnh, bench 0,996× E5), 130 s: MCTS Khó 15×15 trung bình 1,85–2,38 s/nước, tối đa 3,60 → đạt luật, giữ cấu hình; bảng đủ ở D-29. Bỏ số đo trên pin.
+- xfail duy nhất: `tests/test_mcts.py::test_15x15_block_without_tactics_is_unreliable` — lý do đã nằm trong `reason=` (MCTS thuần 1000 iter rollout random không chặn được four 15×15; D-11, E6).
+
+### 2026-11-17 — P6.3 phiên 1/3 (dừng chờ đo lại thời gian) — số pin, đã thay bằng đo lại ở trên
 - Git: `develop` merge `--no-ff` `feat/P6.1` (local, `5747e08`, chưa push), tạo `feat/P6.3`. D-29 + PLAN P6.3 (commit `a953986`); An duyệt plan + 4 chỉnh (undo khóa khi AI nghĩ, nhãn tọa độ, Esc theo màn, độ trễ AI vs AI + nút đầu hàng theo chế độ).
 - Code: `gui/controller.py` (`undo`/`can_undo`, `resign`/`resign_side`/`can_resign`, `outcome`, `side_time`, `position_at`, thời gian nghĩ của người, bỏ kết quả AI khi ván đã dừng), `gui/presets.py` (`DIFFICULTY` 12 ô, `Level`, 3 spec AB riêng, `side_label` AB), `gui/game_config.py` mới. `.md` cập nhật. Không sửa `agents/`, `games/`, `heuristics/`.
 - Test: +9 test controller, `tests/test_gui_config.py` mới (20 case); full suite xanh (1 xfail chủ ý), golden xanh, ruff sạch.

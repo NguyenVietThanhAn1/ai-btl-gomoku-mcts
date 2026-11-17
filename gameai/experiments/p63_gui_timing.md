@@ -35,7 +35,7 @@ python -m gameai.experiments.p63_gui_timing --quick         # 1 ván/mức, file
 |---|---|
 | `p63_gui_timing.csv` | board, kind, level, source (E1/E2/E3/E3/E5/riêng), config, opponent, games, ai_moves, search_moves, mean_s / median_s (chỉ nước có search, bỏ tactic 1/2), max_s (mọi nước AI), power, note |
 | `p63_gui_runinfo.csv` | mỗi lần chạy 1 dòng: thời điểm, wall_s, boards, cpu, power, battery_pct, power_plan, bench_speed_vs_e5, git_commit, git_dirty, note |
-| `p63_gui_bench.csv` | bench ngắn lần chạy gần nhất (cột như `e6_bench.csv`) |
+| `p63_bench.csv` | bench ngắn lần chạy gần nhất (cột như `e6_bench.csv`) |
 
 ## Phụ thuộc
 - Dùng: `gui/presets.py` (`DIFFICULTY`, `AB2`), `gui/pygame_app.py` (`App`, `autoplay_move`), `e5_rollout`
