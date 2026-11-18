@@ -3,6 +3,8 @@
 ## Trạng thái hiện tại
 Xem mục "Đang ở đâu" đầu [PROGRESS.md](PROGRESS.md) (single source of truth). Kế hoạch & tiêu chí từng task: [PLAN.md](PLAN.md); quyết định thiết kế: [docs/DECISIONS.md](docs/DECISIONS.md). Số liệu thí nghiệm k-in-row khóa ở tag `kinrow-final`; bảng tổng hợp cho báo cáo: [results/tables/summary_kinrow.md](results/tables/summary_kinrow.md).
 
+**Luật & quy trình (mọi công cụ, D-31):** luật dự án ở [AGENTS.md](AGENTS.md) (nguồn duy nhất; `CLAUDE.md` chỉ import nó); quy trình làm task / wrap-up: [docs/WORKFLOW.md](docs/WORKFLOW.md); review: [docs/REVIEW.md](docs/REVIEW.md).
+
 ## Cài đặt
 Xem [docs/SETUP.md](docs/SETUP.md) (venv `.venv`, Python 3.11+, `python -m pip install -r requirements.txt`). Windows: dùng `python`, không dùng `python3`.
 
@@ -14,11 +16,13 @@ python -m gameai.gui.pygame_app --preset 3x3_human_mcts   # GUI; preset: 3x3_hum
 ```
 
 ## Quy ước làm việc nhóm (D-27)
-- **Branch:** `master` = bản ổn định / nộp được, chỉ merge từ `develop` ở mốc, **không commit thẳng**. `develop` = tích hợp. Mỗi task một branch `feat/<task-id>` (vd. `feat/P6.1`) tạo từ `develop`; merge về `develop` khi `pytest` + `ruff` xanh và spec-reviewer PASS.
-- **Commit:** `<TaskID>: <mô tả ngắn>` (vd. `P3.1: MCTS-UCT core with root stats`). Không push khi chưa thống nhất.
+Luật đầy đủ cho người/agent: [AGENTS.md](AGENTS.md).
+
+- **Branch:** `master` = bản ổn định / nộp được, chỉ merge từ `develop` ở mốc, **không commit thẳng**. `develop` = tích hợp. Mỗi task một branch `feat/<task-id>` (vd. `feat/P6.1`) tạo từ `develop`; merge về `develop` khi `pytest` + `ruff` xanh và review PASS theo [docs/REVIEW.md](docs/REVIEW.md). Quy trình từng bước: [docs/WORKFLOW.md](docs/WORKFLOW.md).
+- **Commit:** `<TaskID>: <mô tả ngắn>` (vd. `P3.1: MCTS-UCT core with root stats`). Được push branch `feat/<ID>` của mình để mở PR; không push `develop`/`master` (D-31).
 - **Golden test:** `tests/test_regression_kinrow.py` phải luôn xanh (hành vi k-in-row khóa ở `kinrow-final`).
 - **Không sửa `gameai/agents/`** (và interface `Game`/`Agent`) khi chưa ghi lý do vào `docs/DECISIONS.md`; sửa agent thì thêm tham số có mặc định giữ hành vi cũ.
 - **Mỗi module `X.py` có `X.md` cạnh nó** theo [docs/MODULE_TEMPLATE.md](docs/MODULE_TEMPLATE.md), cập nhật cùng thay đổi code.
-- **PROGRESS.md:** mỗi người chỉ sửa dòng task của mình (cột Owner); session log chỉ thêm ở đầu, không sửa dòng của người khác.
+- **PROGRESS.md:** mỗi người chỉ sửa dòng task của mình (cột Owner) và khối "Đang ở đâu" của mình; session log chỉ thêm ở đầu, không sửa dòng của người khác.
 - **Dữ liệu:** không sửa tay `results/raw/`; bảng/hình chỉ sinh bằng script trong `gameai/experiments/`. File `*quick*` và `results/*.log` không commit.
 - **Thí nghiệm dài (> 2 phút):** chạy `--quick` trước, báo thời gian ước tính, hỏi trước khi chạy full.

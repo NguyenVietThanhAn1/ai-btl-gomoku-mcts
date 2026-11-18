@@ -1,15 +1,26 @@
 # PROGRESS — BTL AI Bài 1
 
-> Single source of truth cho tiến độ. Cập nhật **cuối mỗi task / mỗi phiên** (`/wrap-up`).
+> Single source of truth cho tiến độ. Cập nhật **cuối mỗi task / mỗi phiên** (wrap-up: `docs/WORKFLOW.md` §2).
 > Ký hiệu: ⬜ chưa làm · 🔄 đang làm · ✅ xong · ⛔ bị chặn
 > Định nghĩa task: xem `PLAN.md`.
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
+> Mỗi người chỉ sửa khối của mình (D-27, D-31).
+
+### An
+
 - **Task hiện tại:** P6.3 ✅ — mốc "k-in-row hoàn chỉnh" (thí nghiệm E1–E6 + GUI MoveMind): `feat/P6.3` → `develop` → `master` (merge `--no-ff`, đã push).
 - **Việc đang dở:** —
 - **Bước tiếp theo:** P8.1 (luật cờ tướng + perft) trên `feat/P8.1` tạo từ `develop` (D-27). Nguồn số liệu cho báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI cho báo cáo/video: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
+
+### Thành viên 2
+
+- **Task hiện tại:**
+- **Việc đang dở:**
+- **Bước tiếp theo:**
+- **Cảnh báo / blocker:**
 
 ## Bảng trạng thái
 
