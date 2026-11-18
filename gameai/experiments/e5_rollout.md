@@ -72,7 +72,8 @@ Cờ chung `--workers` (4, chỉ cho phần iteration; phần time cố định 
   - `e5_bench.csv` — benchmark đơn luồng (không phải số liệu ván đấu): `rollout, plies, seed, iterations, agent_time, iter_per_s`.
 - Hình: `results/figures/e5_iter.png` (3 panel: vs Greedy, vs mref, đối đầu — x log iteration, 1 đường/rollout, Wilson)
   và `e5_time.png` (hàng trên x = thời gian/nước; hàng dưới x = iteration thực tế/nước, panel đối đầu = cột
-  iteration thực tế của từng bên).
+  iteration thực tế của từng bên). Tiêu đề hàng dưới dùng tên ngắn ("Thắng vs mref — theo iteration thực tế") để không
+  tràn sang panel phải (sửa P7.2, chỉ đổi PNG).
 - Quick: tiền tố `e5quick_` (không commit), `e5quick_estimate.csv` = ước tính full từng bước.
 
 ## Thiết kế & quyết định (D-20)

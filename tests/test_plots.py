@@ -102,3 +102,26 @@ def test_summary_numbers_come_from_csv(tmp_path: Path):
     # mọi tên file được nhắc tới đều tồn tại
     for name in re.findall(r"`(e\d_[a-z0-9_]+\.(?:csv|png))`", text):
         assert (tmp_path / name).exists() or (plots.FIG_DIR / name).exists(), name
+
+
+@needs_tables
+def test_summary_report_tables_wdl_and_e4_15x15(tmp_path: Path):
+    """P7.2: mỗi bảng cho báo cáo có tiêu đề `###` riêng (không trùng); W/D/L E3 khớp CSV và
+    W + D + L = n; ví dụ E4 15×15 có cột tham chiếu."""
+    for f in TABLES.glob("*.csv"):
+        shutil.copy2(f, tmp_path / f.name)
+    text = plots.write_summary_md(tmp_path, plots.FIG_DIR).read_text(encoding="utf-8")
+    heads = [ln for ln in text.splitlines() if ln.startswith("### ")]
+    assert len(heads) == len(set(heads))
+    for name in ("e3_3x3_random", "e3_3x3_minimax", "e3_greedy", "e3_ab2"):
+        assert any(f"`{name}.csv`" in h and "W/D/L" in h for h in heads), name
+        for r in read_rows(TABLES / f"{name}.csv"):
+            if r["split"] != "all":
+                continue
+            assert int(r["wins"]) + int(r["draws"]) + int(r["losses"]) == int(r["n"])
+            assert f"{r['wins']}/{r['draws']}/{r['losses']}" in text
+    sens = [r for r in read_rows(TABLES / "e4_roots_examples.csv")
+            if r["example"] == "sensitivity"]  # fmt: skip
+    assert any("ví dụ gốc 15×15" in h for h in heads)
+    assert "W/N tham chiếu" in text
+    assert f"| {sens[0]['move']} | " in text and plots.vn(sens[0]["ref_wn"], 3) in text

@@ -1065,7 +1065,9 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
             _plot_lines(ax, t[k], "time", "a_search_iterations_per_move")
             ax.set_xlabel("iteration thực tế / nước (có search)", color=INK2)
             ax.set_ylabel("tỉ lệ thắng", color=INK2)
-            ax.set_title(f"{subs[k]} — theo iteration thực tế", color=INK, fontsize=11, loc="left")
+            # tên ngắn: tên đầy đủ của mref + hậu tố tràn sang panel bên phải (P7.2)
+            short = subs[k].split(" (")[0]
+            ax.set_title(f"{short} — theo iteration thực tế", color=INK, fontsize=11, loc="left")
     _finish(
         fig,
         axes[0][0],

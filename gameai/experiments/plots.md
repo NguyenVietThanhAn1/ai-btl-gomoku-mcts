@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P7.1  ·  **Cập nhật:** 2026-11-17
+**Trạng thái:** ✅ ổn định  ·  **Task:** P7.1, P7.2  ·  **Cập nhật:** 2026-11-18
 
 ## Mục đích
 Sinh lại **mọi bảng/hình báo cáo k-in-row (E1–E6)** từ `results/raw` (không vẽ/gõ tay, không chạy search/ván nào)
@@ -27,6 +27,11 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
 - `write_summary_md(table_dir, fig_dir) -> Path`; `REPORT_MAP` (mục, nội dung, E, hình, bảng); `SECTIONS[E]`;
   định dạng `vn(x, d)` (dấu phẩy thập phân; số nguyên ≥ 10 000 nhóm nghìn bằng khoảng trắng), `ci(lo, hi)`;
   `_one(rows, **kw)` = đúng 1 dòng khớp, không thì `KeyError` (không đoán).
+- **Bảng cho báo cáo trong summary (P7.2, D-30):** mỗi bảng có tiêu đề `### Bảng E… — …` riêng, duy nhất (`_table`) —
+  đây là neo `<!-- src-table: summary_kinrow.md#<tiêu đề> -->` mà `report_check` so byte với bảng chép trong
+  `report/report.md`. Gồm: E1 nút/thời gian; E2 W/D/L; E3 win rate vs Greedy + **W/D/L** (hàng iter × cột c, `_wdl_rows`)
+  cho 3×3 vs Random, 3×3 vs Minimax, 15×15 vs Greedy, 15×15 vs AB2; E4 ví dụ gốc 3×3 (trace) + **ví dụ 15×15**
+  (`example = sensitivity`, thế đầu tiên, có W/N/W/N tham chiếu 20 000 iter). Chỉ đổi summary, không đổi CSV.
 
 ## Nguồn của từng bảng
 | E | Nguồn | Ghi chú |
@@ -61,8 +66,8 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
 ## Test
 `tests/test_plots.py`: `vn`/`ci`; `_one` báo lỗi khi 0 hoặc ≥ 2 dòng; `compare` (giống sau chuẩn hóa CRLF / khác / mới);
 lọc 10 cặp đầu + moves tương ứng; tóm tắt mistakes E2 từ chuỗi = từ int (gồm thứ tự); `summary_kinrow.md` sinh được từ
-bảng thật, chứa số lấy từ CSV (mẫu E1/E2/E6), mọi file được nhắc tới tồn tại. Chạy: `python -m pytest tests/test_plots.py -q`.
+bảng thật, chứa số lấy từ CSV (mẫu E1/E2/E6), mọi file được nhắc tới tồn tại. P7.2: tiêu đề `###` không trùng; W/D/L E3 khớp CSV, W + D + L = n; ví dụ E4 15×15 có cột tham chiếu. Chạy: `python -m pytest tests/test_plots.py -q`.
 
 ## Hạn chế / TODO
 - E1 và các bảng đo trực tiếp không kiểm được bằng sinh lại (chỉ kiểm tồn tại).
-- `e5_time.png`: tiêu đề panel dưới-giữa hơi tràn sang panel phải (có từ E5, không sửa ở P7.1 để hình giữ nguyên byte) — sửa ở P7.2/P7.3 nếu dùng hình này.
+- `e5_time.png`: tiêu đề panel dưới-giữa từng tràn sang panel phải — đã sửa ở P7.2 (`e5_rollout.make_figures` dùng tên ngắn); chỉ PNG đổi, `--check` 25/25 CSV giống byte.
