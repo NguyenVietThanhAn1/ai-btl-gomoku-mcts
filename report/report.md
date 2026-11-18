@@ -262,16 +262,16 @@ Thiết lập: Bảng 1, dòng E1 — 3×3 tìm hết trên bàn trống và 5 t
 
 | bàn | depth | biến thể | nút | giây | giảm nút vs Minimax | giá trị = Minimax |
 |---|---|---|---|---|---|---|
-| 3x3 | full | minimax | 559 426 | 1,317 | — | 6/6 |
-| 3x3 | full | ab | 21 626 | 0,069 | 96,13 % | 6/6 |
-| 3x3 | full | ab_order | 2252 | 0,015 | 99,60 % | 6/6 |
-| 3x3 | full | ab_order_tt | 1318 | 0,009 | 99,76 % | 6/6 |
-| 15x15 | 2 | minimax | 46 825 | 7,010 | — | 5/5 |
-| 15x15 | 2 | ab_evalonly | 21 612 | 3,692 | 53,85 % | 5/5 |
-| 15x15 | 2 | ab | 21 612 | 0,247 | 53,85 % | 5/5 |
-| 15x15 | 2 | ab_order | 1416 | 0,265 | 96,98 % | 5/5 |
-| 15x15 | 3 | ab | 553 574 | 5,458 | — | — |
-| 15x15 | 3 | ab_order | 48 504 | 1,256 | — | — |
+| 3×3 | full | minimax | 559 426 | 1,317 | — | 6/6 |
+| 3×3 | full | ab | 21 626 | 0,069 | 96,13 % | 6/6 |
+| 3×3 | full | ab_order | 2252 | 0,015 | 99,60 % | 6/6 |
+| 3×3 | full | ab_order_tt | 1318 | 0,009 | 99,76 % | 6/6 |
+| 15×15 | 2 | minimax | 46 825 | 7,010 | — | 5/5 |
+| 15×15 | 2 | ab_evalonly | 21 612 | 3,692 | 53,85 % | 5/5 |
+| 15×15 | 2 | ab | 21 612 | 0,247 | 53,85 % | 5/5 |
+| 15×15 | 2 | ab_order | 1416 | 0,265 | 96,98 % | 5/5 |
+| 15×15 | 3 | ab | 553 574 | 5,458 | — | — |
+| 15×15 | 3 | ab_order | 48 504 | 1,256 | — | — |
 
 - Ở mọi thế, mọi biến thể Alpha-Beta cho **cùng giá trị gốc** với Minimax (3×3: 6/6 thế; 15×15 độ sâu 2: 5/5 thế).
 - 3×3: tổng số nút giảm từ 559 426 <!-- src: summary_kinrow.md#E1 --> (Minimax) xuống 21 626 <!-- src: summary_kinrow.md#E1 --> (Alpha-Beta, giảm 96,13 % <!-- src: results/tables/e1_summary.csv | board=3x3,variant=ab | nodes_saving_vs_minimax_pooled_pct -->), 2252 <!-- src: summary_kinrow.md#E1 --> khi thêm ordering (99,60 % <!-- src: results/tables/e1_summary.csv | board=3x3,variant=ab_order | nodes_saving_vs_minimax_pooled_pct -->) và 1318 <!-- src: summary_kinrow.md#E1 --> khi thêm TT (99,76 % <!-- src: results/tables/e1_summary.csv | board=3x3,variant=ab_order_tt | nodes_saving_vs_minimax_pooled_pct -->).

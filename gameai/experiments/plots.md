@@ -62,9 +62,8 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
 | 5.5 Rollout | E5 | `e5_iter`, `e5_time` | `e5_paired`, `e5_h2h`, `e5_greedy`, `e5_mref`, `e5_ab2`, `e5_bench`, `e5_rates` |
 | 5.6 check_tactics | E6 | `e6_choice`, `e6_match`, `e6_mechanism` | `e6_choice`, `e6_match`, `e6_paired`, `e6_mechanism`, `e6_cost_check`, `e6_time`, `e6_tactic_rate` |
 
-## Kết quả kiểm (2026-11-17, sau commit `e98dc49`)
-`--check`: 25 bảng sinh lại, **24 giống byte** với bản đã commit, 0 khác, 1 mới (`e6_mechanism.csv`). Chạy ghi đè:
-`git status` chỉ có 3 file mới (`e6_mechanism.{csv,png}`, `summary_kinrow.md`) — **mọi PNG cũ cũng giống byte**.
+## Kết quả kiểm (2026-11-18, sau commit `1fac6f7`)
+`--check`: 25 bảng + `summary_kinrow.md` sinh lại, **26 giống byte** với bản đã commit, 0 khác, 0 mới (9 hình sinh lại). Lịch sử: 2026-11-17 (sau `e98dc49`) là 25 bảng, 24 giống byte, 1 mới (`e6_mechanism.csv`), chưa so summary.
 
 ## Phụ thuộc
 `experiments/{common,e2_never_lose,e3_c_sweep,e4_final_move,e5_rollout,e6_tactics,e6_mechanism}.py`, matplotlib (Agg), `git`.

@@ -287,7 +287,8 @@ def section_e1(td: Path) -> list[str]:
         f"{vn(a15['time_sum'], 3)} s; depth 3: {vn(a153['nodes_sum'], 0)} → "
         f"{vn(o153['nodes_sum'], 0)} nút, {vn(a153['time_sum'])} → {vn(o153['time_sum'])} s.",
     ]
-    rows = [[r["board"], r["depth"], r["variant"], vn(r["nodes_sum"], 0), vn(r["time_sum"], 3),
+    rows = [[r["board"].replace("x", "×"), r["depth"], r["variant"], vn(r["nodes_sum"], 0),
+             vn(r["time_sum"], 3),
              _pct(r), r["values_same_as_minimax"] or "—"] for r in s]  # fmt: skip
     return lines + _table("Bảng E1 — số nút và thời gian (tổng trên các thế, `e1_summary.csv`)",
                           ["bàn", "depth", "biến thể", "nút", "giây", "giảm nút vs Minimax",

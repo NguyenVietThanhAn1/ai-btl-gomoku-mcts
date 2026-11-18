@@ -152,3 +152,14 @@ def test_check_outputs_compares_summary(tmp_path: Path):
     assert old != text
     ((name, why),) = plots.check_outputs(tmp_path, plots.FIG_DIR, [], ref=lambda p: old)
     assert name == "summary_kinrow.md" and why.startswith("khác từ dòng ")
+
+
+@needs_tables
+def test_e1_table_shows_times_sign_not_x(tmp_path: Path):
+    """Bảng E1 hiển thị "3×3"/"15×15" (không "3x3"/"15x15"); giá trị board trong CSV không đổi."""
+    for f in TABLES.glob("*.csv"):
+        shutil.copy2(f, tmp_path / f.name)
+    text = plots.write_summary_md(tmp_path, plots.FIG_DIR).read_text(encoding="utf-8")
+    assert "| 3×3 | full | minimax |" in text and "| 15×15 | 2 | minimax |" in text
+    assert "| 3x3 |" not in text and "| 15x15 |" not in text
+    assert {r["board"] for r in read_rows(TABLES / "e1_summary.csv")} == {"3x3", "15x15"}

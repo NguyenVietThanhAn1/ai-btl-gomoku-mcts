@@ -301,3 +301,8 @@
 - **Quyết định:** bước đồng bộ chuẩn của agent (trước push, khi bắt đầu task) là `git fetch origin` rồi `git rebase origin/develop`, hai lệnh riêng, kiểm exit code từng lệnh; không dùng `git pull --rebase`. Người gõ tay vẫn có thể dùng `git pull` với `pull.rebase true` (docs/SETUP.md). Số D-xx lấy ngay sau khi đồng bộ. D-32 giữ nguyên; quyết định này chỉ thay cách đồng bộ mà D-32 ghi là `git pull --rebase`.
 - **Lý do:** 2/3 lần `git pull --rebase` gần đây báo "Cannot rebase onto multiple branches" vì `.git/FETCH_HEAD` có dòng `develop` trùng; fetch + rebase lên `origin/develop` không đọc FETCH_HEAD nên tránh được lỗi này.
 - **Nơi ghi luật:** AGENTS.md (Lệnh nguy hiểm, Làm việc nhóm), docs/WORKFLOW.md.
+
+### D-34 (2026-11-18) — Bản nộp là PDF (không cần report.docx); P7.3 = xuất PDF, hoãn
+- **Quyết định (An):** sản phẩm nộp của báo cáo là **PDF** (cùng video demo), không cần `report.docx`. P7.3 đổi từ "Convert sang `report.docx`" thành "Xuất PDF từ `report/report.md`, kiểm tra hình/bảng/công thức hiển thị đúng". **Hoãn P7.3 tới khi An yêu cầu**; trước đó chưa chọn công cụ xuất PDF (pandoc có sẵn trên máy; cần engine PDF, chưa kiểm).
+- **Không đổi:** `report/report.md` vẫn là nguồn duy nhất và vẫn qua `report_check` (D-30); comment `<!-- src … -->` pandoc bỏ qua; ràng buộc "Hình n./Bảng n." đánh số tay không đổi. Các tài liệu cũ còn chữ "docx" (D-1 ở dòng 6, `report_check.md`, AGENTS.md "Sản phẩm nộp") là ghi chép/mô tả cũ — sửa khi An đồng ý (AGENTS.md là nguồn luật).
+- **Lý do:** yêu cầu nộp thực tế là PDF; bỏ một bước chuyển định dạng.
