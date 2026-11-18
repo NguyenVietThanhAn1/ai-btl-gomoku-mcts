@@ -23,7 +23,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from gameai.experiments.plots import vn
+from gameai.experiments.plots import ci, vn
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "report" / "report.md"
@@ -154,14 +154,27 @@ _N = r"-?(?:\d{1,3}(?: \d{3})+|\d+)(?:,\d+)?"
 CI_TAIL = re.compile(rf"({_N} \[[^\[\]]*\]|{_N}–{_N})$")
 
 
+def _value_digits(before: str) -> int:
+    """Số chữ số thập phân của `x` trong `x [lo; hi]` cuối văn bản (không thì token cuối)."""
+    m = CI_TAIL.search(norm(before))
+    tok = m.group(1).split(" [")[0] if m and "[" in m.group(1) else last_number(before).group(0)
+    return len(tok.split(",")[1]) if "," in tok else 0
+
+
 def ci_text(raw: str, before: str) -> str:
-    """Cột `x,lo,hi` → chuỗi `x [lo; hi]`, số chữ số thập phân theo token cuối trước comment."""
+    """Cột `x,lo,hi` → chuỗi `x [lo; hi]`; `x` theo số chữ số thập phân của token trong report,
+    biên theo `plots.ci` (luật làm tròn D-30: có thể thêm một chữ số)."""
     vals = [float(v) for v in raw.split(",")]
     if len(vals) != 3:
         raise SourceError("cột dạng khoảng cần đúng 3 cột: giá trị,cận dưới,cận trên")
-    tok = last_number(before).group(0)
-    d = len(tok.split(",")[1]) if "," in tok else 0
-    return f"{vn(vals[0], d)} [{vn(vals[1], d)}; {vn(vals[2], d)}]"
+    d = _value_digits(before)
+    return f"{vn(vals[0], d)} {ci(vals[1], vals[2], d)}"
+
+
+def rounding_rule_hit(lo: float, hi: float, d: int) -> bool:
+    """Làm tròn [lo; hi] tới d chữ số vi phạm luật D-30 (đổi kết luận chứa 0 / 0,5, hoặc biên ≠ 0
+    thành 0) — khi đó `plots.ci` thêm một chữ số."""
+    return ci(lo, hi, d) != f"[{vn(lo, d)}; {vn(hi, d)}]"
 
 
 def check_src(body: str, before: str, read: dict[Path, str]) -> int | None:
@@ -193,6 +206,13 @@ def check_src(body: str, before: str, read: dict[Path, str]) -> int | None:
     exp, b = norm(exp), norm(before)
     ok = b.endswith(exp) and (len(b) == len(exp) or not re.match(r"[\d,]", b[-len(exp) - 1]))
     if not ok:
+        if len(cols) == 3:
+            v = [float(x) for x in raw.split(",")]
+            if rounding_rule_hit(v[1], v[2], _value_digits(before)):
+                raise SourceError(
+                    f"D-30: không làm tròn biên CI khi làm tròn đổi kết luận chứa 0 / 0,5 hoặc "
+                    f"biến biên ≠ 0 thành 0 — cần '{exp}' (nguồn: {raw})"
+                )
         raise SourceError(f"cần '{exp}' ngay trước comment (nguồn: {raw})")
     return len(b) - len(exp)
 

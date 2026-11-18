@@ -25,7 +25,10 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
   `make_figures` của từng E, `e4.plot_match`, `e6_mechanism.make_figure`.
 - `compare(new_dir, ref_dir, names, ref=committed_bytes) -> [(tên, lý do)]`.
 - `write_summary_md(table_dir, fig_dir) -> Path`; `REPORT_MAP` (mục, nội dung, E, hình, bảng); `SECTIONS[E]`;
-  định dạng `vn(x, d)` (dấu phẩy thập phân; số nguyên ≥ 10 000 nhóm nghìn bằng khoảng trắng), `ci(lo, hi)`;
+  định dạng `vn(x, d)` (dấu phẩy thập phân; số nguyên ≥ 10 000 nhóm nghìn bằng khoảng trắng; số âm dùng "−" U+2212,
+  giá trị làm tròn thành 0 không mang dấu), `ci(lo, hi, d)` = `[lo; hi]` với **luật làm tròn D-30**: nếu làm tròn tới d
+  chữ số đổi kết luận chứa / không chứa 0 (dung sai 1e-9) hoặc 0,5, hay biến biên ≠ 0 thành 0 → thêm một chữ số cho
+  cả hai biên (vd. `[0,004; 0,156]`, `[0,241; 0,499]`);
   `_one(rows, **kw)` = đúng 1 dòng khớp, không thì `KeyError` (không đoán).
 - **Bảng cho báo cáo trong summary (P7.2, D-30):** mỗi bảng có tiêu đề `### Bảng E… — …` riêng, duy nhất (`_table`) —
   đây là neo `<!-- src-table: summary_kinrow.md#<tiêu đề> -->` mà `report_check` so byte với bảng chép trong
@@ -64,7 +67,7 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
 `experiments/{common,e2_never_lose,e3_c_sweep,e4_final_move,e5_rollout,e6_tactics,e6_mechanism}.py`, matplotlib (Agg), `git`.
 
 ## Test
-`tests/test_plots.py`: `vn`/`ci`; `_one` báo lỗi khi 0 hoặc ≥ 2 dòng; `compare` (giống sau chuẩn hóa CRLF / khác / mới);
+`tests/test_plots.py`: `vn`/`ci` (gồm luật làm tròn D-30, dấu "−"); `_one` báo lỗi khi 0 hoặc ≥ 2 dòng; `compare` (giống sau chuẩn hóa CRLF / khác / mới);
 lọc 10 cặp đầu + moves tương ứng; tóm tắt mistakes E2 từ chuỗi = từ int (gồm thứ tự); `summary_kinrow.md` sinh được từ
 bảng thật, chứa số lấy từ CSV (mẫu E1/E2/E6), mọi file được nhắc tới tồn tại. P7.2: tiêu đề `###` không trùng; W/D/L E3 khớp CSV, W + D + L = n; ví dụ E4 15×15 có cột tham chiếu. Chạy: `python -m pytest tests/test_plots.py -q`.
 

@@ -72,7 +72,7 @@ Nguồn: `results/tables/e2_play.csv`, `results/tables/e2_exhaustive.csv`, `resu
 
 - 3×3 vs Random: thắng 0,915–0,980; vs Minimax không thua 0,70–0,77 ở 100 iter → 1,00 từ 2500 iter (mọi c).
 - 15×15 vs Greedy (h300 + tactics): c = 0,5, 1000 iter 0,62 [0,48; 0,74]; c = 1,0, 1000 iter 0,46 [0,33; 0,60]; c = 1,4, 1000 iter 0,48 [0,35; 0,61]; c = 2,0, 1000 iter 0,22 [0,13; 0,35]; c = 0,5, 5000 iter 0,82 [0,69; 0,90]; c = 1,0, 5000 iter 0,88 [0,76; 0,94]; c = 1,4, 5000 iter 0,92 [0,81; 0,97]; c = 2,0, 5000 iter 0,96 [0,87; 0,99].
-- AB depth 2: pilot c = 2,0 thắng 2/20; tốt nhất c = 1,0, 5000 iter 0,36 [0,24; 0,50].
+- AB depth 2: pilot c = 2,0 thắng 2/20; tốt nhất c = 1,0, 5000 iter 0,36 [0,241; 0,499].
 
 ### Bảng E3 — tỷ lệ thắng vs Greedy 15×15 (`e3_greedy.csv`)
 
@@ -138,7 +138,7 @@ Nguồn: `results/figures/e3_3x3.png`, `results/figures/e3_greedy.png`, `results
 | ô | W | N | W/N | max N | max W/N | giá trị |
 |---|---|---|---|---|---|---|
 | 4 | 17,5 | 24 | 0,729 |  | ✓ | 0 |
-| 8 | 3,5 | 10 | 0,350 |  |  | -1 |
+| 8 | 3,5 | 10 | 0,350 |  |  | −1 |
 | 3 | 11,0 | 18 | 0,611 |  |  | 0 |
 | 0 | 18,0 | 25 | 0,720 | ✓ |  | 0 |
 | 1 | 16,5 | 23 | 0,717 |  |  | 1 |
@@ -190,7 +190,7 @@ Nguồn: `results/figures/e4_match.png`, `results/tables/e4_roots_examples.csv`,
 ## E5 — Rollout random vs heuristic h300 (cùng iteration, cùng thời gian) (mục 5.5)
 
 - Cùng thời gian (kết luận chính): đối đầu h300 thắng rand 0,90 [0,79; 0,96] (0,5 s), 1,00 [0,93; 1,00] (2 s).
-- Tỷ lệ thắng h300 vs rand (hiệu cặp): vs Greedy 0,5 s 0,62 vs 0,00, hiệu 0,62 [0,48; 0,76]; 2 s 0,86 vs 0,10, hiệu 0,76 [0,63; 0,89]; vs mref 2 s 1,00 vs 0,92, hiệu 0,08 [0,00; 0,16].
+- Tỷ lệ thắng h300 vs rand (hiệu cặp): vs Greedy 0,5 s 0,62 vs 0,00, hiệu 0,62 [0,48; 0,76]; 2 s 0,86 vs 0,10, hiệu 0,76 [0,63; 0,89]; vs mref 2 s 1,00 vs 0,92, hiệu 0,08 [0,004; 0,156].
 - Cùng iteration vs Greedy: 1000 iter 0,48 vs 0,02, hiệu 0,46 [0,32; 0,60]; 5000 iter 0,92 vs 0,08, hiệu 0,84 [0,72; 0,96].
 - Benchmark đơn luồng (`e5_bench.csv`, trung vị): rand 3606 iter/s, h300 2409 iter/s, tỉ lệ rand/h300 = 1,50.
 - Kiểm tra hợp lệ mref: rand 1000 iter vs mref thắng 25/50 [0,37; 0,63] (chứa 0,5: có).
@@ -204,7 +204,7 @@ Nguồn: `results/figures/e4_match.png`, `results/tables/e4_roots_examples.csv`,
 | Greedy | 0,5 s | 0,00 [0,00; 0,07] | 0,62 [0,48; 0,74] | 1457 / 1206 | 0,62 [0,48; 0,76] |
 | Greedy | 2,0 s | 0,10 [0,04; 0,21] | 0,86 [0,74; 0,93] | 5831 / 4331 | 0,76 [0,63; 0,89] |
 | mref | 0,5 s | 0,50 [0,37; 0,63] | 0,98 [0,90; 1,00] | 1399 / 1305 | 0,48 [0,34; 0,62] |
-| mref | 2,0 s | 0,92 [0,81; 0,97] | 1,00 [0,93; 1,00] | 5531 / 3829 | 0,08 [0,00; 0,16] |
+| mref | 2,0 s | 0,92 [0,81; 0,97] | 1,00 [0,93; 1,00] | 5531 / 3829 | 0,08 [0,004; 0,156] |
 
 ### Bảng E5 — cùng số iteration (thiên vị h300; 4 worker)
 
@@ -213,23 +213,23 @@ Nguồn: `results/figures/e4_match.png`, `results/tables/e4_roots_examples.csv`,
 | đối đầu (h300 vs rand) | 250 | — | 0,96 [0,87; 0,99] | — / 50 | — |
 | đối đầu (h300 vs rand) | 1000 | — | 0,90 [0,79; 0,96] | — / 50 | — |
 | đối đầu (h300 vs rand) | 5000 | — | 0,98 [0,90; 1,00] | — / 50 | — |
-| Greedy | 100 | 0,00 [0,00; 0,07] | 0,04 [0,01; 0,13] | 50 / 50 | 0,04 [-0,01; 0,09] |
-| Greedy | 250 | 0,00 [0,00; 0,07] | 0,02 [0,00; 0,10] | 50 / 50 | 0,02 [-0,02; 0,06] |
+| Greedy | 100 | 0,00 [0,00; 0,07] | 0,04 [0,01; 0,13] | 50 / 50 | 0,04 [−0,01; 0,09] |
+| Greedy | 250 | 0,00 [0,00; 0,07] | 0,02 [0,004; 0,105] | 50 / 50 | 0,02 [−0,02; 0,06] |
 | Greedy | 500 | 0,00 [0,00; 0,07] | 0,18 [0,10; 0,31] | 50 / 50 | 0,18 [0,07; 0,29] |
-| Greedy | 1000 | 0,02 [0,00; 0,10] | 0,48 [0,35; 0,61] | 50 / 50 | 0,46 [0,32; 0,60] |
+| Greedy | 1000 | 0,02 [0,004; 0,105] | 0,48 [0,35; 0,61] | 50 / 50 | 0,46 [0,32; 0,60] |
 | Greedy | 2500 | 0,00 [0,00; 0,07] | 0,90 [0,79; 0,96] | 50 / 50 | 0,90 [0,82; 0,98] |
 | Greedy | 5000 | 0,08 [0,03; 0,19] | 0,92 [0,81; 0,97] | 50 / 50 | 0,84 [0,72; 0,96] |
 | mref | 250 | 0,20 [0,11; 0,33] | 0,74 [0,60; 0,84] | 50 / 50 | 0,54 [0,37; 0,71] |
 | mref | 1000 | 0,50 [0,37; 0,63] | 0,90 [0,79; 0,96] | 50 / 50 | 0,40 [0,24; 0,56] |
 | mref | 5000 | 0,88 [0,76; 0,94] | 1,00 [0,93; 1,00] | 50 / 50 | 0,12 [0,03; 0,21] |
-| AB2 | 5000 | 0,00 [0,00; 0,16] | 0,22 [0,13; 0,35] | 20 / 50 | 0,15 [-0,01; 0,31] |
+| AB2 | 5000 | 0,00 [0,00; 0,16] | 0,22 [0,13; 0,35] | 20 / 50 | 0,15 [−0,01; 0,31] |
 
 Nguồn: `results/figures/e5_iter.png`, `results/figures/e5_time.png`, `results/tables/e5_paired.csv`, `results/tables/e5_h2h.csv`, `results/tables/e5_greedy.csv`, `results/tables/e5_mref.csv`, `results/tables/e5_ab2.csv`, `results/tables/e5_bench.csv`, `results/tables/e5_rates.csv`
 
 ## E6 — Kiểm tra thắng ngay / chặn ngay (`check_tactics`) + cơ chế (mục 5.6)
 
 - Tắt tactics, chọn đúng ô chặn (trọng số pool) 100/500/1000/2500/5000 iter: rand 0,03 → 0,08 → 0,12 → 0,26 → 0,38; h300 0,50 → 0,22 → 0,14 → 0,13 → 0,48; bật tactics 1,00.
-- Win rate tắt → bật (so cặp): h300 vs Greedy 1000 iter 0,10 → 0,48, hiệu 0,38 [0,23; 0,53]; 5000 iter 0,30 → 0,92, hiệu 0,62 [0,47; 0,77]; rand vs mref 0,46 → 0,50, hiệu 0,04 [-0,10; 0,18].
+- Win rate tắt → bật (so cặp): h300 vs Greedy 1000 iter 0,10 → 0,48, hiệu 0,38 [0,23; 0,53]; 5000 iter 0,30 → 0,92, hiệu 0,62 [0,47; 0,77]; rand vs mref 0,46 → 0,50, hiệu 0,04 [−0,10; 0,18].
 - Cơ chế (block, chạy lại cây): tỷ lệ con sai có W = 0 ở 100 iter h300 0,73 vs rand 0,55; nhóm chọn sai h300: W/N nước được chọn 0,31 / 0,90 / 0,70 (100 / 1000 / 5000 iter), ô thắng của đối thủ đã mở dưới nước đó 0,20 (1000) → 0,97 (5000). Kết luận: `e6_tactics.md`, D-21.
 
 ### Bảng E6 — tỷ lệ chọn đúng khi TẮT check_tactics (45 thế/loại × 10 seed; trọng số pool, bootstrap 95 %; `e6_choice.csv`)
@@ -247,7 +247,7 @@ Nguồn: `results/figures/e5_iter.png`, `results/figures/e5_time.png`, `results/
 
 | cấu hình | iter | ván | tắt | bật | hiệu bật − tắt [95 %] |
 |---|---|---|---|---|---|
-| rand vs mref | 1000 | 50 | 0,46 | 0,50 | 0,04 [-0,10; 0,18] |
+| rand vs mref | 1000 | 50 | 0,46 | 0,50 | 0,04 [−0,10; 0,18] |
 | h300 vs Greedy | 1000 | 50 | 0,10 | 0,48 | 0,38 [0,23; 0,53] |
 | h300 vs Greedy | 5000 | 50 | 0,30 | 0,92 | 0,62 [0,47; 0,77] |
 

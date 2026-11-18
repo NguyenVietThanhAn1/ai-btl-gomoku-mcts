@@ -18,7 +18,7 @@ In từng lỗi `L<dòng>: …` + dòng tổng `N số có nguồn, M bảng src
 |---|---|
 | `0,92 <!-- src: results/tables/e3_greedy.csv \| part=greedy,c=1.4,iterations=5000,split=all \| win_rate -->` | Lọc **đúng 1 hàng** (so chuỗi, như `plots._one`; `-` = không lọc); văn bản ngay trước comment phải **kết thúc bằng** giá trị định dạng `plots.vn` với số chữ số thập phân của token (cho phép ` %` sau số). Nhóm nghìn theo token (5000 / 5 000 đều được nếu giá trị khớp). |
 | `… \| wins/draws/losses -->` | Ghép cột bằng `/` → so nguyên văn `46/0/4`. |
-| `0,62 [0,48; 0,74] <!-- src: … \| … \| win_rate,win_lo,win_hi -->` | Cột `x,lo,hi` → so nguyên văn `x [lo; hi]` (số chữ số thập phân theo token cuối). Một comment phủ cả ba số. |
+| `0,62 [0,48; 0,74] <!-- src: … \| … \| win_rate,win_lo,win_hi -->` | Cột `x,lo,hi` → so nguyên văn `x [lo; hi]`: `x` theo số chữ số thập phân của nó trong report, biên theo `plots.ci` (luật làm tròn D-30, có thể thêm một chữ số). Nếu report làm tròn biên vi phạm luật (đổi kết luận chứa 0 / 0,5 hoặc biên ≠ 0 thành 0,00) → lỗi riêng có chữ "D-30". Số âm "−" hay "-" đều khớp. Một comment phủ cả ba số. |
 | `… \| win_rate \| x100 -->` | Biến đổi: `x100` (tỷ lệ → %), `abs` (bỏ dấu). |
 | `… \| cpu -->` | Giá trị không phải số → so chuỗi (tên CPU, phiên bản Python từ `p72_env.csv`). |
 | `0,62 <!-- src: summary_kinrow.md#E5 -->` | Token số cuối trước comment phải có **nguyên văn** trong mục có tiêu đề **bắt đầu bằng** `E5` (tới tiêu đề cùng cấp/cao hơn kế tiếp); neo phải khớp đúng 1 tiêu đề. Không neo theo số dòng. |
@@ -47,12 +47,12 @@ D-18, P7.2, 3×3 vẫn là số < 100 nên không bị báo). Số nhỏ không 
 `find_section(text, anchor)`, `expected_text(raw, before, transforms)`, `abstract_words(text)`, `main(argv)`.
 
 ## Phụ thuộc
-`experiments/plots.vn` (cùng định dạng với summary). Được dùng bởi: kiểm P7.2 / P7.3.
+`experiments/plots.vn`, `plots.ci` (cùng định dạng và luật làm tròn với summary). Được dùng bởi: kiểm P7.2 / P7.3.
 
 ## Test
 `tests/test_report_check.py` (ROOT giả trong tmp): khớp / lệch CSV, lọc 0 hoặc ≥ 2 hàng, `x100`, nhóm nghìn, W/D/L, chuỗi,
 không khớp một phần (10,92 ≠ 0,92), neo summary đúng / sai / không tồn tại, bảng giống byte / khác, số trần (3 lỗi đúng
-chỗ), const D-xx có / không, khối ``` và `example:` (file có / không / thiếu), code + công thức + link bỏ qua, ảnh thiếu, caption hình trong alt + nhảy số + thiếu alt + dòng **Hình** bị cấm, Hình B.n không đếm, khoảng `x [lo; hi]` (CSV 3 cột, neo summary), khoảng `a–b`, const liệt kê token (miễn đúng token, token phải có trong D-xx), Tóm tắt > 200 từ, mục Tài liệu
+chỗ), const D-xx có / không, khối ``` và `example:` (file có / không / thiếu), code + công thức + link bỏ qua, ảnh thiếu, caption hình trong alt + nhảy số + thiếu alt + dòng **Hình** bị cấm, Hình B.n không đếm, khoảng `x [lo; hi]` (CSV 3 cột, neo summary), luật làm tròn D-30 (biên 0,004 ghi 0,00 → lỗi D-30; dấu "−"), khoảng `a–b`, const liệt kê token (miễn đúng token, token phải có trong D-xx), Tóm tắt > 200 từ, mục Tài liệu
 tham khảo bỏ qua.
 
 ## Hạn chế

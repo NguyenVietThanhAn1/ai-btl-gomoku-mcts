@@ -24,6 +24,17 @@ def test_vn_format():
     assert plots.ci(0.1, 0.25) == "[0,10; 0,25]"
 
 
+def test_ci_rounding_rule_and_minus():
+    """D-30: thêm một chữ số khi làm tròn đổi kết luận chứa 0 / 0,5 hoặc biên ≠ 0 thành 0."""
+    assert plots.ci(0.004037904, 0.155962096) == "[0,004; 0,156]"  # E5 mref 2 s
+    assert plots.ci(0.241, 0.4994) == "[0,241; 0,499]"  # 0,499 → 0,50 sẽ "chứa 0,5"
+    assert plots.ci(0.0035, 0.105) == "[0,004; 0,105]"  # Wilson, biên ≠ 0 → 0,00
+    assert plots.ci(0.0, 0.07) == "[0,00; 0,07]"  # biên đúng bằng 0: không đổi
+    assert plots.ci(-0.0149, 0.0949) == "[−0,01; 0,09]"  # vẫn chứa 0: không đổi
+    assert plots.vn(-0.001) == "0,00"  # −0 không mang dấu
+    assert plots.vn(-1, 0) == "−1"
+
+
 def test_one_requires_unique():
     rows = [{"a": "1", "b": "x"}, {"a": "1", "b": "y"}]
     assert plots._one(rows, a=1, b="y")["b"] == "y"

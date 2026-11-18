@@ -132,6 +132,19 @@ def test_ci_span(src: Path):
     assert len(run("0,99 và 0,62 [0,48; 0,76] <!-- src: summary_kinrow.md#E5 -->", src)) == 1
 
 
+def test_ci_rounding_rule_d30(src: Path):
+    """Biên CI ≠ 0 làm tròn thành 0,00 (đổi kết luận chứa 0) → lỗi nhắc D-30; ghi 3 chữ số thì qua;
+    biên âm viết bằng dấu trừ "−" vẫn khớp."""
+    (src / "results" / "tables" / "d.csv").write_text(
+        "k,diff,lo,hi\na,0.08,0.004037,0.155962\nb,0.04,-0.0149,0.0949\n", encoding="utf-8"
+    )
+    d = "results/tables/d.csv"
+    bad = run(f"hiệu 0,08 [0,00; 0,16] <!-- src: {d} | k=a | diff,lo,hi -->", src)
+    assert "D-30" in bad[0] and "0,08 [0,004; 0,156]" in bad[0]
+    assert run(f"hiệu 0,08 [0,004; 0,156] <!-- src: {d} | k=a | diff,lo,hi -->", src) == []
+    assert run(f"hiệu 0,04 [−0,01; 0,09] <!-- src: {d} | k=b | diff,lo,hi -->", src) == []
+
+
 def test_const_token_list(src: Path):
     ok = (
         f"ở 1000 và 5000 iteration, c = 2,0 thắng 0,92 <!-- src: {T} | c=1.4 | win_rate --> "

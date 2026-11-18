@@ -11,7 +11,7 @@
 ### An
 
 - **Task hiện tại:** P7.2 🔄 (trên `develop`, D-32) — báo cáo `report/report.md`. Thứ tự mới D-30: xong Bài 1 (P7.2 → P7.3 → P7.4) trước cờ tướng.
-- **Việc đang dở:** P7.2 — xong đợt (a) (đã duyệt + sửa) và đợt (b) mục 5. **Chờ An duyệt mục 5** rồi viết đợt (c) mục 6 + Tóm tắt, spec-reviewer.
+- **Việc đang dở:** P7.2 — xong đợt (a), (b) và sửa mục 5 theo review. Đang viết đợt (c) mục 6 + Tóm tắt theo dàn ý đã duyệt (5 chỉnh), rồi chờ An duyệt, spec-reviewer; sau đó sửa dấu thập phân trong hình (commit riêng).
 - **Bước tiếp theo:** P7.2 → P7.3 (docx) → P7.4 (video) → P8.1 (luật cờ tướng + perft, trên `develop`). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
@@ -78,6 +78,13 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-18 — P7.2 sửa mục 5 theo review (commit "P7.2: section 5 review fixes")
+- Nguồn gốc diff `plots.py` chưa commit (`vn` dấu "−", `ci` luật làm tròn): do **phiên trước** (transcript `8ecf8477`, 11:31–12:45 cùng ngày, file sửa lần cuối 12:45:28) tạo, không phải phiên này (phiên này bắt đầu 12:45:53, file không bị sửa trong plan mode). Phiên này giữ nguyên code đó, thêm test + doc.
+- `git pull --rebase` báo "Cannot rebase onto multiple branches": FETCH_HEAD có 2 dòng `develop` trùng (không not-for-merge); xử lý `git fetch origin` + `git rebase --autostash origin/develop` (đã trùng origin).
+- Luật làm tròn CI ghi vào D-30 (P7.2): không làm tròn biên nếu đổi kết luận chứa 0 / 0,5 hay biến biên ≠ 0 thành 0,00 → thêm một chữ số; số âm "−"; "tỷ lệ". `report_check`: biên theo `plots.ci`, lỗi riêng "D-30" khi vi phạm. Summary sinh lại: 10 dòng đổi (E5 mref 2 s `[0,004; 0,156]`, 2 Wilson `[0,004; 0,105]`, E3 AB2 `[0,241; 0,499]`, dấu "−").
+- `report.md` mục 5: Bảng 10/14/15/17 đồng bộ summary; 5.2 thêm W/D/L vs MCTS 0/100/0; 5.3 "c có ước lượng điểm cao nhất" (3 chỗ) + `[0,241; 0,499]`; 5.4 "năm con có N lớn nhất ở gốc", "mọi lần tìm kiếm (1,00)"; 5.5 `[0,004; 0,156]`, "tỷ lệ 1,50"; 5.6 `[−0,10; 0,18]`.
+- Kiểm: report_check 0 lỗi, plots --check, pytest, ruff. Bước tiếp: viết đợt (c) mục 6 + Tóm tắt theo dàn ý An đã duyệt (5 chỉnh), dừng chờ duyệt. Sau (c): dấu thập phân trong hình (commit riêng).
 
 #### 2026-11-18 — P7.2 đợt (b) (dừng chờ An duyệt)
 - Sửa (a) theo An: caption hình kiểu pandoc `![Hình n. …](…)` (bỏ dòng **Hình** đậm), dấu phẩy thập phân trong văn xuôi (E2: c = √2 ≈ 1,41 — `e2.mcts_spec` dùng mặc định `MCTSAgent`), câu thời gian GUI nêu bench 0,827× vs 0,996× (không gõ % chênh tự tính), "tối đa $15 	imes 15 = 225$ nước". Quy tắc: không đặt số đo trong code fence.

@@ -225,16 +225,37 @@ REPORT_MAP = [
 
 
 def vn(x: Any, d: int = 2) -> str:
-    """Số kiểu VN: dấu phẩy thập phân; số nguyên (d = 0) ≥ 10 000 nhóm nghìn bằng khoảng trắng."""
+    """Số kiểu VN: dấu phẩy thập phân, dấu trừ "−" (U+2212); số nguyên (d = 0) ≥ 10 000 nhóm nghìn
+    bằng khoảng trắng. Giá trị làm tròn thành 0 không mang dấu."""
     v = float(x)
     if d == 0:
         s = f"{round(v):,}".replace(",", " ")
-        return s if abs(v) >= 10_000 else s.replace(" ", "")
-    return f"{v:.{d}f}".replace(".", ",")
+        s = s if abs(v) >= 10_000 else s.replace(" ", "")
+    else:
+        s = f"{v:.{d}f}".replace(".", ",")
+    if s.startswith("-") and not any(c in "123456789" for c in s):
+        s = s[1:]
+    return s.replace("-", "−")
+
+
+_EPS = 1e-9  # |giá trị| < _EPS coi là đúng 0 (nhiễu số học của cận Wilson)
+
+
+def _conclusions(lo: float, hi: float) -> tuple[bool, bool]:
+    """Khoảng [lo, hi] có chứa 0 / chứa 0,5 không (có dung sai _EPS quanh 0)."""
+    return lo - _EPS <= 0 <= hi + _EPS, lo <= 0.5 <= hi
 
 
 def ci(lo: Any, hi: Any, d: int = 2) -> str:
-    return f"[{vn(lo, d)}; {vn(hi, d)}]"
+    """Khoảng `[lo; hi]`. Luật (D-30): không làm tròn biên nếu làm tròn đổi kết luận chứa/không chứa
+    0 hoặc 0,5, hay làm một biên ≠ 0 thành 0,00 → thêm một chữ số cho cả hai biên."""
+    a, b = float(lo), float(hi)
+    ra, rb = round(a, d), round(b, d)
+    flips = _conclusions(a, b) != _conclusions(ra, rb)
+    zeroed = any(abs(v) >= _EPS and r == 0 for v, r in ((a, ra), (b, rb)))
+    if flips or zeroed:
+        d += 1
+    return f"[{vn(a, d)}; {vn(b, d)}]"
 
 
 def _t(table_dir: Path, name: str) -> list[dict[str, str]]:
@@ -420,7 +441,7 @@ def section_e4(td: Path) -> list[str]:
     ]
     rows = [[r["move"], vn(r["W"], 1), r["N"], vn(r["wn"], 3),
              "✓" if r["is_max_n"] == "1" else "", "✓" if r["is_max_wn"] == "1" else "",
-             r["value"]] for r in tr]  # fmt: skip
+             vn(r["value"], 0)] for r in tr]  # fmt: skip
     lines += _table(f"Bảng E4 — ví dụ gốc 3×3, {tr[0]['iterations']} iter, c = {vn(tr[0]['c'], 1)} "
                     "(`e4_roots_examples.csv`, giá trị trò chơi theo góc người đi ở gốc)",
                     ["ô", "W", "N", "W/N", "max N", "max W/N", "giá trị"], rows)  # fmt: skip
