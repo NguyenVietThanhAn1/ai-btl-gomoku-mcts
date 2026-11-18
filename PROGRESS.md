@@ -79,6 +79,13 @@
 
 ### An
 
+#### 2026-11-18 — P7.2 dấu thập phân VN trong hình
+- Module mới `gameai/experiments/figfmt.py` (+ `figfmt.md`, `tests/test_figfmt.py`): `vn` (chuyển từ `plots`, `plots.vn` vẫn dùng được), `vn_tick`, `vn_figure(fig)` (gọi trước `tight_layout` ở mọi hàm vẽ E3–E6), `ratio_axis(ax)`. Import ở đầu file trong `plots` và `e3/e4/e5/e6_*` (không còn import trong hàm; figfmt không import `plots`, không vòng).
+- Tick: phẩy thập phân, "−", **mọi tick một trục cùng số chữ số suy từ bước tick** (bước 0,05 → `0,80 … 1,00`; bước 0,2 → `0 0,2 … 1`); trục log chỉ major (1, 2, 5 × 10^k) có nhãn, hết `10^3`. Trục tỷ lệ: không tick > 1 (`ratio_axis`). Số nguyên không nhóm nghìn dưới 10 000 (khớp report).
+- `e5_time`: panel dưới-trái/giữa (x = iteration thực tế) đổi sang trục tuyến tính; panel cột iteration thực tế đổi sang trục tuyến tính từ 0 (cột trên log làm sai tỷ lệ chiều dài). `e6_choice`: legend 2 cột theo rollout (random trái, h300 phải; "chọn đúng" rồi "không mất thắng"), "bật tactics (sanity)" riêng ở cuối (figsize 11×5,8).
+- "tỉ lệ" → "tỷ lệ" trong mọi `gameai/experiments/*.py` (common, e3, e4, e5, plots: 12 chỗ; docstring, nhãn trục, tiêu đề hình, chú thích hình, 1 dòng summary). Bảng CSV không đổi (`plots --check` 25/25 giống byte); `summary_kinrow.md` đổi đúng 1 dòng (E5 benchmark: "tỉ lệ rand/h300" → "tỷ lệ rand/h300"; số 1,50 giữ nguyên). Còn "tỉ lệ" trong các file `.md` module/DECISIONS/PROGRESS/PLAN (chưa đổi).
+- Hình đổi so với bản `5d1ea03` trước amend (cả 9 hình đổi so với `43be113`): `e3_{3x3,greedy,ab2}`, `e4_match`, `e5_{iter,time}`, `e6_choice`; `e6_match`, `e6_mechanism` giữ nguyên byte. Đã xem bằng mắt `e5_time`, `e6_choice`, `e3_3x3`.
+
 #### 2026-11-18 — P7.2 sửa đợt (c) theo review (An duyệt đợt (c))
 - 6.6: bỏ "vừa quá một nửa" (0,50 mà CI chứa 0,5); giữ khẳng định ở 5000 iteration; câu riêng "mức cao nhất mọi ngân sách: h300 100 iteration 0,503 [0,40; 0,61], khoảng chứa 0,5" — src thẳng `e6_choice.csv` (bootstrap, stratum all). `report_check`: số chữ số của biên CI lấy theo biên trong report (trước đây theo `x`) để cho phép `x` 3 chữ số + biên 2 chữ số; thêm test.
 - Văn phong 5.3 ("-->;"), 6.1 ("được so với", bỏ "ở cùng số nút" lặp). AGENTS: số D-xx lấy sau khi đồng bộ (fetch + rebase); thêm D-33 (đồng bộ fetch + rebase, tham chiếu D-32, không sửa D-32).

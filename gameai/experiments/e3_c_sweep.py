@@ -35,6 +35,7 @@ from gameai.experiments.common import (
     run_match,
     summarize,
 )
+from gameai.experiments.figfmt import ratio_axis, vn, vn_figure
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = ROOT / "results" / "raw"
@@ -353,13 +354,15 @@ def plot_panels(
             lows += [p[2] for p in pts]
             ax.errorbar(xs, ys, yerr=err, color=SERIES_COLORS[i], marker=MARKERS[i],
                         markersize=6, linewidth=2, elinewidth=1.2, capsize=0,
-                        markeredgecolor=SURFACE, markeredgewidth=1, label=f"c = {c}")  # fmt: skip
+                        markeredgecolor=SURFACE, markeredgewidth=1,
+                        label=f"c = {vn(c, 1)}")  # fmt: skip
         its = sorted({int(r["iterations"]) for r in rows})
         ax.set_xscale("log")
         ax.set_xticks(its, [str(x) for x in its])
         ax.minorticks_off()
         floor = min(lows, default=0.0)
         ax.set_ylim(max(0.0, math.floor((floor - 0.02) * 10) / 10) if floor > 0.5 else 0.0, 1.03)
+        ratio_axis(ax)
         ax.set_facecolor(SURFACE)
         ax.grid(True, axis="y", color=GRID, linewidth=0.8)
         ax.set_axisbelow(True)
@@ -369,7 +372,7 @@ def plot_panels(
             ax.spines[s].set_color(INK2)
         ax.tick_params(colors=INK2)
         ax.set_xlabel("iteration / nước", color=INK2)
-        ax.set_ylabel({"win": "tỉ lệ thắng", "nonloss": "tỉ lệ không thua"}[metric], color=INK2)
+        ax.set_ylabel({"win": "tỷ lệ thắng", "nonloss": "tỷ lệ không thua"}[metric], color=INK2)
         ax.set_title(sub, color=INK, fontsize=11, loc="left")
     handles, labels = axes[0][0].get_legend_handles_labels()  # một legend chung, không đè dữ liệu
     # hàng riêng dưới tiêu đề: không đè tiêu đề ở hình 1 panel, không đè dữ liệu ở 1,0
@@ -378,6 +381,7 @@ def plot_panels(
     fig.suptitle(title, color=INK, fontsize=12, x=0.01, y=0.99, ha="left")
     fig.text(0.01, 0.005, "Thanh lỗi: Wilson 95 %, tính độc lập từng điểm (các c dùng chung seed).",
              color=INK2, fontsize=8, ha="left", va="bottom")  # fmt: skip
+    vn_figure(fig)  # tick/nhãn số kiểu VN (P7.2)
     fig.tight_layout(rect=(0, 0.03, 1, 0.88))
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=150, facecolor=SURFACE)

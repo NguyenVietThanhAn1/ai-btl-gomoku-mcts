@@ -30,6 +30,9 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
   chữ số đổi kết luận chứa / không chứa 0 (dung sai 1e-9) hoặc 0,5, hay biến biên ≠ 0 thành 0 → thêm một chữ số cho
   cả hai biên (vd. `[0,004; 0,156]`, `[0,241; 0,499]`);
   `_one(rows, **kw)` = đúng 1 dòng khớp, không thì `KeyError` (không đoán).
+- **Số trong hình kiểu VN (P7.2):** `vn`, `vn_tick`, `vn_figure`, `ratio_axis` nằm ở [figfmt.py](figfmt.md); `plots` chỉ
+  import `vn`, `EPS` (re-export `plots.vn`). Mọi hàm vẽ E3–E6 gọi `vn_figure(fig)` ngay trước `tight_layout`/`savefig`
+  (tick cùng số chữ số trên một trục, trục log chỉ major có nhãn) và `ratio_axis(ax)` ở trục tỷ lệ (không tick > 1).
 - **Bảng cho báo cáo trong summary (P7.2, D-30):** mỗi bảng có tiêu đề `### Bảng E… — …` riêng, duy nhất (`_table`) —
   đây là neo `<!-- src-table: summary_kinrow.md#<tiêu đề> -->` mà `report_check` so byte với bảng chép trong
   `report/report.md`. Gồm: E1 nút/thời gian; E2 W/D/L; E3 win rate vs Greedy + **W/D/L** (hàng iter × cột c, `_wdl_rows`)
@@ -67,7 +70,7 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
 `experiments/{common,e2_never_lose,e3_c_sweep,e4_final_move,e5_rollout,e6_tactics,e6_mechanism}.py`, matplotlib (Agg), `git`.
 
 ## Test
-`tests/test_plots.py`: `vn`/`ci` (gồm luật làm tròn D-30, dấu "−"); `_one` báo lỗi khi 0 hoặc ≥ 2 dòng; `compare` (giống sau chuẩn hóa CRLF / khác / mới);
+`tests/test_plots.py`: `vn`/`ci` (gồm luật làm tròn D-30, dấu "−"; tick hình: `tests/test_figfmt.py`); `_one` báo lỗi khi 0 hoặc ≥ 2 dòng; `compare` (giống sau chuẩn hóa CRLF / khác / mới);
 lọc 10 cặp đầu + moves tương ứng; tóm tắt mistakes E2 từ chuỗi = từ int (gồm thứ tự); `summary_kinrow.md` sinh được từ
 bảng thật, chứa số lấy từ CSV (mẫu E1/E2/E6), mọi file được nhắc tới tồn tại. P7.2: tiêu đề `###` không trùng; W/D/L E3 khớp CSV, W + D + L = n; ví dụ E4 15×15 có cột tham chiếu. Chạy: `python -m pytest tests/test_plots.py -q`.
 

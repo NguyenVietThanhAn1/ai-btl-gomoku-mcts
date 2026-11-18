@@ -45,6 +45,7 @@ from gameai.experiments.common import (
 )
 from gameai.experiments.e1_nodes import make_position
 from gameai.experiments.e3_c_sweep import AB2, GREEDY, fit_cost, gate_passes
+from gameai.experiments.figfmt import ratio_axis, vn_figure, vn_tick
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = ROOT / "results" / "raw"
@@ -969,7 +970,12 @@ def _series(
 
 
 def _plot_lines(
-    ax: Any, rows: list[dict[str, Any]], btype: str, xkey: str, rolls: tuple[str, ...] = ROLLOUTS
+    ax: Any,
+    rows: list[dict[str, Any]],
+    btype: str,
+    xkey: str,
+    rolls: tuple[str, ...] = ROLLOUTS,
+    log_x: bool = True,
 ) -> list[float]:
     xs_all: list[float] = []
     for i, roll in enumerate(rolls):
@@ -994,8 +1000,9 @@ def _plot_lines(
             label=NAMES[roll],
         )
         xs_all += [p[0] for p in pts]
-    ax.set_xscale("log")
+    ax.set_xscale("log" if log_x else "linear")
     ax.set_ylim(0.0, 1.03)
+    ratio_axis(ax)
     _style(ax)
     return xs_all
 
@@ -1016,11 +1023,11 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
         return read_rows(f) if f.exists() else []
 
     t = {k: table(k) for k in ("greedy", "mref", "h2h")}
-    # đối đầu: vẽ win rate của h300 (A); trục y là tỉ lệ thắng của bên được ghi trong tiêu đề
+    # đối đầu: vẽ win rate của h300 (A); trục y là tỷ lệ thắng của bên được ghi trong tiêu đề
     subs = {
         "greedy": "Thắng vs Greedy",
         "mref": "Thắng vs mref (MCTS random 1000 iter)",
-        "h2h": "Đối đầu: tỉ lệ thắng của h300 vs rand",
+        "h2h": "Đối đầu: tỷ lệ thắng của h300 vs rand",
     }
     out: list[Path] = []
     fig, axes = plt.subplots(1, 3, figsize=(15.6, 4.6), facecolor=SURFACE)
@@ -1034,7 +1041,7 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
         if k == "h2h":
             ax.axhline(0.5, color=INK2, linewidth=0.8, linestyle="--")
         ax.set_xlabel("iteration / nước (cùng cho hai bên)", color=INK2)
-        ax.set_ylabel("tỉ lệ thắng", color=INK2)
+        ax.set_ylabel("tỷ lệ thắng", color=INK2)
         ax.set_title(subs[k], color=INK, fontsize=11, loc="left")
     _finish(
         fig,
@@ -1051,20 +1058,20 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
         xs = _plot_lines(ax, t[k], "time", "budget", rolls)
         ticks = sorted(set(xs))
         if ticks:
-            ax.set_xticks(ticks, [f"{x:g} s" for x in ticks])
+            ax.set_xticks(ticks, [f"{vn_tick(x)} s" for x in ticks])
         ax.minorticks_off()
         if k == "h2h":
             ax.axhline(0.5, color=INK2, linewidth=0.8, linestyle="--")
         ax.set_xlabel("thời gian / nước", color=INK2)
-        ax.set_ylabel("tỉ lệ thắng", color=INK2)
+        ax.set_ylabel("tỷ lệ thắng", color=INK2)
         ax.set_title(subs[k], color=INK, fontsize=11, loc="left")
         ax = axes[1][col]
         if k == "h2h":
             _plot_h2h_iters(ax, t[k])
         else:
-            _plot_lines(ax, t[k], "time", "a_search_iterations_per_move")
+            _plot_lines(ax, t[k], "time", "a_search_iterations_per_move", log_x=False)
             ax.set_xlabel("iteration thực tế / nước (có search)", color=INK2)
-            ax.set_ylabel("tỉ lệ thắng", color=INK2)
+            ax.set_ylabel("tỷ lệ thắng", color=INK2)
             # tên ngắn: tên đầy đủ của mref + hậu tố tràn sang panel bên phải (P7.2)
             short = subs[k].split(" (")[0]
             ax.set_title(f"{short} — theo iteration thực tế", color=INK, fontsize=11, loc="left")
@@ -1082,15 +1089,18 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
 
 def _plot_h2h_iters(ax: Any, rows: list[dict[str, Any]]) -> None:
     """Đối đầu theo thời gian: iteration thực tế/nước của từng bên ở mỗi mức thời gian
-    (cột, trục log)."""
+    (cột, trục tuyến tính từ 0)."""
+
     rs = sorted(
         (r for r in rows if r["split"] == "all" and r["budget_type"] == "time"),
         key=lambda r: float(r["budget"]),
     )
+    top = 1.0
     for j, r in enumerate(rs):
         for i, (side, roll) in enumerate((("a", "h300"), ("b", "rand"))):
             v = fnum(r[f"{side}_search_iterations_per_move"])
             if v == v:
+                top = max(top, v)
                 ax.bar(
                     j + (i - 0.5) * 0.38,
                     v,
@@ -1107,8 +1117,8 @@ def _plot_h2h_iters(ax: Any, rows: list[dict[str, Any]]) -> None:
                     fontsize=8,
                     color=INK2,
                 )
-    ax.set_xticks(range(len(rs)), [f"{float(r['budget']):g} s" for r in rs])
-    ax.set_yscale("log")
+    ax.set_xticks(range(len(rs)), [f"{vn_tick(r['budget'])} s" for r in rs])
+    ax.set_ylim(0.0, top * 1.1)
     _style(ax)
     ax.set_xlabel("thời gian / nước", color=INK2)
     ax.set_ylabel("iteration thực tế / nước", color=INK2)
@@ -1133,13 +1143,14 @@ def _finish(fig: Any, legend_ax: Any, title: str, path: Path, out: list[Path]) -
     fig.text(
         0.01,
         0.005,
-        "Thanh lỗi: Wilson 95 % của tỉ lệ thắng, tính độc lập từng điểm "
+        "Thanh lỗi: Wilson 95 % của tỷ lệ thắng, tính độc lập từng điểm "
         "(rand và h300 dùng chung seed đối thủ; so sánh cặp: e5_paired.csv).",
         color=INK2,
         fontsize=8,
         ha="left",
         va="bottom",
     )
+    vn_figure(fig)  # tick/nhãn số kiểu VN (P7.2)
     fig.tight_layout(rect=(0, 0.03, 1, 0.9))
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=150, facecolor=SURFACE)

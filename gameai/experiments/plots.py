@@ -31,6 +31,8 @@ from gameai.experiments.common import (
     write_summary,
 )
 from gameai.experiments.e5_rollout import _keep_pairs
+from gameai.experiments.figfmt import EPS as _EPS
+from gameai.experiments.figfmt import vn
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = ROOT / "results" / "raw"
@@ -222,23 +224,6 @@ REPORT_MAP = [
      ["e6_choice.csv", "e6_match.csv", "e6_paired.csv", "e6_mechanism.csv",
       "e6_cost_check.csv", "e6_time.csv", "e6_tactic_rate.csv"]),
 ]  # fmt: skip
-
-
-def vn(x: Any, d: int = 2) -> str:
-    """Số kiểu VN: dấu phẩy thập phân, dấu trừ "−" (U+2212); số nguyên (d = 0) ≥ 10 000 nhóm nghìn
-    bằng khoảng trắng. Giá trị làm tròn thành 0 không mang dấu."""
-    v = float(x)
-    if d == 0:
-        s = f"{round(v):,}".replace(",", " ")
-        s = s if abs(v) >= 10_000 else s.replace(" ", "")
-    else:
-        s = f"{v:.{d}f}".replace(".", ",")
-    if s.startswith("-") and not any(c in "123456789" for c in s):
-        s = s[1:]
-    return s.replace("-", "−")
-
-
-_EPS = 1e-9  # |giá trị| < _EPS coi là đúng 0 (nhiễu số học của cận Wilson)
 
 
 def _conclusions(lo: float, hi: float) -> tuple[bool, bool]:
@@ -512,7 +497,7 @@ def section_e5(td: Path) -> list[str]:
         f"{d('greedy', 'iter', '5000.0')}.",
         f"- Benchmark đơn luồng (`e5_bench.csv`, trung vị): rand {vn(bench['rand'], 0)} iter/s, "
         f"h300 "
-        f"{vn(bench['h300'], 0)} iter/s, tỉ lệ rand/h300 = {vn(bench['rand'] / bench['h300'])}.",
+        f"{vn(bench['h300'], 0)} iter/s, tỷ lệ rand/h300 = {vn(bench['rand'] / bench['h300'])}.",
         f"- Kiểm tra hợp lệ mref: rand 1000 iter vs mref thắng {val['wins']}/{val['n']} "
         f"{ci(val['win_lo'], val['win_hi'])} (chứa 0,5: "
         f"{'có' if val['contains_half'] == '1' else 'không'}).",

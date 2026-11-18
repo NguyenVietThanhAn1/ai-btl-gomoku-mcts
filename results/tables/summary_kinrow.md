@@ -192,7 +192,7 @@ Nguồn: `results/figures/e4_match.png`, `results/tables/e4_roots_examples.csv`,
 - Cùng thời gian (kết luận chính): đối đầu h300 thắng rand 0,90 [0,79; 0,96] (0,5 s), 1,00 [0,93; 1,00] (2 s).
 - Tỷ lệ thắng h300 vs rand (hiệu cặp): vs Greedy 0,5 s 0,62 vs 0,00, hiệu 0,62 [0,48; 0,76]; 2 s 0,86 vs 0,10, hiệu 0,76 [0,63; 0,89]; vs mref 2 s 1,00 vs 0,92, hiệu 0,08 [0,004; 0,156].
 - Cùng iteration vs Greedy: 1000 iter 0,48 vs 0,02, hiệu 0,46 [0,32; 0,60]; 5000 iter 0,92 vs 0,08, hiệu 0,84 [0,72; 0,96].
-- Benchmark đơn luồng (`e5_bench.csv`, trung vị): rand 3606 iter/s, h300 2409 iter/s, tỉ lệ rand/h300 = 1,50.
+- Benchmark đơn luồng (`e5_bench.csv`, trung vị): rand 3606 iter/s, h300 2409 iter/s, tỷ lệ rand/h300 = 1,50.
 - Kiểm tra hợp lệ mref: rand 1000 iter vs mref thắng 25/50 [0,37; 0,63] (chứa 0,5: có).
 
 ### Bảng E5 — cùng thời gian/nước (so sánh công bằng; 2 worker)

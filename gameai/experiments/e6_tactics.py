@@ -61,6 +61,7 @@ from gameai.experiments.e5_rollout import (
     paired_diff,
     phase_of,
 )
+from gameai.experiments.figfmt import ratio_axis, vn_figure
 from gameai.games.kinrow import KInRow, cell_of
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -1238,13 +1239,14 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
 
     p = prefix(quick)
     out: list[Path] = []
     cpath = table_dir / f"{p}choice.csv"
     if cpath.exists():
         rows = [r for r in read_rows(cpath) if r["stratum"] == "all"]
-        fig, axes = plt.subplots(1, 2, figsize=(11, 5.2), facecolor=SURFACE, sharey=True)
+        fig, axes = plt.subplots(1, 2, figsize=(11, 5.8), facecolor=SURFACE, sharey=True)
         titles = {"block": "Loại 1 — phải chặn four (1 ô chặn)", "win": "Loại 2 — có thắng ngay"}
         for ax, t in zip(axes, TYPES, strict=True):
             for i, roll in enumerate(ROLLOUTS):
@@ -1274,20 +1276,33 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
             ax.set_xticks(CHECKPOINTS)
             ax.set_xticklabels([str(c) for c in CHECKPOINTS])
             ax.set_ylim(0.0, 1.05)
+            ratio_axis(ax)
             ax.set_xlabel("iteration / nước", color=INK2)
             ax.set_title(titles[t], color=INK, fontsize=10, loc="left")
             _style(ax)
         axes[0].set_ylabel("tỷ lệ chọn đúng", color=INK2)
-        # legend chung dưới hình (panel loại 2 có đủ mọi loại đường), không đè dữ liệu
+        # legend chung dưới hình, 2 cột theo rollout (trái random, phải h300): tiêu đề cột rồi
+        # "chọn đúng", "không mất thắng" (chỉ panel loại 2 có); "bật tactics" riêng ở cuối
         h1, l1 = axes[1].get_legend_handles_labels()
-        fig.legend(h1, l1, loc="lower left", bbox_to_anchor=(0.01, 0.045), ncol=3,
-                   frameon=False, fontsize=8, labelcolor=INK)  # fmt: skip
+        by = dict(zip(l1, h1, strict=True))
+        col: list[tuple[Any, str]] = []
+        for roll in ROLLOUTS:
+            col.append((Line2D([], [], linestyle="none"), NAMES[roll]))
+            for key, text in (("chọn đúng (chặn / thắng ngay)", "chọn đúng (chặn / thắng ngay)"),
+                              ("không mất thắng", "không mất thắng")):  # fmt: skip
+                col.append((by[f"{NAMES[roll]} — {key}"], text))
+        fig.legend(*zip(*col, strict=True), loc="lower left", bbox_to_anchor=(0.01, 0.085),
+                   ncol=len(ROLLOUTS), frameon=False, fontsize=8, labelcolor=INK)  # fmt: skip
+        fig.legend([by["bật tactics (sanity)"]], ["bật tactics (sanity)"], loc="lower left",
+                   bbox_to_anchor=(0.01, 0.04), frameon=False, fontsize=8,
+                   labelcolor=INK)  # fmt: skip
         fig.suptitle("E6 — MCTS tắt check_tactics trên bộ thế cờ thật 15×15", color=INK,
                      fontsize=12, x=0.01, ha="left")  # fmt: skip
         fig.text(0.01, 0.005, "Tỷ lệ chung có trọng số tầng n_candidates theo pool (D-21). Thanh "
                  "lỗi: bootstrap phân tầng 95 % theo cụm thế. Từng tầng: e6_choice.csv.",
                  color=INK2, fontsize=8, ha="left", va="bottom")  # fmt: skip
-        fig.tight_layout(rect=(0, 0.17, 1, 0.95))
+        vn_figure(fig)  # tick/nhãn số kiểu VN (P7.2)
+        fig.tight_layout(rect=(0, 0.24, 1, 0.95))
         path = fig_dir / f"{p}choice.png"
         path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(path, dpi=150, facecolor=SURFACE)
@@ -1317,6 +1332,7 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
         ax.set_xticks(range(len(cats)))
         ax.set_xticklabels(["rand 1000 vs mref", "h300 1000 vs Greedy", "h300 5000 vs Greedy"])
         ax.set_ylim(0.0, 1.05)
+        ratio_axis(ax)
         ax.set_ylabel("tỷ lệ thắng (của MCTS)", color=INK2)
         ax.set_title("Cùng đối thủ, cùng seed: tắt vs bật", color=INK, fontsize=10, loc="left")
         ax.legend(frameon=False, fontsize=8, labelcolor=INK)
@@ -1343,6 +1359,7 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
         ax.set_xticklabels([f"{it} iter" for it in SELF_ITERS])
         ax.set_xlim(-0.5, len(SELF_ITERS) - 0.5)
         ax.set_ylim(0.0, 1.05)
+        ratio_axis(ax)
         ax.set_title("Đối đầu trực tiếp h300 bật vs tắt", color=INK, fontsize=10, loc="left")
         ax.legend(frameon=False, fontsize=8, labelcolor=INK)
         _style(ax)
@@ -1350,6 +1367,7 @@ def make_figures(quick: bool, table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_D
                      x=0.01, ha="left")  # fmt: skip
         fig.text(0.01, 0.005, "Thanh lỗi: Wilson 95 % (độc lập từng điểm); so cặp: e6_paired.csv.",
                  color=INK2, fontsize=8, ha="left", va="bottom")  # fmt: skip
+        vn_figure(fig)  # tick/nhãn số kiểu VN (P7.2)
         fig.tight_layout(rect=(0, 0.03, 1, 0.95))
         path = fig_dir / f"{p}match.png"
         fig.savefig(path, dpi=150, facecolor=SURFACE)
