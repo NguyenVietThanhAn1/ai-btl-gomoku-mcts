@@ -10,8 +10,8 @@
 
 ### An
 
-- **Task hiện tại:** P7.2 🔄 (trên `develop`, D-32) — báo cáo `report/report.md`. Thứ tự mới D-30: xong Bài 1 (P7.2 → P7.3 → P7.4) trước cờ tướng.
-- **Việc đang dở:** P7.2 — xong đợt (a), (b), (c) (An đã duyệt), dấu thập phân VN trong hình (`1d3c20b`), `plots --check` so cả summary + "tỷ lệ" trong GUI (`9d2aef6`), "tỷ lệ" trong `experiments/*.md` (`1fac6f7`) — cả ba đã push. **spec-reviewer P7.2: PASS** (3 minor, đã xử lý ở commit "docs: P7.2 review minors"). Còn: An **chụp lại `report/figures/gui/help.png`** (Hình B.8; dòng "Phân tích… W/N là tỷ lệ thắng ước lượng" đổi chữ) → commit ảnh, đánh dấu P7.2 ✅, push, mở PR `develop` → `master`.
+- **Task hiện tại:** P7.2 ✅ xong (trên `develop`, D-32) — báo cáo `report/report.md`; đang chờ An merge PR `develop` → `master` (mốc Bài 1). Task kế: P7.4 (video). Thứ tự mới D-30: xong Bài 1 (P7.2 → P7.3 → P7.4) trước cờ tướng.
+- **Việc đang dở:** P7.2 — xong đợt (a), (b), (c) (An đã duyệt), dấu thập phân VN trong hình (`1d3c20b`), `plots --check` so cả summary + "tỷ lệ" trong GUI (`9d2aef6`), "tỷ lệ" trong `experiments/*.md` (`1fac6f7`) — cả ba đã push. **spec-reviewer P7.2: PASS** (3 minor, đã xử lý ở `fc418cc`). `help.png` đã sinh lại (Hình B.8), P7.2 ✅. Còn: An merge PR `develop` → `master` (merge commit, không squash).
 - **Bước tiếp theo:** P7.2 → P7.4 (video) (P7.3 xuất PDF hoãn tới khi An yêu cầu, D-34) → P8.1 (luật cờ tướng + perft, trên `develop`). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
@@ -50,7 +50,7 @@
 | P6.3 | GUI: game chơi được hoàn chỉnh | ✅ | An | 2026-11-17 | D-29; spec-reviewer PASS; An chơi thử bằng chuột OK |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
-| P7.2 | report.md | 🔄 | An | 2026-11-18 | D-30 |
+| P7.2 | report.md | ✅ | An | 2026-11-18 | D-30; spec-reviewer PASS; report_check 0 lỗi; `plots --check` 26/26 |
 | P7.3 | Xuất report.pdf (D-34; thay docx) | ⬜ | An | | hoãn tới khi An yêu cầu |
 | P7.4 | Video demo (script + quay) | ⬜ | An | | |
 | P8.0 | Xiangqi design D-22 + golden k-in-row | ✅ | An | 2026-11-17 | tag `kinrow-final`, branch `xiangqi`; golden 12 ván / 123 nước |
@@ -78,6 +78,11 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-18 — P7.2 ✅ xong: help.png sinh lại, AGENTS PDF, PR mốc Bài 1
+- `help.png` (Hình B.8) sinh lại bằng `python -m gameai.gui.screenshots --only help` (headless, theme mặc định, tắt animation): 1280×720, dòng "Phân tích…" có "tỷ lệ thắng"; chỉ file này đổi (các ảnh GUI khác giữ nguyên). Lưu ý: `--help` của script lỗi `UnicodeEncodeError` trên console cp1252 — chạy với `PYTHONIOENCODING=utf-8`.
+- AGENTS.md "Sản phẩm nộp": ".docx" → "PDF (D-34)". `report_check.md` và D-1 giữ nguyên (mô tả lịch sử).
+- P7.2 ✅ (Done khi: report_check 0 lỗi, `plots --check` 26/26 giống byte, pytest + ruff xanh, spec-reviewer PASS). Mở PR `develop` → `master` (mốc "Bài 1: code + thí nghiệm + báo cáo"); An merge.
 
 #### 2026-11-18 — P7.2 spec-reviewer PASS + xử lý 3 minor; D-34 (nộp PDF)
 - **spec-reviewer P7.2: PASS** (không blocker/major; report_check 0 lỗi, `plots --check` 26/26 giống byte, pytest + ruff xanh; ~40 khẳng định định lượng mục 5–6 khớp CSV). 3 minor, đã xử lý: (1) PROGRESS dòng "Việc đang dở"/log lỗi thời → cập nhật + log `1fac6f7` (`docs: tỷ lệ in experiment docs`, đổi "tỉ lệ" trong 6 file `experiments/*.md`; commit đã push); (2) `plots.md` mục "Kết quả kiểm" → "26 giống byte, 0 khác, 0 mới" (2026-11-18, sau `1fac6f7`); (3) Bảng 2 (E1) nhãn hiển thị "3x3"/"15x15" → "3×3"/"15×15": đổi trong `section_e1` (`plots.py`, `r["board"].replace("x", "×")`), sinh lại summary (đổi đúng 10 dòng nhãn của Bảng E1, không dòng nào khác), sync 10 dòng Bảng 2 trong `report.md`. Giá trị `board` trong CSV và selector `board=3x3` / `board=15x15` trong comment `src` không đổi. Bảng khác hiển thị "3x3": không còn (grep summary/report: chỉ còn tên file `e3_3x3*` và selector).

@@ -56,7 +56,7 @@
 - `candidate_moves`: các ô trống trong bán kính `radius` quanh quân đã đặt.
 
 ## Sản phẩm nộp
-Sản phẩm nộp: **báo cáo .docx + video demo** (không vấn đáp). Với module thuật toán (minimax, alphabeta, mcts, rollout, eval), mục "Giải thích cho báo cáo" trong `.md` là bắt buộc: bản chất, công thức/pseudocode, ví dụ nhỏ trace tay. Đây là nguyên liệu cho mục 3 (Phương pháp) của báo cáo, viết sao cho chép sang báo cáo được gần như nguyên văn.
+Sản phẩm nộp: **báo cáo PDF (D-34) + video demo** (không vấn đáp). Với module thuật toán (minimax, alphabeta, mcts, rollout, eval), mục "Giải thích cho báo cáo" trong `.md` là bắt buộc: bản chất, công thức/pseudocode, ví dụ nhỏ trace tay. Đây là nguyên liệu cho mục 3 (Phương pháp) của báo cáo, viết sao cho chép sang báo cáo được gần như nguyên văn.
 
 ## Commit & push
 - Message: `<TaskID>: <mô tả ngắn>` — ví dụ `P3.1: MCTS-UCT core with root stats`. Không thêm trailer (Co-Authored-By, "Generated with…").
