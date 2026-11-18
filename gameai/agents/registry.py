@@ -23,6 +23,7 @@ from gameai.core.game import Game
 from gameai.games.kinrow import KInRow
 from gameai.heuristics import kinrow_eval
 from gameai.heuristics.kinrow_rollout import KInRowHeavyRollout
+from gameai.heuristics.kinrow_vcf import make_root_hook
 
 # Hàm heuristic gọi được theo tên trong params (k-in-row; P8 thêm hàm cờ tướng vào đây).
 FUNCTIONS: dict[str, Callable[..., Any]] = {
@@ -107,11 +108,26 @@ def _build_minimax(p: dict[str, Any], seed: int | None) -> Agent:
     return MinimaxAgent(eval_fn=_fn(p.pop("eval", None)), seed=seed, **p)
 
 
+def _vcf_hook(p: dict[str, Any]) -> Any:
+    """Tham số spec `vcf_depth` + `vcf_time` → hook VCF k-in-row (P6.4); không có → None.
+
+    `vcf_time` bắt buộc khi có `vcf_depth` (giá trị mặc định nằm trong spec, không trong agent)."""
+    depth, limit = p.pop("vcf_depth", None), p.pop("vcf_time", None)
+    if depth is None:
+        if limit is not None:
+            raise ValueError("vcf_time cần vcf_depth")
+        return None
+    if limit is None:
+        raise ValueError("vcf_depth cần vcf_time (giây) ghi rõ trong spec")
+    return make_root_hook(depth, limit)
+
+
 def _build_alphabeta(p: dict[str, Any], seed: int | None) -> Agent:
     return AlphaBetaAgent(
         eval_fn=_fn(p.pop("eval", None)),
         delta_fn=_fn(p.pop("delta", None)),
         order_fn=_fn(p.pop("order", None)),
+        root_hook=_vcf_hook(p),
         seed=seed,
         **p,
     )

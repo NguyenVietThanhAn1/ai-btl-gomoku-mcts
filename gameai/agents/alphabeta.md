@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P2.4  ·  **Cập nhật:** 2026-11-04
+**Trạng thái:** ✅ ổn định  ·  **Task:** P2.4, P6.4 (`top_k`, `root_hook`; ID/TT sâu: sắp tới)  ·  **Cập nhật:** 2026-11-18
 
 ## Mục đích
 Minimax có cắt tỉa alpha-beta (đề ý 1): **cùng giá trị gốc** với `MinimaxAgent` nhưng thăm ít nút hơn.
@@ -17,7 +17,8 @@ class AlphaBetaAgent(Agent):
     def __init__(self, depth: int | None = None, eval_fn: EvalFn | None = None,
                  use_candidates: bool = True, seed: int | None = None,
                  order_fn: MoveFn | None = None, delta_fn: MoveFn | None = None,
-                 use_tt: bool = False): ...
+                 use_tt: bool = False, top_k: int | Sequence[int] | None = None,
+                 root_hook: RootHook | None = None): ...
     def select_move(self, game: Game) -> Move            # từ Agent (template method)
     def search(self, game: Game) -> tuple[Move, float]   # (nước tốt nhất, giá trị gốc)
     def value(self, game: Game) -> float                 # = MinimaxAgent(...).value với cùng depth/eval
@@ -31,6 +32,17 @@ class AlphaBetaAgent(Agent):
 - `use_tt`: bật TT theo `game.key()`, xóa ở đầu mỗi lần `search`.
 - `seed`: `None` → nước tốt nhất đầu tiên theo thứ tự duyệt (tất định). Có seed → xáo thứ tự nước **ở gốc**
   trước khi sort ổn định theo `order_fn` → tie-break ngẫu nhiên giữa các nước bằng điểm (không đảm bảo đều).
+- `top_k` (P6.4, mặc định `None` = tắt, hành vi cũ không đổi): sau khi sắp theo `order_fn` chỉ duyệt **k nước đầu**.
+  `int` = cùng k ở mọi ply; dãy = k theo ply (phần tử 0 = gốc, 1 = ply 1, …; ply vượt dãy dùng phần tử cuối). Cần
+  `order_fn` (không có → `ValueError`). **Đây là cắt tỉa xấp xỉ, không phải alpha-beta chính xác:** giá trị gốc có
+  thể khác Minimax (nước mạnh nằm ngoài top-k bị bỏ qua). Hệ quả với TT: khóa TT chỉ gồm `(key, độ sâu còn lại)`,
+  còn k phụ thuộc **ply** → hai entry cùng thế, cùng độ sâu còn lại nhưng ở ply khác (k khác) có thể mang giá trị
+  khác nhau, và TT dùng lại chúng. Chấp nhận có chủ đích (tìm kiếm đã xấp xỉ); chế độ `tt_mode="deep"` (sắp tới)
+  cũng dùng lại entry giữa các ply có k khác nhau. Chỉ dùng `top_k` ở chế độ chơi (GUI), không dùng cho thí nghiệm.
+- `root_hook(game) -> (nước | None, tập nước | None)` (P6.4, mặc định `None`): gọi **một lần ở gốc** trước khi tìm.
+  Nước ≠ None → đi ngay, không tìm (`search` trả `(nước, NaN)`, `stats["root_hook"] = 1`, `nodes = 1`). Tập nước →
+  chỉ duyệt các nước thuộc tập (giao với ứng viên; giao rỗng → dùng nguyên tập). Tham số spec `vcf_depth` +
+  `vcf_time` dựng hook VCF k-in-row `heuristics/kinrow_vcf.make_root_hook` (xem `kinrow_vcf.md`).
 - `stats`: `nodes` (kể cả gốc, đếm như Minimax), `iterations` = 0, `time` (giây), `value`, `cutoffs`
   (số lần cắt β/α), `tt_hits` (số lần tra TT trúng).
 - Không làm thay đổi `game`. Precondition: ván chưa kết thúc.

@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import math
 import random
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from gameai.agents.base import Agent
 from gameai.agents.minimax import WIN_SCORE, EvalFn, terminal_score
 from gameai.core.game import Game, Move
 
 MoveFn = Callable[[Game, Move], float]
+# Hook ở gốc: (nước đi ngay | None, tập nước cho gốc | None). Vd. `kinrow_vcf.make_root_hook`.
+RootHook = Callable[[Game], tuple[Move | None, list[Move] | None]]
 
 EXACT, LOWER, UPPER = 0, 1, 2
 _INF = float("inf")
@@ -34,6 +37,19 @@ def _from_tt(v: float, ply: int) -> float:
     return v
 
 
+def _norm_top_k(top_k: int | Sequence[int] | None) -> tuple[int, ...] | None:
+    """None → None; int → (k,); dãy → tuple. Mọi k phải là số nguyên ≥ 1."""
+    if top_k is None:
+        return None
+    if isinstance(top_k, (int, float)):
+        ks: tuple = (top_k,)
+    else:
+        ks = tuple(top_k)
+    if not ks or any(not isinstance(k, int) or isinstance(k, bool) or k < 1 for k in ks):
+        raise ValueError("top_k phải là int ≥ 1 hoặc dãy int ≥ 1")
+    return ks
+
+
 class AlphaBetaAgent(Agent):
     """Alpha-Beta dạng max/min tường minh (MAX = người đi ở gốc), cùng giá trị gốc với Minimax.
 
@@ -41,6 +57,11 @@ class AlphaBetaAgent(Agent):
     - `delta_fn(game, move)`: thay đổi lượng giá theo góc nhìn người đi, tính *trước* `play`
       (vd. `kinrow_eval.delta_eval`); lá = `eval_fn(gốc)` (hoặc 0) + tổng delta dọc nhánh.
     - `use_tt`: bảng chuyển vị theo `game.key()`, xóa ở đầu mỗi lần tìm.
+    - `top_k` (P6.4, mặc định None = tắt): sau khi sắp theo `order_fn`, chỉ duyệt k nước đầu —
+      **cắt tỉa xấp xỉ** (mất tính đúng của giá trị minimax). `int` = mọi ply; dãy = k theo ply
+      (gốc = ply 0).
+    - `root_hook` (P6.4, mặc định None): gọi ở gốc trước khi tìm; trả nước đi ngay hoặc tập nước
+      cho gốc.
     """
 
     def __init__(
@@ -52,10 +73,16 @@ class AlphaBetaAgent(Agent):
         order_fn: MoveFn | None = None,
         delta_fn: MoveFn | None = None,
         use_tt: bool = False,
+        top_k: int | Sequence[int] | None = None,
+        root_hook: RootHook | None = None,
     ) -> None:
         super().__init__()
         if depth is not None and depth < 1:
             raise ValueError("depth phải ≥ 1 hoặc None")
+        self._top_k = _norm_top_k(top_k)
+        if self._top_k is not None and order_fn is None:
+            raise ValueError("top_k cần order_fn (chọn k nước đầu theo điểm sắp xếp)")
+        self.root_hook = root_hook
         self.depth = depth
         self.eval_fn = eval_fn
         self.use_candidates = use_candidates
@@ -69,10 +96,12 @@ class AlphaBetaAgent(Agent):
         self._tt_hits = 0
         self._root = 0
 
-    def _moves(self, game: Game) -> list[Move]:
+    def _moves(self, game: Game, ply: int = 1) -> list[Move]:
         moves = game.candidate_moves() if self.use_candidates else game.legal_moves()
         if self.order_fn is not None:
             moves = sorted(moves, key=lambda m: self.order_fn(game, m), reverse=True)
+        if self._top_k is not None:
+            moves = moves[: self._top_k[min(ply, len(self._top_k) - 1)]]
         return moves
 
     def search(self, game: Game) -> tuple[Move, float]:
@@ -84,14 +113,26 @@ class AlphaBetaAgent(Agent):
         self._cutoffs = 0
         self._tt_hits = 0
         self._tt = {}
+        hook_moves: list[Move] | None = None
+        if self.root_hook is not None:
+            forced, hook_moves = self.root_hook(game)
+            if forced is not None:  # đi ngay, không tìm (value = NaN như MCTS đi tắt)
+                self._write_stats(t0, math.nan)
+                self.stats["root_hook"] = 1
+                return forced, math.nan
         need_score = self.depth is not None
         base = self.eval_fn(game, self._root) if need_score and self.eval_fn else 0
 
         moves = game.candidate_moves() if self.use_candidates else game.legal_moves()
         if self.rng is not None:
             self.rng.shuffle(moves)  # tie-break ngẫu nhiên; sort ổn định giữ thứ tự trong nhóm bằng
+        if hook_moves:  # giữ thứ tự gốc; rỗng sau giao → dùng nguyên tập hook trả về
+            allowed = set(hook_moves)
+            moves = [m for m in moves if m in allowed] or list(hook_moves)
         if self.order_fn is not None:
             moves.sort(key=lambda m: self.order_fn(game, m), reverse=True)
+        if self._top_k is not None:
+            moves = moves[: self._top_k[0]]
 
         best_move, best, alpha = moves[0], -_INF, -_INF
         for move in moves:
@@ -103,13 +144,16 @@ class AlphaBetaAgent(Agent):
                 best, best_move = v, move
             alpha = max(alpha, v)
 
+        self._write_stats(t0, best)
+        return best_move, best
+
+    def _write_stats(self, t0: float, value: float) -> None:
         self.stats["nodes"] = self._nodes
         self.stats["iterations"] = 0
         self.stats["time"] = time.perf_counter() - t0
-        self.stats["value"] = best
+        self.stats["value"] = value
         self.stats["cutoffs"] = self._cutoffs
         self.stats["tt_hits"] = self._tt_hits
-        return best_move, best
 
     def value(self, game: Game) -> float:
         """Giá trị gốc (bằng `MinimaxAgent.value` với cùng depth/eval)."""
@@ -154,7 +198,7 @@ class AlphaBetaAgent(Agent):
         sign = 1 if maximizing else -1
         delta_fn = self.delta_fn if depth is not None else None
         best = -_INF if maximizing else _INF
-        for move in self._moves(game):
+        for move in self._moves(game, ply):
             child = score + sign * delta_fn(game, move) if delta_fn else score
             game.play(move)
             v = self._alphabeta(game, ply + 1, alpha, beta, child)
