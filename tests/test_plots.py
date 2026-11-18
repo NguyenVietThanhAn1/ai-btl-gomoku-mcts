@@ -10,6 +10,8 @@ from pathlib import Path
 import pytest
 
 from gameai.experiments import e2_never_lose as e2
+from gameai.experiments import e5_rollout as e5
+from gameai.experiments import e6_tactics as e6
 from gameai.experiments import plots
 from gameai.experiments.common import read_rows
 
@@ -163,3 +165,26 @@ def test_e1_table_shows_times_sign_not_x(tmp_path: Path):
     assert "| 3×3 | full | minimax |" in text and "| 15×15 | 2 | minimax |" in text
     assert "| 3x3 |" not in text and "| 15x15 |" not in text
     assert {r["board"] for r in read_rows(TABLES / "e1_summary.csv")} == {"3x3", "15x15"}
+
+
+def test_tables_do_not_depend_on_head(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Sinh lại bảng E5/E6 phải giống byte dù HEAD đã đổi code agent sau `kinrow-final`:
+    giả lập so với HEAD luôn "có đổi" (False) → plots vẫn ghim tag, ra bảng giống byte."""
+    if not plots.pinned_tag_exists():
+        pytest.skip("không có tag kinrow-final")
+    real = e5.git_diff_empty
+
+    def fake(commit, paths=e5.CODE_PATHS, target="HEAD"):
+        return False if target == "HEAD" else real(commit, paths, target)
+
+    monkeypatch.setattr(e5, "git_diff_empty", fake)
+    assert fake("HEAD") is False  # HEAD bị giả là "đã đổi"
+    for f in TABLES.glob("*.csv"):
+        shutil.copy2(f, tmp_path / f.name)
+    t5 = e5.build_tables(False, plots.RAW_DIR, tmp_path, reuse_check=plots.pinned_reuse)
+    t6 = e6.build_tables(False, plots.RAW_DIR, tmp_path, reuse_check=plots.pinned_reuse)
+    names = [f"e5_{n}.csv" for n in t5] + [f"e6_{n}.csv" for n in t6]
+    assert names
+    for n in names:
+        if (TABLES / n).exists():
+            assert (tmp_path / n).read_bytes() == (TABLES / n).read_bytes(), n

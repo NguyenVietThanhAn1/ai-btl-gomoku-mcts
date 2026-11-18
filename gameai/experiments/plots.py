@@ -146,15 +146,35 @@ def e4_tables(raw_dir: Path, table_dir: Path) -> list[Path]:
 # ---------------------------------------------------------------- tất cả
 
 
+PINNED_TAG = "kinrow-final"  # tái dùng raw E3 chỉ cần code k-in-row không đổi đến tag này
+
+
+def pinned_tag_exists() -> bool:
+    r = subprocess.run(
+        ["git", "rev-parse", "--verify", "-q", f"{PINNED_TAG}^{{commit}}"],
+        cwd=ROOT,
+        capture_output=True,
+    )
+    return r.returncode == 0
+
+
+def pinned_reuse(*args: Any, **kwargs: Any) -> tuple[bool, str]:
+    """`e3_reusable` nhưng so code với `PINNED_TAG` (không phụ thuộc HEAD): sinh lại bảng từ raw
+    phải tất định dù sau tag có sửa `agents/`, `heuristics/`… (vd. P6.4, mặc định tắt)."""
+    return e5.e3_reusable(
+        *args, diff_empty=lambda c: e5.git_diff_empty(c, target=PINNED_TAG), **kwargs
+    )
+
+
 def regenerate(raw_dir: Path, table_dir: Path, fig_dir: Path) -> tuple[list[Path], list[Path]]:
     """Sinh bảng + hình E2–E6 vào `table_dir`/`fig_dir`. Trả (bảng, hình)."""
     table_dir.mkdir(parents=True, exist_ok=True)
     fig_dir.mkdir(parents=True, exist_ok=True)
     tables = e2_tables(raw_dir, table_dir) + e3_tables(raw_dir, table_dir)
     tables += e4_tables(raw_dir, table_dir)
-    t5 = e5.build_tables(False, raw_dir, table_dir)
+    t5 = e5.build_tables(False, raw_dir, table_dir, reuse_check=pinned_reuse)
     tables += [table_dir / f"e5_{n}.csv" for n in t5 if (table_dir / f"e5_{n}.csv").exists()]
-    t6 = e6.build_tables(False, raw_dir, table_dir)
+    t6 = e6.build_tables(False, raw_dir, table_dir, reuse_check=pinned_reuse)
     tables += [table_dir / f"e6_{n}.csv" for n in t6 if (table_dir / f"e6_{n}.csv").exists()]
     if e6m.build_table(raw_dir, table_dir):
         tables.append(table_dir / "e6_mechanism.csv")
