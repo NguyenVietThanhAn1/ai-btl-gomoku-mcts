@@ -11,7 +11,7 @@
 
 | Phần | Đo gì | Output |
 |---|---|---|
-| (a) bộ thế cờ | tắt tactics: tỷ lệ chọn đúng theo iter {100, 500, 1000, 2500, 5000}, rand và h300, 10 seed/thế; bật: sanity 100 % | `e6_choice.csv`, `e6_sanity.csv`, `e6_choice.png` |
+| (a) bộ thế cờ | tắt tactics: tỷ lệ chọn đúng theo iter {100, 500, 1000, 2500, 5000}, rand và h300, 10 seed/thế; bật: sanity 100 % | `e6_choice.csv`, `e6_sanity.csv`, `e6_choice.png` (legend 2 cột theo rollout: random trái, h300 phải; "bật tactics (sanity)" riêng ở cuối) |
 | (b) win rate | `randoff_i1000` vs mref; `h300off_i1000` vs `h300_i1000`; `h300off_iN` vs Greedy (N ∈ {1000, 5000}) | `e6_match.csv`, `e6_paired.csv`, `e6_match.png` |
 | (c) chi phí | thời gian `_tactics`, % nước đi thẳng, thời gian/nước bật vs tắt | `e6_cost_check.csv`, `e6_tactic_rate.csv`, `e6_time.csv` |
 

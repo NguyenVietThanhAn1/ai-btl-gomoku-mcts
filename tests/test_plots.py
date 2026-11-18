@@ -24,6 +24,17 @@ def test_vn_format():
     assert plots.ci(0.1, 0.25) == "[0,10; 0,25]"
 
 
+def test_ci_rounding_rule_and_minus():
+    """D-30: thêm một chữ số khi làm tròn đổi kết luận chứa 0 / 0,5 hoặc biên ≠ 0 thành 0."""
+    assert plots.ci(0.004037904, 0.155962096) == "[0,004; 0,156]"  # E5 mref 2 s
+    assert plots.ci(0.241, 0.4994) == "[0,241; 0,499]"  # 0,499 → 0,50 sẽ "chứa 0,5"
+    assert plots.ci(0.0035, 0.105) == "[0,004; 0,105]"  # Wilson, biên ≠ 0 → 0,00
+    assert plots.ci(0.0, 0.07) == "[0,00; 0,07]"  # biên đúng bằng 0: không đổi
+    assert plots.ci(-0.0149, 0.0949) == "[−0,01; 0,09]"  # vẫn chứa 0: không đổi
+    assert plots.vn(-0.001) == "0,00"  # −0 không mang dấu
+    assert plots.vn(-1, 0) == "−1"
+
+
 def test_one_requires_unique():
     rows = [{"a": "1", "b": "x"}, {"a": "1", "b": "y"}]
     assert plots._one(rows, a=1, b="y")["b"] == "y"
@@ -102,3 +113,53 @@ def test_summary_numbers_come_from_csv(tmp_path: Path):
     # mọi tên file được nhắc tới đều tồn tại
     for name in re.findall(r"`(e\d_[a-z0-9_]+\.(?:csv|png))`", text):
         assert (tmp_path / name).exists() or (plots.FIG_DIR / name).exists(), name
+
+
+@needs_tables
+def test_summary_report_tables_wdl_and_e4_15x15(tmp_path: Path):
+    """P7.2: mỗi bảng cho báo cáo có tiêu đề `###` riêng (không trùng); W/D/L E3 khớp CSV và
+    W + D + L = n; ví dụ E4 15×15 có cột tham chiếu."""
+    for f in TABLES.glob("*.csv"):
+        shutil.copy2(f, tmp_path / f.name)
+    text = plots.write_summary_md(tmp_path, plots.FIG_DIR).read_text(encoding="utf-8")
+    heads = [ln for ln in text.splitlines() if ln.startswith("### ")]
+    assert len(heads) == len(set(heads))
+    for name in ("e3_3x3_random", "e3_3x3_minimax", "e3_greedy", "e3_ab2"):
+        assert any(f"`{name}.csv`" in h and "W/D/L" in h for h in heads), name
+        for r in read_rows(TABLES / f"{name}.csv"):
+            if r["split"] != "all":
+                continue
+            assert int(r["wins"]) + int(r["draws"]) + int(r["losses"]) == int(r["n"])
+            assert f"{r['wins']}/{r['draws']}/{r['losses']}" in text
+    sens = [r for r in read_rows(TABLES / "e4_roots_examples.csv")
+            if r["example"] == "sensitivity"]  # fmt: skip
+    assert any("ví dụ gốc 15×15" in h for h in heads)
+    assert "W/N tham chiếu" in text
+    assert f"| {sens[0]['move']} | " in text and plots.vn(sens[0]["ref_wn"], 3) in text
+
+
+@needs_tables
+def test_check_outputs_compares_summary(tmp_path: Path):
+    """`--check` so cả summary_kinrow.md (report lấy nó làm src): giống bản tham chiếu → không báo;
+    lệch một chữ (vd. "tỷ lệ" ↔ "tỉ lệ") → báo đúng tên file, đúng dòng; chưa commit → "mới"."""
+    for f in TABLES.glob("*.csv"):
+        shutil.copy2(f, tmp_path / f.name)
+    bad = plots.check_outputs(tmp_path, plots.FIG_DIR, [], ref=lambda p: None)
+    assert bad == [("summary_kinrow.md", "mới (chưa commit)")]
+    text = (tmp_path / "summary_kinrow.md").read_bytes()
+    assert plots.check_outputs(tmp_path, plots.FIG_DIR, [], ref=lambda p: text) == []
+    old = text.replace("tỷ lệ rand/h300".encode(), "tỉ lệ rand/h300".encode())
+    assert old != text
+    ((name, why),) = plots.check_outputs(tmp_path, plots.FIG_DIR, [], ref=lambda p: old)
+    assert name == "summary_kinrow.md" and why.startswith("khác từ dòng ")
+
+
+@needs_tables
+def test_e1_table_shows_times_sign_not_x(tmp_path: Path):
+    """Bảng E1 hiển thị "3×3"/"15×15" (không "3x3"/"15x15"); giá trị board trong CSV không đổi."""
+    for f in TABLES.glob("*.csv"):
+        shutil.copy2(f, tmp_path / f.name)
+    text = plots.write_summary_md(tmp_path, plots.FIG_DIR).read_text(encoding="utf-8")
+    assert "| 3×3 | full | minimax |" in text and "| 15×15 | 2 | minimax |" in text
+    assert "| 3x3 |" not in text and "| 15x15 |" not in text
+    assert {r["board"] for r in read_rows(TABLES / "e1_summary.csv")} == {"3x3", "15x15"}

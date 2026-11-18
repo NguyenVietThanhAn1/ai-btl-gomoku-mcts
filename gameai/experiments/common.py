@@ -65,7 +65,7 @@ class ResumeError(ValueError):
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
-    """Khoảng tin cậy Wilson cho tỉ lệ k/n (mặc định 95%). n = 0 → (nan, nan)."""
+    """Khoảng tin cậy Wilson cho tỷ lệ k/n (mặc định 95%). n = 0 → (nan, nan)."""
     if n == 0:
         return math.nan, math.nan
     p = k / n

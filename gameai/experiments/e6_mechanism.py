@@ -51,6 +51,7 @@ from gameai.experiments.e6_tactics import (
     power_status,
     spec_off,
 )
+from gameai.experiments.figfmt import ratio_axis, vn_figure
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = ROOT / "results" / "raw"
@@ -388,6 +389,7 @@ def make_figure(table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_DIR) -> Path | 
         ax.set_xticklabels([str(c) for c in CHECKPOINTS])
         ax.minorticks_off()
         ax.set_ylim(0.0, 1.03)
+        ratio_axis(ax)
         ax.set_xlabel("iteration / nước", color=INK2)
         ax.set_title(title, color=INK, fontsize=9.5, loc="left")
         _style(ax)
@@ -400,6 +402,7 @@ def make_figure(table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_DIR) -> Path | 
     fig.text(0.01, 0.005, "Chạy lại đúng cây của e6_choice (khớp 100 %). Thanh lỗi: bootstrap 95 % "
              "theo cụm thế. Số đầy đủ (gồm nhóm chọn đúng): e6_mechanism.csv.",
              color=INK2, fontsize=8, ha="left", va="bottom")  # fmt: skip
+    vn_figure(fig)  # tick/nhãn số kiểu VN (P7.2)
     fig.tight_layout(rect=(0, 0.04, 1, 0.93))
     path = fig_dir / "e6_mechanism.png"
     path.parent.mkdir(parents=True, exist_ok=True)

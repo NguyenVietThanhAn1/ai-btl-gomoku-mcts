@@ -37,6 +37,7 @@ from gameai.experiments.common import (
 from gameai.experiments.e1_nodes import build_game, make_position
 from gameai.experiments.e2_never_lose import solve
 from gameai.experiments.e3_c_sweep import SERIES_COLORS, fit_cost
+from gameai.experiments.figfmt import ratio_axis, vn_figure
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = ROOT / "results" / "raw"
@@ -549,7 +550,7 @@ INK, INK2, GRID, SURFACE = "#0b0b0b", "#52514e", "#e4e3df", "#fcfcfb"
 
 
 def plot_match(table: list[dict[str, Any]], path: Path) -> Path:
-    """3×3: score của max_n (chính, khoảng xấp xỉ chuẩn) + tỉ lệ thắng của max_n và của max_wn
+    """3×3: score của max_n (chính, khoảng xấp xỉ chuẩn) + tỷ lệ thắng của max_n và của max_wn
     (Wilson 95 %) theo iter; trục x log."""
     import matplotlib
 
@@ -588,6 +589,7 @@ def plot_match(table: list[dict[str, Any]], path: Path) -> Path:
     ax.set_xticks(its, [str(x) for x in its])
     ax.minorticks_off()
     ax.set_ylim(0.0, 1.03)
+    ratio_axis(ax)
     ax.set_facecolor(SURFACE)
     ax.grid(True, axis="y", color=GRID, linewidth=0.8)
     ax.set_axisbelow(True)
@@ -597,7 +599,7 @@ def plot_match(table: list[dict[str, Any]], path: Path) -> Path:
         ax.spines[s].set_color(INK2)
     ax.tick_params(colors=INK2)
     ax.set_xlabel("iteration / nước (cả hai bên)", color=INK2)
-    ax.set_ylabel("tỉ lệ / score", color=INK2)
+    ax.set_ylabel("tỷ lệ / score", color=INK2)
     handles, labels = ax.get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper left", bbox_to_anchor=(0.005, 0.94),
                ncol=len(labels), frameon=False, labelcolor=INK, fontsize=9)  # fmt: skip
@@ -605,6 +607,7 @@ def plot_match(table: list[dict[str, Any]], path: Path) -> Path:
                  x=0.01, y=0.99, ha="left")  # fmt: skip
     fig.text(0.01, 0.005, "Score: mean ± 1,96·sd/√n (xấp xỉ). Thắng: Wilson 95 %. "
              "Phần còn lại là hòa.", color=INK2, fontsize=8, ha="left", va="bottom")  # fmt: skip
+    vn_figure(fig)  # tick/nhãn số kiểu VN (P7.2)
     fig.tight_layout(rect=(0, 0.03, 1, 0.88))
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=150, facecolor=SURFACE)

@@ -25,4 +25,4 @@ def draw_wordmark(surf, center, size, theme=None, with_logo=True) -> Rect   # lo
 - `tests/test_gui_style.py::test_brand_name_logo_and_window` (tên, logo 64 px, caption + icon cửa sổ khi `run`).
 
 ## Hạn chế / TODO
-- Wordmark dùng font đóng gói; thiếu font → fallback hệ thống, tỉ lệ chữ có thể khác ảnh.
+- Wordmark dùng font đóng gói; thiếu font → fallback hệ thống, tỷ lệ chữ có thể khác ảnh.

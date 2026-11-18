@@ -33,7 +33,11 @@
       "Bash(rm -rf *)",
       "Bash(git reset --hard *)",
       "PowerShell(Remove-Item * -Recurse *)",
-      "PowerShell(git reset --hard *)"
+      "PowerShell(git reset --hard *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "PowerShell(git push --force*)",
+      "PowerShell(git push -f*)"
     ]
   },
   "attribution": {

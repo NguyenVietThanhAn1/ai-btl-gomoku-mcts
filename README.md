@@ -15,14 +15,15 @@ python -m gameai.experiments.plots --check       # bảng/hình báo cáo sinh l
 python -m gameai.gui.pygame_app --preset 3x3_human_mcts   # GUI; preset: 3x3_human_mcts | 15_human_h300 | 15_h300_vs_ab2 (phím: gameai/gui/pygame_app.md)
 ```
 
-## Quy ước làm việc nhóm (D-27)
+## Quy ước làm việc nhóm (D-32)
 Luật đầy đủ cho người/agent: [AGENTS.md](AGENTS.md).
 
-- **Branch:** `master` = bản ổn định / nộp được, chỉ merge từ `develop` ở mốc, **không commit thẳng**. `develop` = tích hợp. Mỗi task một branch `feat/<task-id>` (vd. `feat/P6.1`) tạo từ `develop`; merge về `develop` khi `pytest` + `ruff` xanh và review PASS theo [docs/REVIEW.md](docs/REVIEW.md). Quy trình từng bước: [docs/WORKFLOW.md](docs/WORKFLOW.md).
-- **Commit:** `<TaskID>: <mô tả ngắn>` (vd. `P3.1: MCTS-UCT core with root stats`). Được push branch `feat/<ID>` của mình để mở PR; không push `develop`/`master` (D-31).
+- **Branch:** làm và commit **thẳng trên `develop`**; feature branch chỉ khi thay đổi lớn/rủi ro (không bắt buộc). `master` = bản ổn định / nộp được: chỉ merge từ `develop` ở mốc, qua PR "Create a merge commit" (không squash), không push thẳng. Quy trình từng bước: [docs/WORKFLOW.md](docs/WORKFLOW.md); review: [docs/REVIEW.md](docs/REVIEW.md).
+- **Trước mỗi push `develop`:** đồng bộ (`git fetch origin` rồi `git rebase origin/develop`; người gõ tay có thể dùng `git pull` với `pull.rebase true`); `python -m pytest -q` (gồm golden) + `python -m ruff check .` xanh; nếu đụng `report/` hoặc `gameai/experiments/`: thêm `report_check` + `python -m gameai.experiments.plots --check`. Cấm `git push --force`, cấm rebase commit đã push.
+- **Commit:** `<TaskID>: <mô tả ngắn>` (vd. `P3.1: MCTS-UCT core with root stats`). Push `develop` sau khi qua các kiểm tra trên; không push thẳng `master` (D-32).
 - **Golden test:** `tests/test_regression_kinrow.py` phải luôn xanh (hành vi k-in-row khóa ở `kinrow-final`).
-- **Không sửa `gameai/agents/`** (và interface `Game`/`Agent`) khi chưa ghi lý do vào `docs/DECISIONS.md`; sửa agent thì thêm tham số có mặc định giữ hành vi cũ.
+- **Vùng nhạy cảm** (`gameai/agents/`, interface `Game`/`Agent`, `gameai/core/`, `results/`, `report/report.md`): báo người kia trước khi sửa; agent phải dừng và hỏi người dùng. Đổi interface/agent cần ghi lý do vào `docs/DECISIONS.md`; sửa agent thì thêm tham số có mặc định giữ hành vi cũ.
 - **Mỗi module `X.py` có `X.md` cạnh nó** theo [docs/MODULE_TEMPLATE.md](docs/MODULE_TEMPLATE.md), cập nhật cùng thay đổi code.
-- **PROGRESS.md:** mỗi người chỉ sửa dòng task của mình (cột Owner) và khối "Đang ở đâu" của mình; session log chỉ thêm ở đầu, không sửa dòng của người khác.
+- **PROGRESS.md:** mỗi người chỉ sửa dòng task của mình (cột Owner) và khối "Đang ở đâu" của mình; session log nằm trong khối của từng người (`### An` / `### Thành viên 2`), mới nhất ở đầu khối mình.
 - **Dữ liệu:** không sửa tay `results/raw/`; bảng/hình chỉ sinh bằng script trong `gameai/experiments/`. File `*quick*` và `results/*.log` không commit.
 - **Thí nghiệm dài (> 2 phút):** chạy `--quick` trước, báo thời gian ước tính, hỏi trước khi chạy full.

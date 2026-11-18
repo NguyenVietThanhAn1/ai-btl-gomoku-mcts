@@ -7,7 +7,7 @@
 
 ## Mục đích
 Chạy một match A vs B song song nhiều tiến trình, ghi **mỗi ván một dòng CSV ngay khi xong**, chạy tiếp
-được nếu bị ngắt, và làm bảng tổng hợp (W/D/L, tỉ lệ thắng kèm khoảng tin cậy Wilson 95%).
+được nếu bị ngắt, và làm bảng tổng hợp (W/D/L, tỷ lệ thắng kèm khoảng tin cậy Wilson 95%).
 
 ## Public API
 ```python
@@ -92,11 +92,11 @@ Thắng/hòa/thua theo góc nhìn A. Gom theo `(label_a, label_b)` →
 - **Thiết kế ván đấu.** Mỗi cấu hình đấu `2·n` ván với n seed; mỗi seed chơi hai ván, mỗi bên cầm quân đi
   trước một lần, cùng seed ngẫu nhiên của agent → loại lợi thế đi trước khỏi so sánh. Agent được dựng mới mỗi
   ván nên các ván độc lập (không chia sẻ cây / bảng băm).
-- **Khoảng tin cậy Wilson 95%** cho tỉ lệ thắng p̂ = k/n (z = 1,96):
+- **Khoảng tin cậy Wilson 95%** cho tỷ lệ thắng p̂ = k/n (z = 1,96):
   `tâm = (p̂ + z²/2n) / (1 + z²/n)`, `nửa độ rộng = z·√(p̂(1−p̂)/n + z²/4n²) / (1 + z²/n)`.
   Khác khoảng Wald p̂ ± z√(p̂(1−p̂)/n), Wilson không suy biến khi p̂ = 0 hoặc 1 (hay gặp khi một bên áp đảo)
   và luôn nằm trong [0, 1]. Ví dụ: 5/10 → [0,237; 0,763]; 10/10 → [0,722; 1] (Wald cho [1; 1]).
-- Điểm (W + 0,5·D)/n không phải tỉ lệ nhị thức nên không kèm khoảng Wilson.
+- Điểm (W + 0,5·D)/n không phải tỷ lệ nhị thức nên không kèm khoảng Wilson.
 - Khoảng tin cậy chỉ có nghĩa khi các ván thực sự khác nhau: cột `distinct_games` cho biết số chuỗi nước
   khác nhau; nếu nhỏ hơn n thì số mẫu hiệu dụng nhỏ hơn n.
 

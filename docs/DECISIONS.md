@@ -281,6 +281,7 @@
 - **Thứ tự mới** (An chốt, thay phần thứ tự của D-26): `… P6.3 → P7.2 → P7.3 → P7.4 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4`, sau đó bổ sung mục 3.4 / 5 / video cho cờ tướng.
 - **Lý do:** k-in-row đã đủ thí nghiệm (E1–E6, tag `kinrow-final`) + GUI → có ngay một bản nộp được; cờ tướng là khối lớn, rủi ro thời gian. Mục 3.4 "Cờ tướng" trong báo cáo để placeholder "(bổ sung sau P8)".
 - **P7.2 (An duyệt plan + 6 chỉnh):** bảng chép từ `summary_kinrow.md` gắn một comment `<!-- src-table: summary_kinrow.md#<heading> -->`, script `report_check` so khối bảng giống byte; số trong câu văn có `<!-- src: … -->` từng số, neo CSV (lọc hàng + cột) hoặc heading của summary (không neo số dòng). Mục 2: A(s) = mọi ô trống; `candidate_moves` là tỉa nhánh (xấp xỉ) → mục 3. Thêm bảng ví dụ 15×15 có tham chiếu 20 000 iter vào summary (E4). Markdown tương thích pandoc không crossref: LaTeX `$…$`, caption tự đánh số "Hình n." / "Bảng n.". Số thời gian GUI dùng đúng file D-29 (`p63_gui_timing` = animation tắt, `p63anim_gui_timing` = bật).
+- **P7.2 — làm tròn khoảng tin cậy (sau review mục 5, 2026-11-18):** không làm tròn biên CI nếu làm tròn **đổi kết luận** chứa / không chứa 0 (hoặc 0,5), hay biến một biên ≠ 0 thành 0,00 — khi đó ghi thêm một chữ số cho cả hai biên (vd. hiệu cặp mref 2 s: số gốc [0,0040; 0,1560] ghi `[0,004; 0,156]`, không ghi `[0,00; 0,16]`). Cài trong `plots.ci`; `report_check` báo lỗi "D-30" khi số trong report (nguồn CSV dạng khoảng) vi phạm. Số âm dùng dấu trừ "−" (U+2212); dùng "tỷ lệ" (không "tỉ lệ").
 - **Git:** `feat/P7.2` từ `develop` (D-27).
 
 ### D-31 (2026-11-18) — Onboarding không phụ thuộc công cụ: AGENTS.md là nguồn luật duy nhất
@@ -288,3 +289,20 @@
 - **Quyết định:** mỗi luật chỉ viết ở một nơi. `AGENTS.md` (root) = toàn bộ luật dự án, gồm luật trước chỉ có trong settings.json (cấm `rm -rf`, `git reset --hard`, sửa `results/raw/`; hỏi trước khi cài gói mới / push) và tóm tắt D-27. `docs/WORKFLOW.md` = checklist làm task + wrap-up (thêm bước 0 kiểm branch `feat/<ID>`); `docs/REVIEW.md` = checklist review. `CLAUDE.md` chỉ còn `@AGENTS.md` + ghi chú riêng Claude Code; skill `next-task`/`wrap-up` và agent `spec-reviewer` chỉ trỏ tới WORKFLOW/REVIEW. `docs/SETUP.md` chia §A chung / §B Claude Code / §C agent khác.
 - **Luật push sửa đổi (thay "không push khi chưa được yêu cầu"):** được push branch `feat/<ID>` của mình để mở PR; không push `develop`/`master`.
 - **PROGRESS.md:** "Đang ở đâu" tách khối theo người (`### An`, `### Thành viên 2`); wrap-up chỉ sửa khối của Owner hiện tại.
+
+### D-32 (2026-11-18) — Push thẳng `develop`; thay D-27/D-31 phần branch/push
+- **Quyết định:** làm và commit thẳng trên `develop`; feature branch `feat/<ID>` chỉ khi thay đổi lớn/rủi ro (không bắt buộc). Trước mỗi push: `git pull --rebase`, pytest (gồm golden k-in-row) + ruff xanh; đụng `report/` hoặc `gameai/experiments/` thì thêm `report_check` + `plots --check`. Cấm `git push --force`, cấm rebase commit đã push. `master` chỉ merge từ `develop` ở mốc qua PR "Create a merge commit" (không squash).
+- **Vùng nhạy cảm** (`gameai/agents/`, interface `Game`/`Agent`, `gameai/core/`, `results/`, `report/report.md`): báo người kia trước khi sửa; agent phải dừng và hỏi người dùng trước khi sửa.
+- **PROGRESS.md:** session log chuyển vào khối từng người (`### An` / `### Thành viên 2`), mới nhất ở đầu khối mình; log cũ giữ nguyên, đặt ở khối An.
+- **Đánh số D-xx:** lấy số ngay sau `git pull`; nếu rebase thấy trùng số thì người rebase sau đổi số của mình.
+- **Lý do:** nhóm 2 người, giảm số branch/PR phải quản lý; bù lại bằng kiểm tra trước push + báo trước khi sửa vùng nhạy cảm.
+
+### D-33 (2026-11-18) — Agent đồng bộ `develop` bằng fetch + rebase (bổ sung D-32)
+- **Quyết định:** bước đồng bộ chuẩn của agent (trước push, khi bắt đầu task) là `git fetch origin` rồi `git rebase origin/develop`, hai lệnh riêng, kiểm exit code từng lệnh; không dùng `git pull --rebase`. Người gõ tay vẫn có thể dùng `git pull` với `pull.rebase true` (docs/SETUP.md). Số D-xx lấy ngay sau khi đồng bộ. D-32 giữ nguyên; quyết định này chỉ thay cách đồng bộ mà D-32 ghi là `git pull --rebase`.
+- **Lý do:** 2/3 lần `git pull --rebase` gần đây báo "Cannot rebase onto multiple branches" vì `.git/FETCH_HEAD` có dòng `develop` trùng; fetch + rebase lên `origin/develop` không đọc FETCH_HEAD nên tránh được lỗi này.
+- **Nơi ghi luật:** AGENTS.md (Lệnh nguy hiểm, Làm việc nhóm), docs/WORKFLOW.md.
+
+### D-34 (2026-11-18) — Bản nộp là PDF (không cần report.docx); P7.3 = xuất PDF, hoãn
+- **Quyết định (An):** sản phẩm nộp của báo cáo là **PDF** (cùng video demo), không cần `report.docx`. P7.3 đổi từ "Convert sang `report.docx`" thành "Xuất PDF từ `report/report.md`, kiểm tra hình/bảng/công thức hiển thị đúng". **Hoãn P7.3 tới khi An yêu cầu**; trước đó chưa chọn công cụ xuất PDF (pandoc có sẵn trên máy; cần engine PDF, chưa kiểm).
+- **Không đổi:** `report/report.md` vẫn là nguồn duy nhất và vẫn qua `report_check` (D-30); comment `<!-- src … -->` pandoc bỏ qua; ràng buộc "Hình n./Bảng n." đánh số tay không đổi. Các tài liệu cũ còn chữ "docx" (D-1 ở dòng 6, `report_check.md`, AGENTS.md "Sản phẩm nộp") là ghi chép/mô tả cũ — sửa khi An đồng ý (AGENTS.md là nguồn luật).
+- **Lý do:** yêu cầu nộp thực tế là PDF; bỏ một bước chuyển định dạng.

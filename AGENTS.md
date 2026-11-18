@@ -22,13 +22,20 @@
 ## Lệnh nguy hiểm — cấm / phải hỏi
 (Trước đây chỉ ép bằng `.claude/settings.json`; agent khác không đọc file đó nên ghi thành luật ở đây.)
 - **Cấm:** xóa đệ quy (`rm -rf`, `Remove-Item -Recurse`), `git reset --hard`, sửa/xóa file trong `results/raw/`.
+- **Cấm:** `git push --force` / `-f`.
 - **Phải hỏi người trước:** cài gói mới (`pip install <gói>`; riêng `python -m pip install -r requirements.txt` thì được), mọi `git push` (xem mục Commit & push).
 - Được chạy không cần hỏi: pytest, ruff, `python -m gameai…`, `git status/diff/log/add/commit`.
+- **Không pipe output của `git pull/push/merge/rebase` qua `| tail`/`| head` trong chuỗi `&&`** — exit code của pipeline là của lệnh cuối, lỗi bị nuốt. Chạy từng lệnh, kiểm exit code trước khi làm bước tiếp.
+- **Đồng bộ chuẩn (agent):** `git fetch origin` rồi `git rebase origin/develop` (hai lệnh riêng, kiểm exit code từng lệnh), **không** dùng `git pull --rebase`. Lý do: 2/3 lần `git pull --rebase` gần đây báo "Cannot rebase onto multiple branches" vì FETCH_HEAD có dòng `develop` trùng. Người gõ tay vẫn có thể dùng `git pull` với `pull.rebase true` (docs/SETUP.md); nếu gặp lỗi trên: chạy `git branch -vv` và `cat .git/FETCH_HEAD` để lưu bằng chứng, rồi đồng bộ theo cách chuẩn.
 
-## Làm việc nhóm (tóm tắt D-27 — chi tiết: [README.md § Quy ước làm việc nhóm](README.md#quy-ước-làm-việc-nhóm-d-27))
-- Mỗi task một branch `feat/<ID>` (vd. `feat/P8.1`) tạo từ `develop`.
-- **Không commit thẳng** vào `develop` hoặc `master`; vào đó chỉ qua merge/PR.
-- Trong `PROGRESS.md` chỉ sửa **dòng task của mình** (cột Owner) và **khối "Đang ở đâu" của mình** (`### <Tên>`); session log chỉ thêm ở đầu, không sửa dòng người khác.
+## Làm việc nhóm (D-32, thay D-27/D-31 phần branch/push — chi tiết: [README.md § Quy ước làm việc nhóm](README.md#quy-ước-làm-việc-nhóm-d-32))
+- Làm và commit **thẳng trên `develop`**. Feature branch chỉ khi thay đổi lớn/rủi ro (không bắt buộc).
+- **Trước mỗi push `develop`:** đồng bộ (`git fetch origin` rồi `git rebase origin/develop`); `python -m pytest -q` (gồm `tests/test_regression_kinrow.py`) + `python -m ruff check .` xanh; nếu đụng `report/` hoặc `gameai/experiments/`: thêm `report_check` + `python -m gameai.experiments.plots --check`.
+- **Cấm** `git push --force` (và `-f`), cấm rebase commit đã push.
+- **Vùng nhạy cảm:** `gameai/agents/`, interface `Game`/`Agent`, `gameai/core/`, `results/`, `report/report.md` → báo người kia trước khi sửa. **Agent phải dừng và hỏi người dùng trước khi sửa vùng này.**
+- `master`: chỉ merge từ `develop` ở mốc, qua PR "Create a merge commit" (không squash); không push thẳng `master`.
+- Trong `PROGRESS.md` chỉ sửa **dòng task của mình** (cột Owner), **khối "Đang ở đâu" của mình** (`### <Tên>`) và **khối session log của mình**; log mới nhất ở đầu khối.
+- Số quyết định `D-xx` trong `docs/DECISIONS.md`: lấy số ngay sau khi đồng bộ (fetch + rebase); nếu rebase thấy trùng số thì người rebase sau đổi số của mình.
 - Golden test `tests/test_regression_kinrow.py` phải luôn xanh.
 
 ## Lệnh
@@ -49,8 +56,8 @@
 - `candidate_moves`: các ô trống trong bán kính `radius` quanh quân đã đặt.
 
 ## Sản phẩm nộp
-Sản phẩm nộp: **báo cáo .docx + video demo** (không vấn đáp). Với module thuật toán (minimax, alphabeta, mcts, rollout, eval), mục "Giải thích cho báo cáo" trong `.md` là bắt buộc: bản chất, công thức/pseudocode, ví dụ nhỏ trace tay. Đây là nguyên liệu cho mục 3 (Phương pháp) của báo cáo, viết sao cho chép sang báo cáo được gần như nguyên văn.
+Sản phẩm nộp: **báo cáo PDF (D-34) + video demo** (không vấn đáp). Với module thuật toán (minimax, alphabeta, mcts, rollout, eval), mục "Giải thích cho báo cáo" trong `.md` là bắt buộc: bản chất, công thức/pseudocode, ví dụ nhỏ trace tay. Đây là nguyên liệu cho mục 3 (Phương pháp) của báo cáo, viết sao cho chép sang báo cáo được gần như nguyên văn.
 
 ## Commit & push
 - Message: `<TaskID>: <mô tả ngắn>` — ví dụ `P3.1: MCTS-UCT core with root stats`. Không thêm trailer (Co-Authored-By, "Generated with…").
-- **Được push** branch `feat/<ID>` của mình để mở PR. **KHÔNG push** `develop`/`master` (người giữ repo merge).
+- **Được push `develop`** sau khi đã chạy các kiểm tra ở mục "Làm việc nhóm" và **hỏi người dùng trước** khi push. **KHÔNG push thẳng `master`**; không force-push.

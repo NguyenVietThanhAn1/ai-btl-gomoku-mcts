@@ -23,4 +23,4 @@ def icon(name, size, color) -> Surface # tô màu (không cache)
 - `tests/test_gui_style.py::test_icons_exist_and_tint`: mọi icon đúng cỡ, có pixel đặc.
 
 ## Hạn chế / TODO
-- Icon vẽ thủ công theo tỉ lệ; cỡ < 14 px mất chi tiết (cờ, sách).
+- Icon vẽ thủ công theo tỷ lệ; cỡ < 14 px mất chi tiết (cờ, sách).

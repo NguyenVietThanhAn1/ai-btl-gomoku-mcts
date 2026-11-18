@@ -14,7 +14,7 @@ Trò chơi k-in-a-row (Tic-Tac-Toe tổng quát, **5 quân thẳng hàng thắng
 | 2 | MCTS + UCT; kiểm chứng trên Tic-Tac-Toe 3×3 thuật toán **không bao giờ thua** | P3, E2 |
 | 3 | Thực nghiệm c ∈ {0.5, 1.0, 1.4, 2.0}; đồ thị iteration – tỷ lệ thắng (mỗi c một đường) | E3 |
 | 4 | Phân tích: vì sao chọn nước theo **N lớn nhất** thay vì W/N lớn nhất | E4 + báo cáo |
-| — | Sản phẩm nộp: báo cáo .docx + **video demo** (không vấn đáp) | P7 |
+| — | Sản phẩm nộp: báo cáo **PDF** (D-34) + **video demo** (không vấn đáp) | P7 |
 | 5 | Thay rollout ngẫu nhiên bằng heuristic, đo cải thiện; liên hệ value network | E5 |
 | 6 | (*) Mở rộng Cờ tướng → điều kiện điểm > 9 | P8 |
 
@@ -30,7 +30,7 @@ Chưa có phạm vi/task. **Chờ An xác nhận yêu cầu với giảng viên*
 
 - Ngôn ngữ: **Python 3.11+**, thuần Python + numpy/matplotlib/pandas; GUI **pygame**; test **pytest**.
 - Bàn: một class `KInRow(n, k)` dùng cho cả **3×3 (k=3)** và **15×15 (k=5)**. Mặc định demo/thí nghiệm chính: 15×15, k=5.
-- Giao diện: CLI + GUI pygame đơn giản. Báo cáo: `.docx` (viết `report/report.md` → convert sang docx).
+- Giao diện: CLI + GUI pygame đơn giản. Báo cáo: **PDF** (D-34; viết `report/report.md` → xuất PDF).
 - Cờ tướng làm ở **phase cuối**, nhưng interface `Game` thiết kế từ đầu để cắm vào không phải sửa agent.
 - Làm nhóm (hiện 1 người) → mỗi module độc lập, có file `.md` riêng, task có cột Owner trong PROGRESS.
 
@@ -52,7 +52,7 @@ btl/
 │   └── experiments/ common.py e1_nodes.py e2_never_lose.py e3_c_sweep.py e4_root_stats.py e5_rollout.py plots.py
 ├── tests/           test_<module>.py
 ├── results/         raw/*.csv (chỉ script ghi)  tables/  figures/
-└── report/          report.md  report.docx
+└── report/          report.md  report.pdf (D-34)
 ```
 
 Quy ước: mỗi file `X.py` có **`X.md` nằm cạnh** (theo `docs/MODULE_TEMPLATE.md`). Agent đọc `.md` trước, chỉ mở `.py` khi cần sửa.
@@ -163,12 +163,14 @@ Ghi chú hiệu năng 15×15: nếu 5000 iter quá chậm, giảm số ván ở 
 
 ### P7 — Báo cáo & video demo
 - **P7.1** `experiments/plots.py` sinh toàn bộ hình/bảng từ `results/raw` (không vẽ tay).
-- **P7.2** `report/report.md` đúng khung đề; số liệu lấy từ `results/tables`.
-- **P7.3** Convert sang `report.docx`, kiểm tra hình/bảng hiển thị đúng.
+- **P7.2** `report/report.md` đúng khung đề; số liệu lấy từ `results/tables` (D-30). Mục 3.4 Cờ tướng = placeholder.
+  Done khi: `python -m gameai.experiments.report_check` 0 lỗi (mọi số có nguồn `src` khớp CSV / mục summary; bảng `src-table`
+  giống byte với summary; hình tồn tại; Tóm tắt ≤ 200 từ); `plots --check` CSV giống byte; pytest + ruff xanh; spec-reviewer PASS.
+- **P7.3** (D-34, **hoãn tới khi An yêu cầu**) Xuất `report.pdf` từ `report/report.md` (thay cho docx), kiểm tra hình/bảng/công thức hiển thị đúng, đánh số Hình/Bảng khớp.
 - **P7.4** Video demo (3–5 phút): `report/video_script.md` gồm kịch bản từng cảnh + lệnh chạy chính xác. Cảnh gợi ý: (1) 3×3 người vs MCTS — MCTS không thua; (2) 15×15 người vs MCTS với overlay N; (3) 15×15 MCTS vs Alpha-Beta (AI vs AI); (4) đồ thị E3/E5 và kết luận; (5) cờ tướng nếu xong P8. Quay bằng OBS hoặc Xbox Game Bar (Win+Alt+R).
 
 ### P8 — (*) Cờ tướng — **bắt buộc** (đề: điều kiện điểm > 9)
-Làm trên branch `xiangqi` (tạo lại từ master khi bắt đầu P8.1, D-26); số liệu k-in-row khóa ở tag `kinrow-final` (`aa8e3d5`). **Thứ tự (D-26):** `P8.0 → P7.1 → P6.1 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4 → P7.2–P7.4`. Thiết kế: D-22.
+Làm trên branch `xiangqi` (tạo lại từ master khi bắt đầu P8.1, D-26); số liệu k-in-row khóa ở tag `kinrow-final` (`aa8e3d5`). **Thứ tự (D-30, thay D-26):** P7.2 → P7.3 → P7.4 (Bài 1 nộp được) rồi mới `P8.1 → P8.2 → P8.3 → P6.2 → P8.4`; sau P8 bổ sung mục 3.4 / 5 / video cờ tướng. Thiết kế: D-22.
 
 **Ràng buộc:** không đổi hành vi mặc định của agents / arena / k-in-row. Phải sửa agent → thêm tham số có mặc định giữ nguyên
 hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp từ tag: cùng chuỗi nước + cùng stats) phải xanh.
@@ -214,7 +216,7 @@ hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp t
 
 ## 4. Thứ tự & phân việc (khi nhóm có thêm người)
 
-`P0 → P1 → P2 → P3 → P4 → P5` (xong, tag `kinrow-final`) `→ P8.0 → P7.1 → P6.1 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4 → P7.2–P7.4` (D-26: làm nốt k-in-row trước)
+`P0 → P1 → P2 → P3 → P4 → P5` (xong, tag `kinrow-final`) `→ P8.0 → P7.1 → P6.1 → P6.3 → P7.2 → P7.3 → P7.4 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4` → bổ sung báo cáo/video cờ tướng (D-26, D-30: xong Bài 1 trước cờ tướng)
 
 Chia việc gợi ý khi có thêm người: A = P2 + E1; B = P3 + E2–E5; C = P6 GUI + P8; báo cáo chia theo mục. Ranh giới giữa các phần là interface `Game`/`Agent` — không sửa interface khi chưa ghi vào DECISIONS.md.
 

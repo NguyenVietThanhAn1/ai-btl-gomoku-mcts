@@ -474,7 +474,7 @@ HELP_CARDS = [
         [
             "Click ô trống để đi; quân mờ cho biết nước sẽ đặt.",
             "Đi lại: lùi về lượt trước của bạn (khóa khi AI đang nghĩ).",
-            "Phân tích: tô nước ở gốc cây MCTS theo số lần thăm N; W/N là tỉ lệ thắng ước lượng.",
+            "Phân tích: tô nước ở gốc cây MCTS theo số lần thăm N; W/N là tỷ lệ thắng ước lượng.",
             "Hết ván: Xem lại bằng nút ‹ ›, phím mũi tên trái / phải, hoặc click một dòng lịch sử.",
         ],
     ),

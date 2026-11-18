@@ -15,7 +15,7 @@ Hai cấu hình MCTS chỉ khác rollout (c = 1.4, `check_tactics=True` theo D-1
 | `h300_i<N>` / `h300_t<s>` | `heavy_kinrow`, T = 300, không cắt (chọn ở P3.3) | |
 
 Hai trục ngân sách (D-20):
-- **Cùng iteration** (4 worker): **thiên vị h300**, vì mỗi iteration heavy đắt hơn random (tỉ lệ iteration/giây
+- **Cùng iteration** (4 worker): **thiên vị h300**, vì mỗi iteration heavy đắt hơn random (tỷ lệ iteration/giây
   đo bằng benchmark đơn luồng `results/tables/e5_bench.csv` (bản full, 7 thế): rand/h300 = **1,50** theo trung vị,
   1,3–1,8 ở thế 4–16 quân, 0,97–1,0 ở thế 20–28 quân — xem mục Kết quả full).
 - **Cùng thời gian** 0,5 s và 2 s/nước (2 worker, máy rảnh): **so sánh công bằng — kết luận chính dựa trên trục này**.
@@ -71,8 +71,9 @@ Cờ chung `--workers` (4, chỉ cho phần iteration; phần time cố định 
     (lệch > 20 %), `load_indicator` (1 = rand).
   - `e5_bench.csv` — benchmark đơn luồng (không phải số liệu ván đấu): `rollout, plies, seed, iterations, agent_time, iter_per_s`.
 - Hình: `results/figures/e5_iter.png` (3 panel: vs Greedy, vs mref, đối đầu — x log iteration, 1 đường/rollout, Wilson)
-  và `e5_time.png` (hàng trên x = thời gian/nước; hàng dưới x = iteration thực tế/nước, panel đối đầu = cột
-  iteration thực tế của từng bên).
+  và `e5_time.png` (hàng trên x = thời gian/nước; hàng dưới x = iteration thực tế/nước (trục tuyến tính, mỗi series 2 điểm), panel đối đầu = cột
+  iteration thực tế của từng bên, trục tuyến tính bắt đầu từ 0 để chiều dài cột đúng tỷ lệ). Tiêu đề hàng dưới dùng tên ngắn ("Thắng vs mref — theo iteration thực tế") để không
+  tràn sang panel phải (sửa P7.2, chỉ đổi PNG).
 - Quick: tiền tố `e5quick_` (không commit), `e5quick_estimate.csv` = ước tính full từng bước.
 
 ## Thiết kế & quyết định (D-20)
@@ -117,7 +118,7 @@ trung bình W/N của nhiều rollout là ước lượng Monte Carlo của giá
   ```
   Nước thắng ngay có điểm cao hơn mọi nước khác hàng bậc độ lớn nên gần như chắc được chọn; vì vậy rollout heavy
   "biết" kết thúc đe dọa và chặn four → z phản ánh thế cờ tốt hơn, đổi lại mỗi rollout đắt hơn (số iteration/giây
-  thấp hơn; tỉ lệ đo ở `e5_bench.csv`).
+  thấp hơn; tỷ lệ đo ở `e5_bench.csv`).
 - **Ví dụ nhỏ (trace tay, điểm minh họa).** Một thế X có 3 ứng viên với điểm s = (1 000 000 thắng ngay; 500; 0), T = 300:
   p ∝ (e⁰; e^((500 − 10⁶)/300); e^(−10⁶/300)) ≈ (1; 0; 0) → chọn nước thắng. Nếu không có nước thắng, s = (500; 200; 0):
   p ∝ (1; e^(−1); e^(−5/3)) = (1; 0,368; 0,189) → (0,643; 0,236; 0,121): ưu tiên nước tốt nhưng vẫn ngẫu nhiên.
@@ -150,7 +151,7 @@ Win rate [Wilson 95 %], 50 ván/điểm (dòng `all`).
 8: 3 227 / 2 409 (1,34×), 12: 3 468 / 2 000 (1,73×), 16: 3 606 / 2 196 (1,64×), 20: 4 022 / 4 153 (0,97×),
 24: 4 072 / 4 169 (0,98×), 28: 4 321 / 4 332 (1,00×); chung 3 606 / 2 409 = **1,50×**.
 
-**Đối đầu trực tiếp h300 (A) vs rand (B)** — tỉ lệ thắng của h300:
+**Đối đầu trực tiếp h300 (A) vs rand (B)** — tỷ lệ thắng của h300:
 
 | Ngân sách | h300 thắng | iteration/nước thực tế h300 / rand |
 |---|---|---|
