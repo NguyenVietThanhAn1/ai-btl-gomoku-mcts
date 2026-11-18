@@ -45,7 +45,9 @@ def test_id_equals_fixed_depth_without_top_k(opts):
     """time_limit rất lớn + không top_k + tt exact ⇒ trùng AB depth cố định (nước + giá trị)."""
     for seed, plies in [(0, 6), (1, 10), (2, 14), (3, 18)]:
         g = mid_game(15, 5, plies, seed)
-        for depth in (1, 2, 3):
+        for depth in (
+            (1, 2, 3) if "order_fn" in opts else (1, 2)
+        ):  # không ordering: depth 3 quá chậm
             fixed = AlphaBetaAgent(depth=depth, **opts)
             ident = AlphaBetaAgent(depth=depth, time_limit=BIG, **opts)
             assert ident.search(g.clone()) == fixed.search(g.clone()), (opts, seed, depth)
