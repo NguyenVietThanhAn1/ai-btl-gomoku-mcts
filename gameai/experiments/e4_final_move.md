@@ -131,7 +131,7 @@ Win rate của max_n giảm theo iter (0,445 → 0,105) vì **hòa tăng** (26 �
 score ≈ 0,5 ở mọi iter → ở thiết lập này tiêu chí chọn nước cuối **không ảnh hưởng sức đánh**.
 
 ## Giải thích cho báo cáo
-**1. Lý thuyết: vì sao chọn N lớn nhất.** Hết ngân sách, MCTS phải chọn một con của gốc. W/N là ước lượng tỉ lệ
+**1. Lý thuyết: vì sao chọn N lớn nhất.** Hết ngân sách, MCTS phải chọn một con của gốc. W/N là ước lượng tỷ lệ
 điểm của nước, N là số lần UCT đã chọn nước đó. Với N lượt thăm, độ lệch chuẩn của W/N cỡ √(p(1−p)/N): con 1/1
 có W/N = 1,0 nhưng khoảng Wilson 95 % là [0,21; 1] — gần như không có thông tin; con 20/21 là [0,77; 0,99]. Chọn
 max W/N vì thế dễ chọn con "gặp may". Chọn max N dựa vào chính UCT: `UCT = W/N + c·√(ln N_p / N)`; con có W/N
@@ -180,7 +180,7 @@ Trace: N của ba con dẫn đầu chỉ chênh 1–2 lượt, W/N chênh < 0,01
   sớm hơn, và mới thấy vài thế khác nhau (2/50, 1/50).
 
 **max_lcb** (cận dưới Wilson lớn nhất) phạt con N nhỏ tường minh: trùng max_n ở 96,7–99,0 % thế 3×3; trong
-các thế max_n ≠ max_wn, tỉ lệ tối ưu 0,777 (10 iter), 0,788 (20), 0,800 (50), 0,948 (100), 0,982 (250) — không
+các thế max_n ≠ max_wn, tỷ lệ tối ưu 0,777 (10 iter), 0,788 (20), 0,800 (50), 0,948 (100), 0,982 (250) — không
 vượt tiêu chí tốt hơn ở mức iter nào.
 
 **Kết luận.** W/N của một nước vừa **nhiễu** (phương sai cỡ p(1−p)/N, lớn khi N nhỏ) vừa **lệch lạc quan**

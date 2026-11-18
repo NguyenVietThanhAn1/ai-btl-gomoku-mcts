@@ -6,7 +6,7 @@
 **Trạng thái:** ✅ full xong  ·  **Task:** E3 (D-18)  ·  **Cập nhật:** 2026-11-11
 
 ## Mục đích
-Đề ý 3: c ∈ {0.5, 1.0, 1.4, 2.0} × iter ∈ {100, 250, 500, 1000, 2500, 5000}, đồ thị iteration – tỉ lệ thắng,
+Đề ý 3: c ∈ {0.5, 1.0, 1.4, 2.0} × iter ∈ {100, 250, 500, 1000, 2500, 5000}, đồ thị iteration – tỷ lệ thắng,
 mỗi c một đường, kèm Wilson 95 %. Ngân sách **iteration** (không `time_limit`) → kết quả không phụ thuộc tải máy.
 
 | Phần (`part`) | MCTS | Đối thủ | Ván/điểm | Độ đo chính |
@@ -116,7 +116,7 @@ Tổng 310 s, 4 worker; mọi ván `normal`, `git_dirty = 0`, `distinct_games` =
 | 3x3_minimax | 2 400 | 32,5 phút | 9,3 phút | cận trên: a = 0,72 s/ván là cache lạnh (quick 4 ván/điểm) |
 | greedy | 1 200 | 143,6 phút | 41 phút | |
 | ab2 pilot | 20 | 31,3 phút | 8,9 phút | |
-| ab2 full | 380 | 595 phút | 170 phút | quá cao: fit chỉ có điểm 5000 (b = 0); tỉ lệ theo iter → ~440 phút tuần tự, **~2 h** 4 worker |
+| ab2 full | 380 | 595 phút | 170 phút | quá cao: fit chỉ có điểm 5000 (b = 0); tỷ lệ theo iter → ~440 phút tuần tự, **~2 h** 4 worker |
 
 ## Phụ thuộc
 `experiments/common.py` (`run_match`, `summarize`, `read_rows`, `moves_path_for`, `add_runner_args`),
@@ -124,7 +124,7 @@ Tổng 310 s, 4 worker; mọi ván `normal`, `git_dirty = 0`, `distinct_games` =
 
 ## Giải thích cho báo cáo
 **Vai trò của c.** Ở bước chọn, MCTS-UCT đi xuống con có điểm UCT lớn nhất:
-`UCT(con) = W/N + c · √(ln N_p / N)`. Số hạng đầu là **khai thác** (tỉ lệ thắng ước lượng, góc nhìn người vừa đi vào
+`UCT(con) = W/N + c · √(ln N_p / N)`. Số hạng đầu là **khai thác** (tỷ lệ thắng ước lượng, góc nhìn người vừa đi vào
 con), số hạng sau là **khám phá** (lớn khi con ít được thăm so với cha). c nhỏ → tập trung sớm vào nước đang tốt nhất
 (nhanh hội tụ nhưng dễ bỏ sót nước tốt bị ước lượng thấp lúc đầu); c lớn → rải iteration đều hơn (ít bỏ sót nhưng
 cây nông, ước lượng nước tốt nhất chậm chính xác). c = √2 ≈ 1,4 là giá trị lý thuyết của UCB1 khi thưởng trong [0, 1].

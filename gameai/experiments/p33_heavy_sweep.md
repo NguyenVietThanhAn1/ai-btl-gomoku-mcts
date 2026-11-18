@@ -108,7 +108,7 @@ scale* = argmax LL trên lưới {100, 200, 300, 500, 1000, 2000, 5000} (mở r�
 log 0,953 = −0,049. scale = 1000: σ(0,3) = 0,574 → LL = −0,554. Mẫu "dễ" ủng hộ scale nhỏ (tự tin); khi có
 mẫu ngược chiều (e = 300 nhưng z = 0: scale 100 → log(1 − 0,953) = −3,05) scale lớn hơn được ưu tiên.
 
-**Chọn T / rollout_limit.** Các cấu hình đấu cùng 0,5 s/nước với Greedy và AlphaBeta depth 2; chọn theo tỉ lệ
+**Chọn T / rollout_limit.** Các cấu hình đấu cùng 0,5 s/nước với Greedy và AlphaBeta depth 2; chọn theo tỷ lệ
 thắng (kèm Wilson 95%) — số liệu sơ bộ, E5 chạy lại với thiết lập đầy đủ.
 
 ## Test

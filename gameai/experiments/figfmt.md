@@ -6,7 +6,7 @@
 
 ## Mục đích
 Một nơi duy nhất định dạng số kiểu Việt Nam (dấu phẩy thập phân, dấu trừ "−" U+2212) cho **bảng** (`vn`) và **tick/nhãn hình**
-(`vn_tick`, `vn_figure`, `ratio_axis`). Không dùng locale hệ thống (không ổn định giữa máy). Báo cáo dùng "tỷ lệ" (không "tỉ lệ").
+(`vn_tick`, `vn_figure`, `ratio_axis`). Không dùng locale hệ thống (không ổn định giữa máy). Hình, bảng và báo cáo thống nhất viết "tỷ lệ".
 
 ## Public API
 ```python
