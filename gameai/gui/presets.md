@@ -52,7 +52,7 @@ def experiment_source(spec, board) -> str | None   # 'E3/E5' cho AB2 trên 15×1
 | 15×15 | AB | depth 1 + eval + delta + ordering — riêng | `e1.variants_15(3)["ab_order"]` — E1 (**Khó cũ**) | `AB15_HARD` — riêng (D-36) |
 
 **D-36 (2026-11-18):** bảng trên thay phần bảng độ khó của D-29 ở dòng AB 15×15 (D-29 giữ nguyên làm lịch sử): Vừa = Khó cũ (E1), Khó = `AB15_HARD` =
-`depth` tối đa 12 + `time_limit` 2,4 s (iterative deepening) + `delta_eval` + `move_score` + `top_k` (16, 12, 8) *(tạm, chưa chốt)* + TT sâu +
+`depth` tối đa 12 + `time_limit` 2,4 s (iterative deepening) + `delta_eval` + `move_score` + `top_k` (16, 12, 8) *(chốt sau B5)* + TT sâu +
 VCF ở gốc (`vcf_depth` 8, `vcf_time` 0,3 s). Lý do: Khó cũ quá dễ với người chơi. `e3.AB2` không còn là mức
 độ khó nhưng vẫn là bên O của preset Demo (`15_h300_vs_ab2`, nhãn "cấu hình thí nghiệm · E3/E5").
 

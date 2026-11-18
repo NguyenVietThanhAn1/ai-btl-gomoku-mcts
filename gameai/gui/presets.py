@@ -70,7 +70,7 @@ AB3_D2 = AgentSpec("alphabeta", {"depth": 2, "eval": "evaluate"}, label="play_ab
 AB15_D1 = AgentSpec("alphabeta", {"depth": 1, "eval": "evaluate", "delta": "delta_eval",
                                   "order": "move_score"}, label="play_ab15_d1")  # fmt: skip
 # D-36: Khó mới của AB 15×15 = iterative deepening theo thời gian + top-k + TT sâu + VCF ở gốc.
-# `top_k` tạm (16, 12, 8), chưa chốt (B5). `vcf_time` ghi ở đây, không hard-code trong agent.
+# `top_k` (16, 12, 8): An chốt sau B5 (D-36). `vcf_time` ghi ở đây, không hard-code trong agent.
 AB15_HARD = AgentSpec(
     "alphabeta",
     {"depth": 12, "eval": "evaluate", "delta": "delta_eval", "order": "move_score",
