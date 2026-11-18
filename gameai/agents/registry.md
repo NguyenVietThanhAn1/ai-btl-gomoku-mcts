@@ -33,7 +33,7 @@ def make_game(spec: GameSpec) -> Game
 | `random` | — | `use_candidates` |
 | `greedy` | `score` (mặc định `"move_score"`) | `use_candidates` |
 | `minimax` | `eval` (None) | `depth`, `use_candidates` |
-| `alphabeta` | `eval`, `delta`, `order` (đều None), `vcf_depth` + `vcf_time` (P6.4: hook VCF k-in-row ở gốc; **phải đi cùng nhau**, `vcf_time` ghi rõ trong spec) | `depth`, `use_candidates`, `use_tt`, `top_k` (P6.4) |
+| `alphabeta` | `eval`, `delta`, `order` (đều None), `vcf_depth` + `vcf_time` (P6.4: hook VCF k-in-row ở gốc; **phải đi cùng nhau**, `vcf_time` ghi rõ trong spec) | `depth`, `use_candidates`, `use_tt`, `top_k`, `time_limit`, `tt_mode` (P6.4) |
 | `mcts` | `rollout` (`"random"` / `"heavy"` = `HeavyRollout(score, temperature)` bản chuẩn / `"heavy_kinrow"` = `KInRowHeavyRollout(temperature)`), `temperature` (100), `score` (`"move_score"`), `value_scale` (None; có → `sigmoid_value(value_eval, value_scale)`), `value_eval` (`"evaluate"`) | `iterations`, `time_limit`, `c`, `rollout_limit`, `final_move`, `check_tactics` |
 | `"module:Class"` | — | mọi params, gọi `Class(seed=seed, **params)` |
 

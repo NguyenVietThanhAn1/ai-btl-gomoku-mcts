@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P2.4, P6.4 (`top_k`, `root_hook`; ID/TT sâu: sắp tới)  ·  **Cập nhật:** 2026-11-18
+**Trạng thái:** ✅ ổn định  ·  **Task:** P2.4, P6.4 (`top_k`, `root_hook`, `time_limit` = iterative deepening, `tt_mode`)  ·  **Cập nhật:** 2026-11-18
 
 ## Mục đích
 Minimax có cắt tỉa alpha-beta (đề ý 1): **cùng giá trị gốc** với `MinimaxAgent` nhưng thăm ít nút hơn.
@@ -18,7 +18,8 @@ class AlphaBetaAgent(Agent):
                  use_candidates: bool = True, seed: int | None = None,
                  order_fn: MoveFn | None = None, delta_fn: MoveFn | None = None,
                  use_tt: bool = False, top_k: int | Sequence[int] | None = None,
-                 root_hook: RootHook | None = None): ...
+                 root_hook: RootHook | None = None,
+                 time_limit: float | None = None, tt_mode: str = "exact"): ...
     def select_move(self, game: Game) -> Move            # từ Agent (template method)
     def search(self, game: Game) -> tuple[Move, float]   # (nước tốt nhất, giá trị gốc)
     def value(self, game: Game) -> float                 # = MinimaxAgent(...).value với cùng depth/eval
@@ -43,8 +44,24 @@ class AlphaBetaAgent(Agent):
   Nước ≠ None → đi ngay, không tìm (`search` trả `(nước, NaN)`, `stats["root_hook"] = 1`, `nodes = 1`). Tập nước →
   chỉ duyệt các nước thuộc tập (giao với ứng viên; giao rỗng → dùng nguyên tập). Tham số spec `vcf_depth` +
   `vcf_time` dựng hook VCF k-in-row `heuristics/kinrow_vcf.make_root_hook` (xem `kinrow_vcf.md`).
+- `time_limit` (P6.4, giây, mặc định `None` = tắt): **iterative deepening** theo thời gian. Lặp độ sâu 1, 2, …
+  tới `depth` (= **độ sâu tối đa**, bắt buộc có; thiếu → `ValueError`) hoặc hết giờ; trả nước + giá trị của
+  **độ sâu hoàn tất gần nhất**. Độ sâu 1 luôn chạy xong (không kiểm giờ). Kiểm giờ mỗi 32 nút bằng ngoại lệ nội bộ
+  `_Timeout`; vòng dở dang bị **bỏ hẳn** (không dùng giá trị một phần) và **không ghi TT cho nút dở dang** (mọi
+  ghi TT nằm sau khi duyệt xong con của nút; ngoại lệ thoát trước điểm ghi). Đồng hồ tính từ đầu `search` (gồm
+  `root_hook`). Gốc giữ nguyên thứ tự nước ở mọi vòng (không xếp lại theo điểm vòng trước) ⇒ **khi không `top_k`
+  và không hết giờ, ID trùng AB depth cố định `depth`** (cùng nước, cùng giá trị) ở TT "exact"
+  (`tests/test_alphabeta_id.py`). Có `top_k` hoặc TT "deep" thì không đảm bảo trùng. `search` làm việc trên
+  `game.clone()` ở chế độ này (bản bị hủy khi hết giờ).
+- `tt_mode` (P6.4): `"exact"` (mặc định, = hành vi cũ: khóa `(key, độ sâu còn lại)`, chỉ dùng lại khi **bằng**
+  độ sâu còn lại) hoặc `"deep"` (cần `use_tt=True` và `depth`): khóa chỉ theo `game.key()`, entry
+  `(flag, value, độ sâu còn lại, nước tốt nhất)`, dùng lại khi độ sâu còn lại của entry **≥** cần, thay entry khi
+  độ sâu mới ≥ cũ, nước tốt nhất của entry đưa lên đầu danh sách nước (PV ordering). TT dùng chung giữa các vòng
+  ID trong một `search` và **dùng lại entry giữa các ply có k khác nhau** (xem `top_k`): giá trị lấy từ độ sâu sâu
+  hơn / ply khác nên **không còn trùng Minimax cùng depth**. Đầy `TT_MAX_ENTRIES` (2 triệu) → xóa hết.
 - `stats`: `nodes` (kể cả gốc, đếm như Minimax), `iterations` = 0, `time` (giây), `value`, `cutoffs`
-  (số lần cắt β/α), `tt_hits` (số lần tra TT trúng).
+  (số lần cắt β/α), `tt_hits` (số lần tra TT trúng). Với `time_limit`: thêm `depth_reached` (độ sâu hoàn tất
+  cuối), `timed_out` (1 nếu chưa tới `depth`), `tt_size`; `nodes` cộng dồn mọi vòng.
 - Không làm thay đổi `game`. Precondition: ván chưa kết thúc.
 
 ## Phụ thuộc
@@ -63,6 +80,11 @@ class AlphaBetaAgent(Agent):
 - Đo thử (không phải số liệu E1): bàn trống 3×3 tìm hết — không tùy chọn 20 866 nút, + ordering 1 856,
   + TT 5 505, cả hai 990 (Minimax: 549 946). 15×15 sau 5 nước, depth 3: 9 599 nút; `delta_fn` giảm thời
   gian ~12 lần (1,23 s → 0,10 s), thêm ordering còn 1 959 nút.
+
+- **Đo thử P6.4 (2026-11-18, không phải số liệu thí nghiệm):** 15×15, 8 thế giữa ván (6–34 nước), `time_limit` 2,4 s,
+  `depth` tối đa 12, `delta_eval` + `move_score`: `top_k=(16,12,8)` + TT deep → `depth_reached` trung bình 7,6
+  (6–10), 10,8 nghìn nút; `top_k=(12,8,6)` + deep → 9,0 (7–12); không `top_k` + deep → 3,4 (3–5, 35,6 nghìn
+  nút); `top_k=(16,12,8)` không TT → 7,1 (6–9). Thời gian thực ≤ 2,41 s (quá hạn ≤ 0,01 s).
 
 ## Giải thích cho báo cáo
 **Bản chất.** Alpha-Beta tính đúng giá trị minimax nhưng bỏ qua các nhánh không thể ảnh hưởng tới quyết định.
