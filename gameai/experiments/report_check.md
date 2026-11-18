@@ -41,6 +41,7 @@ D-18, P7.2, 3×3 vẫn là số < 100 nên không bị báo). Số nhỏ không 
   báo lỗi (caption đôi); ảnh không có alt bắt đầu bằng "Hình " bị báo lỗi. Bảng: dòng `**Bảng n.** …` ngay trên bảng.
   `Hình n.` / `Bảng n.` đánh số liên tiếp từ 1 (pandoc không có crossref — D-30); phụ lục dùng `Hình B.n.` (không đếm).
 - Tóm tắt (mục có tiêu đề bắt đầu "Tóm tắt", bỏ comment) ≤ 200 từ (tách theo khoảng trắng).
+- Ký tự điều khiển `\x00–\x08`, TAB, `\x0b`, `\x0c`, `\x0e–\x1f` ở bất kỳ đâu (kể cả trong code/công thức) → lỗi, báo đúng dòng. Đây là dấu hiệu escape hỏng khi ghi file bằng script, vd. `\tfrac` → TAB + `frac`, `\approx` → BEL + `pprox`. `\n`, `\r` (CRLF) được phép.
 
 ## Public API
 `check_text(text, decisions=None, base=REPORT.parent) -> (list[Issue], số từ Tóm tắt)`, `csv_value(path, filt, col)`,
@@ -52,7 +53,7 @@ D-18, P7.2, 3×3 vẫn là số < 100 nên không bị báo). Số nhỏ không 
 ## Test
 `tests/test_report_check.py` (ROOT giả trong tmp): khớp / lệch CSV, lọc 0 hoặc ≥ 2 hàng, `x100`, nhóm nghìn, W/D/L, chuỗi,
 không khớp một phần (10,92 ≠ 0,92), neo summary đúng / sai / không tồn tại, bảng giống byte / khác, số trần (3 lỗi đúng
-chỗ), const D-xx có / không, khối ``` và `example:` (file có / không / thiếu), code + công thức + link bỏ qua, ảnh thiếu, caption hình trong alt + nhảy số + thiếu alt + dòng **Hình** bị cấm, Hình B.n không đếm, khoảng `x [lo; hi]` (CSV 3 cột, neo summary), luật làm tròn D-30 (biên 0,004 ghi 0,00 → lỗi D-30; dấu "−"), khoảng `a–b`, const liệt kê token (miễn đúng token, token phải có trong D-xx), Tóm tắt > 200 từ, mục Tài liệu
+chỗ), const D-xx có / không, khối ``` và `example:` (file có / không / thiếu), code + công thức + link bỏ qua, ảnh thiếu, caption hình trong alt + nhảy số + thiếu alt + dòng **Hình** bị cấm, Hình B.n không đếm, khoảng `x [lo; hi]` (CSV 3 cột, neo summary), luật làm tròn D-30 (biên 0,004 ghi 0,00 → lỗi D-30; dấu "−"), khoảng `a–b`, const liệt kê token (miễn đúng token, token phải có trong D-xx), Tóm tắt > 200 từ, ký tự điều khiển (TAB/BEL báo đúng dòng, CRLF không báo), mục Tài liệu
 tham khảo bỏ qua.
 
 ## Hạn chế

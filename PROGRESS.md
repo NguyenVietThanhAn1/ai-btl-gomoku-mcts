@@ -79,6 +79,13 @@
 
 ### An
 
+#### 2026-11-18 — P7.2 đợt (c): mục 6 + Tóm tắt (dừng chờ An duyệt)
+- **Lỗi 5.3** (phát hiện khi viết 6.3): câu "cặp duy nhất có hai khoảng tin cậy tách nhau" sai — `e3_greedy.csv` có 4 cặp tách (1000 và 500 iter: c = 0,5 vs 2,0; 250 iter: c = 1,4 vs 0,5 và vs 1,0). Sửa riêng, commit `P7.2: fix 5.3 CI-separation claim` (chỉ hunk 5.3, `git apply --cached`).
+- Mục 6 (6.1–6.8) + Tóm tắt 198 từ theo dàn ý An duyệt + 5 chỉnh; chỉnh sau duyệt: 6.6 N trung vị ô chặn = 1 (`e6_mechanism.median_n_correct`), viết lại 500–2500 rõ X/O, 6.3 thêm "4 cặp tách trong 36 phép so sánh không hiệu chỉnh".
+- **Rà từ định lượng** (duy nhất/mọi/không … nào/luôn/đều/chỉ) ở Tóm tắt + mục 5–6: 90 câu; đối chiếu CSV các câu có số liệu. Sửa 4 chỗ: 6.6 "không cấu hình nào chặn quá một nửa" sai ở h300 100 iter (0,5029) → giới hạn ở 5000 iter; "mọi thế đã thử" (Tóm tắt, 6.1) → chỉ thế có so với Minimax (độ sâu 3 không chạy Minimax); 6.1 "cùng một cây" → cùng số nút, giá trị, nước đi; 6.1 nước khác Minimax chỉ trên 3×3.
+- **Ký tự điều khiển:** dòng 588 có TAB/BEL (`\tfrac`, `\approx` bị escape khi chèn bằng script) → sửa; PROGRESS dòng log đợt (b) có lỗi cùng loại (`\times` → TAB) → sửa. `report_check` thêm lỗi ký tự điều khiển + test. Bài học: heredoc của Bash tool gộp `\\` thành `\` — chuỗi có dấu `\` phải ghi bằng Edit/Write, không qua heredoc.
+- Workflow (commit riêng): đồng bộ chuẩn của agent = `git fetch origin` + `git rebase origin/develop` (AGENTS, WORKFLOW, README, SETUP); giữ `pull.rebase true` cho người gõ tay. Lý do: 2/3 lần `git pull --rebase` báo FETCH_HEAD trùng dòng.
+
 #### 2026-11-18 — P7.2 sửa mục 5 theo review (commit "P7.2: section 5 review fixes")
 - Nguồn gốc diff `plots.py` chưa commit (`vn` dấu "−", `ci` luật làm tròn): do **phiên trước** (transcript `8ecf8477`, 11:31–12:45 cùng ngày, file sửa lần cuối 12:45:28) tạo, không phải phiên này (phiên này bắt đầu 12:45:53, file không bị sửa trong plan mode). Phiên này giữ nguyên code đó, thêm test + doc.
 - `git pull --rebase` báo "Cannot rebase onto multiple branches": FETCH_HEAD có 2 dòng `develop` trùng (không not-for-merge); xử lý `git fetch origin` + `git rebase --autostash origin/develop` (đã trùng origin).
@@ -87,7 +94,7 @@
 - Kiểm: report_check 0 lỗi, plots --check, pytest, ruff. Bước tiếp: viết đợt (c) mục 6 + Tóm tắt theo dàn ý An đã duyệt (5 chỉnh), dừng chờ duyệt. Sau (c): dấu thập phân trong hình (commit riêng).
 
 #### 2026-11-18 — P7.2 đợt (b) (dừng chờ An duyệt)
-- Sửa (a) theo An: caption hình kiểu pandoc `![Hình n. …](…)` (bỏ dòng **Hình** đậm), dấu phẩy thập phân trong văn xuôi (E2: c = √2 ≈ 1,41 — `e2.mcts_spec` dùng mặc định `MCTSAgent`), câu thời gian GUI nêu bench 0,827× vs 0,996× (không gõ % chênh tự tính), "tối đa $15 	imes 15 = 225$ nước". Quy tắc: không đặt số đo trong code fence.
+- Sửa (a) theo An: caption hình kiểu pandoc `![Hình n. …](…)` (bỏ dòng **Hình** đậm), dấu phẩy thập phân trong văn xuôi (E2: c = √2 ≈ 1,41 — `e2.mcts_spec` dùng mặc định `MCTSAgent`), câu thời gian GUI nêu bench 0,827× vs 0,996× (không gõ % chênh tự tính), "tối đa $15 \times 15 = 225$ nước". Quy tắc: không đặt số đo trong code fence.
 - `plots.py`: tiêu đề cột c kiểu VN; bảng summary mới — E2 vét cạn (theo vai), E4 3×3 thống kê + 15×15 + đối đầu (tách bên đi trước), E5 cùng thời gian / cùng iteration (+ bench rand/h300 = 1,50, kiểm tra hợp lệ mref), E6 chọn đúng / so cặp / chi phí / nước đi thẳng (cột nguồn ván bật E3/E5/E6). `plots --check` 25/25 CSV giống byte.
 - `report_check`: caption hình trong alt (cấm dòng **Hình**, thiếu alt báo lỗi, `Hình B.n` không đếm); một `src` phủ `x [lo; hi]` (CSV 3 cột hoặc neo summary) hoặc khoảng `a–b` (neo summary); `const: D-xx | tok …` chỉ miễn token liệt kê, token phải có trong văn bản D-xx. 14 test.
 - `report.md` mục 5 (5.1–5.6): 18 bảng `src-table` (Bảng 2–19), 8 hình (Hình 1–8), chỉ mô tả kết quả. `report_check` 0 lỗi (146 số có nguồn, 55 dòng const, 2 dòng ví dụ tay). Mục 5 thêm ~2 500 từ văn xuôi (~4 600 kể cả bảng); cả báo cáo ~7 300 từ không tính bảng. pytest xanh, ruff sạch.

@@ -162,3 +162,10 @@ def test_range_span_anchor(src: Path):
     )
     assert run("thắng 0,915–0,980 <!-- src: summary_kinrow.md#E3 -->", src) == []
     assert run("thắng 0,915–0,990 <!-- src: summary_kinrow.md#E3 -->", src) != []
+
+
+def test_control_characters(src: Path):
+    r"""TAB / BEL (escape hỏng: "\tfrac" → TAB, "\approx" → BEL) → lỗi đúng dòng; CRLF không báo."""
+    bad = run("dòng 1\r\nso với $\\ln \tfrac12 \x07pprox$\n", src)
+    assert len(bad) == 2 and all(m.startswith("L2: ký tự điều khiển") for m in bad)
+    assert run(r"dòng 1" + "\r\n" + r"so với $\ln \tfrac12 \approx$" + "\r\n", src) == []

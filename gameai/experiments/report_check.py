@@ -42,6 +42,8 @@ IMAGE = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)")
 CODE = re.compile(r"`[^`]*`")
 MATH = re.compile(r"\$[^$]*\$")
 LINK_TARGET = re.compile(r"\]\([^)]*\)")
+# ký tự điều khiển trừ \n, \r (TAB cũng cấm): dấu hiệu escape hỏng khi ghi file, vd. "\tfrac" → TAB
+CONTROL = re.compile(r"[\x00-\x09\x0b\x0c\x0e-\x1f]")
 
 
 class SourceError(Exception):
@@ -307,6 +309,9 @@ def check_text(
     section = ""
     captions = {"Hình": 0, "Bảng": 0}
     fence = False
+    for m in CONTROL.finditer(text):
+        n = text.count("\n", 0, m.start()) + 1
+        issues.append(Issue(n, f"ký tự điều khiển {m.group(0)!r} (escape hỏng? vd. \\tfrac)"))
     for i, line in enumerate(lines):
         n = i + 1
         if line.lstrip().startswith("```"):
