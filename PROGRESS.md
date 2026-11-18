@@ -11,7 +11,7 @@
 ### An
 
 - **Task hiện tại:** P7.2 🔄 (trên `develop`, D-32) — báo cáo `report/report.md`. Thứ tự mới D-30: xong Bài 1 (P7.2 → P7.3 → P7.4) trước cờ tướng.
-- **Việc đang dở:** P7.2 — xong đợt (a), (b) và sửa mục 5 theo review. Đang viết đợt (c) mục 6 + Tóm tắt theo dàn ý đã duyệt (5 chỉnh), rồi chờ An duyệt, spec-reviewer; sau đó sửa dấu thập phân trong hình (commit riêng).
+- **Việc đang dở:** P7.2 — xong đợt (a), (b), (c) (An đã duyệt), dấu thập phân VN trong hình (đã push `1d3c20b`), `plots --check` so cả summary + "tỷ lệ" trong GUI (commit sau `1d3c20b`, chưa push). Còn: **chụp lại `report/figures/gui/help.png`** (Hình B.8; dòng "Phân tích… W/N là tỷ lệ thắng ước lượng" đổi chữ), chạy spec-reviewer P7.2, đánh dấu ✅.
 - **Bước tiếp theo:** P7.2 → P7.3 (docx) → P7.4 (video) → P8.1 (luật cờ tướng + perft, trên `develop`). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
@@ -78,6 +78,10 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-18 — P7.2 `plots --check` so summary + "tỷ lệ" trong GUI
+- `plots --check` so byte thêm `results/tables/summary_kinrow.md` với bản đã commit (report dùng nó làm `src`): hàm `check_outputs(new_dir, fig_dir, names, ref_dir, ref)` sinh summary vào thư mục tạm rồi so cả 25 bảng + summary (dòng tổng "26 giống byte"). Test `test_check_outputs_compares_summary` (giống / lệch một chữ "tỷ lệ"↔"tỉ lệ" → báo đúng tên + dòng / mới). `plots.md` cập nhật. Lý do: lần đổi "tỉ lệ" → "tỷ lệ" ở `plots.py` làm đổi summary mà `--check` không báo.
+- GUI: chữ **hiển thị** trên giao diện — `gameai/gui/scenes.py:477` (màn Hướng dẫn, thẻ "Trong ván": "W/N là tỷ lệ thắng ước lượng") → đổi. Ảnh cần chụp lại (chưa chụp, An làm): **`report/figures/gui/help.png`** (Hình B.8 trong report). Các ảnh GUI khác không chứa chữ này (chỉ màn Hướng dẫn dùng `HELP_CARDS`). Comment/doc đổi cho thống nhất: `gameai/gui/brand.md`, `gameai/gui/icons.md`, `tests/test_gui_polish.py`. Không đổi DECISIONS/PLAN/PROGRESS (ghi chép lịch sử). Còn "tỉ lệ" trong vài `gameai/experiments/*.md` (common, e3, e4, e5, p33, figfmt) — chưa đổi.
 
 #### 2026-11-18 — P7.2 dấu thập phân VN trong hình
 - Module mới `gameai/experiments/figfmt.py` (+ `figfmt.md`, `tests/test_figfmt.py`): `vn` (chuyển từ `plots`, `plots.vn` vẫn dùng được), `vn_tick`, `vn_figure(fig)` (gọi trước `tight_layout` ở mọi hàm vẽ E3–E6), `ratio_axis(ax)`. Import ở đầu file trong `plots` và `e3/e4/e5/e6_*` (không còn import trong hàm; figfmt không import `plots`, không vòng).

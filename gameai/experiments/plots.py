@@ -674,6 +674,9 @@ SECTIONS: dict[str, Callable[[Path], list[str]]] = {
 }  # fmt: skip
 
 
+SUMMARY_NAME = "summary_kinrow.md"
+
+
 def write_summary_md(table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_DIR) -> Path:
     """`summary_kinrow.md`: bản đồ hình/bảng → mục 5 báo cáo + số chính mỗi E; mọi số đọc từ CSV."""
     out = [
@@ -706,10 +709,24 @@ def write_summary_md(table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_DIR) -> Pa
         files = [f"`results/figures/{f}`" for f in figs if (fig_dir / f).exists()]
         files += [f"`results/tables/{t}`" for t in tabs if (table_dir / t).exists()]
         out += ["", "Nguồn: " + ", ".join(files), ""]
-    path = table_dir / "summary_kinrow.md"
+    path = table_dir / SUMMARY_NAME
     with path.open("w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(out))
     return path
+
+
+def check_outputs(
+    new_dir: Path,
+    fig_dir: Path,
+    names: list[str],
+    ref_dir: Path = TABLE_DIR,
+    ref: Callable[[Path], bytes | None] = committed_bytes,
+) -> list[tuple[str, str]]:
+    """`--check`: sinh `summary_kinrow.md` vào `new_dir` (từ bảng đã sinh ở đó) rồi so byte cả các
+    bảng `names` lẫn summary với bản tham chiếu. Summary cũng phải giống byte vì `report/report.md`
+    lấy nó làm nguồn (`src: summary_kinrow.md#…`, `src-table`). Trả [(tên, lý do)]."""
+    write_summary_md(new_dir, fig_dir)
+    return compare(new_dir, ref_dir, [*names, SUMMARY_NAME], ref=ref)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -730,16 +747,16 @@ def main(argv: list[str] | None = None) -> int:
                     shutil.copy2(TABLE_DIR / n, tdir / n)
             tables, figs = regenerate(RAW_DIR, tdir, fdir)
             names = [p.name for p in tables]
-            bad = compare(tdir, TABLE_DIR, names)
+            bad = check_outputs(tdir, fdir, names)
+            n_files = len(names) + 1  # + summary_kinrow.md
             measured = ", ".join(n for n in MEASURED if n not in names)
-            print(f"[check] {len(tables)} bảng, {len(figs)} hình sinh lại; "
+            print(f"[check] {len(tables)} bảng + {SUMMARY_NAME}, {len(figs)} hình sinh lại; "
                   f"bảng đo trực tiếp (không sinh lại): {measured}")  # fmt: skip
             for n, why in bad:
                 print(f"  ≠ {n}: {why}")
             changed = [n for n, why in bad if not why.startswith("mới")]
-            print(f"[check] {len(tables) - len(bad)} giống byte, {len(changed)} khác, "
+            print(f"[check] {n_files - len(bad)} giống byte, {len(changed)} khác, "
                   f"{len(bad) - len(changed)} mới")  # fmt: skip
-            write_summary_md(tdir, fdir)  # kiểm sinh được (file tổng hợp, không so)
             return 1 if changed else 0
     tables, figs = regenerate(RAW_DIR, TABLE_DIR, FIG_DIR)
     for p in tables + figs:

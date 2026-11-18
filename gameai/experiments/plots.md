@@ -12,9 +12,9 @@ và sinh `results/tables/summary_kinrow.md` — số chính mỗi E + bản đ�
 ## Cách chạy
 ```
 python -m gameai.experiments.plots           # ghi đè results/tables/*.csv, results/figures/*.png, summary_kinrow.md
-python -m gameai.experiments.plots --check   # sinh vào thư mục tạm, so byte từng CSV với bản ĐÃ COMMIT (git show HEAD:…)
+python -m gameai.experiments.plots --check   # sinh vào thư mục tạm, so byte từng CSV **và `summary_kinrow.md`** với bản ĐÃ COMMIT (git show HEAD:…)
 ```
-`--check` in `giống byte / khác / mới (chưa commit)`; exit 1 nếu có bảng khác. CRLF/LF được chuẩn hóa trước khi so.
+`--check` in `giống byte / khác / mới (chưa commit)`; exit 1 nếu có bảng hoặc summary khác. Summary được so vì `report/report.md` lấy nó làm nguồn (`src: summary_kinrow.md#…`, `src-table`); `check_outputs(new_dir, fig_dir, names, ref_dir, ref)` sinh summary vào `new_dir` rồi so cả bảng lẫn summary, dòng tổng đếm 25 bảng + 1 summary. CRLF/LF được chuẩn hóa trước khi so.
 Thời gian ~1 phút (đọc raw E3/E5 lớn).
 
 ## Public API
@@ -70,7 +70,7 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
 `experiments/{common,e2_never_lose,e3_c_sweep,e4_final_move,e5_rollout,e6_tactics,e6_mechanism}.py`, matplotlib (Agg), `git`.
 
 ## Test
-`tests/test_plots.py`: `vn`/`ci` (gồm luật làm tròn D-30, dấu "−"; tick hình: `tests/test_figfmt.py`); `_one` báo lỗi khi 0 hoặc ≥ 2 dòng; `compare` (giống sau chuẩn hóa CRLF / khác / mới);
+`tests/test_plots.py`: `vn`/`ci` (gồm luật làm tròn D-30, dấu "−"; tick hình: `tests/test_figfmt.py`); `_one` báo lỗi khi 0 hoặc ≥ 2 dòng; `compare` (giống sau chuẩn hóa CRLF / khác / mới); `check_outputs` (summary giống / lệch một chữ → báo đúng tên + dòng / mới);
 lọc 10 cặp đầu + moves tương ứng; tóm tắt mistakes E2 từ chuỗi = từ int (gồm thứ tự); `summary_kinrow.md` sinh được từ
 bảng thật, chứa số lấy từ CSV (mẫu E1/E2/E6), mọi file được nhắc tới tồn tại. P7.2: tiêu đề `###` không trùng; W/D/L E3 khớp CSV, W + D + L = n; ví dụ E4 15×15 có cột tham chiếu. Chạy: `python -m pytest tests/test_plots.py -q`.
 

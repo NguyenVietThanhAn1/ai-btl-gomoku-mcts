@@ -159,7 +159,7 @@ def test_overlay_occupied_cell_only_badge_and_3x3_lighter():
     v3.draw(base, g3, None, None, OverlayOpts(False, False))
     pt = v3.cell_rect(0).inflate(-20, -20).topleft
     a, b = s3.get_at(pt), base.get_at(pt)
-    mix = (a.g - b.g) / (t.heat[1] - b.g)  # tỉ lệ pha màu overlay
+    mix = (a.g - b.g) / (t.heat[1] - b.g)  # tỷ lệ pha màu overlay
     assert 0.2 < mix < 0.6  # vân gỗ vẫn thấy (≈ alpha 120/255)
 
 

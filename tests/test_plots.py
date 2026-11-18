@@ -136,3 +136,19 @@ def test_summary_report_tables_wdl_and_e4_15x15(tmp_path: Path):
     assert any("ví dụ gốc 15×15" in h for h in heads)
     assert "W/N tham chiếu" in text
     assert f"| {sens[0]['move']} | " in text and plots.vn(sens[0]["ref_wn"], 3) in text
+
+
+@needs_tables
+def test_check_outputs_compares_summary(tmp_path: Path):
+    """`--check` so cả summary_kinrow.md (report lấy nó làm src): giống bản tham chiếu → không báo;
+    lệch một chữ (vd. "tỷ lệ" ↔ "tỉ lệ") → báo đúng tên file, đúng dòng; chưa commit → "mới"."""
+    for f in TABLES.glob("*.csv"):
+        shutil.copy2(f, tmp_path / f.name)
+    bad = plots.check_outputs(tmp_path, plots.FIG_DIR, [], ref=lambda p: None)
+    assert bad == [("summary_kinrow.md", "mới (chưa commit)")]
+    text = (tmp_path / "summary_kinrow.md").read_bytes()
+    assert plots.check_outputs(tmp_path, plots.FIG_DIR, [], ref=lambda p: text) == []
+    old = text.replace("tỷ lệ rand/h300".encode(), "tỉ lệ rand/h300".encode())
+    assert old != text
+    ((name, why),) = plots.check_outputs(tmp_path, plots.FIG_DIR, [], ref=lambda p: old)
+    assert name == "summary_kinrow.md" and why.startswith("khác từ dòng ")
