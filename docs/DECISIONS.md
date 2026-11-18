@@ -312,3 +312,21 @@
 - **Lý do:** cờ tướng là điều kiện điểm > 9 và là rủi ro thời gian lớn nhất → làm trước khi đóng gói; PDF và video làm **một lần** khi đã có cờ tướng, khỏi xuất/quay hai lần.
 - **P6.4 (task mới, trước P8.1):** AI "Rất khó" chỉ ở GUI 15×15 — xem PLAN §P6. Thiết kế chi tiết + số đo sẽ ghi ở D-36.
 - **Không đổi:** Dễ/Vừa/Khó (khớp E1/E3), `results/`, `report/report.md`, golden k-in-row.
+
+### D-36 (2026-11-18) — P6.4: AB Khó mới cho 15×15 (dịch mức), thay phần bảng độ khó của D-29
+- **Quyết định (An):** KHÔNG thêm mức "Rất khó". Giữ 3 mức; **chỉ dịch mức AB 15×15**: Dễ giữ (`AB15_D1`); **Vừa = Khó cũ** (`variants_15(3)["ab_order"]`, E1); **Khó = AB mới** `AB15_HARD`. MCTS (mọi bàn), AB 3×3: không đổi. D-29 giữ nguyên làm lịch sử; D-36 thay riêng dòng AB 15×15 của bảng D-29. Lý do: Khó cũ quá dễ với người chơi. Demo vẫn giữ cấu hình thí nghiệm (`15_h300_vs_ab2` = MCTS h300 5000 vs `e3.AB2`, nhãn "cấu hình thí nghiệm · E3/E5" — `AB2` không còn là mức độ khó nên tra qua `EXPERIMENT_SPECS`/`experiment_source`).
+- **AB15_HARD (riêng, chỉ GUI):** `depth` tối đa 12, `time_limit` 2,4 s (iterative deepening, trả nước của độ sâu hoàn tất gần nhất), `delta_eval` + `move_score`, `top_k` (16, 12, 8) *(tạm — chốt ở B5 sau khi chạy `--quick` cả (16, 12, 8) và (12, 8, 6))*, `use_tt` + `tt_mode="deep"`, `vcf_depth` 8, `vcf_time` 0,3 s (giá trị nằm trong spec). Phần tìm kiếm viết generic theo `Game` (move ordering/eval là tham số) để P8 dùng lại.
+- **Không đổi:** Dễ/Vừa/Khó cũ của thí nghiệm (E1/E3, report), `results/`, golden k-in-row, mặc định `AlphaBetaAgent`/`MCTSAgent` (tính năng mới chỉ bật bằng tham số; cả `top_k`/`root_hook` ở AB, `time_limit`/`tt_mode` đều mặc định tắt). Tính năng mới là cắt tỉa **xấp xỉ** (`top_k`) và dùng lại TT giữa các ply có k khác nhau — chỉ dùng ở chế độ chơi, không dùng cho thí nghiệm.
+- **Cần sửa ở đợt cập nhật report sau P8 (chưa sửa, An chốt):** `report/report.md` Phụ lục B (mapping mức độ khó AB 15×15 + bảng thời gian/nước GUI). Báo cáo hiện vẫn ghi bảng D-29.
+- **Đo thời gian/nước + FPS (2026-11-18, `p63_gui_timing --boards 15 --kinds alphabeta mcts --levels medium hard --table-dir local_out/p64 --tag p64gui`, animation bật, headless 30 fps; số minh họa GUI, không dùng cho báo cáo thí nghiệm; ngoài `results/`, không ghi đè `p63_*`/`p63anim_*`):** cắm sạc (AC, pin 100 %), Balanced; bench ngắn = **0,986×** `e5_bench.csv`. Trung bình nước có search / tối đa (s) / FPS vòng chính khi AI đang nghĩ (trung bình / khung tệ nhất):
+
+| 15×15 | vs người ngẫu nhiên | vs AB2 |
+|---|---|---|
+| AB Vừa (= Khó cũ) | 0,10 / 0,16 — 27,9 / 25,0 fps | 0,13 / 0,22 — 28,0 / 25,0 fps |
+| **AB Khó (mới)** | **1,55 / 2,41** — 25,8 / 22,7 fps | **2,30 / 2,41** — 25,8 / 24,4 fps |
+| MCTS Vừa | 0,41 / 0,83 — 26,3 / 19,6 fps | 0,54 / 0,74 — 26,4 / 23,8 fps |
+| MCTS Khó | 2,01 / 4,17 — 25,7 / 16,7 fps | 2,44 / 3,59 — 25,8 / 14,5 fps |
+
+  → AB Khó mới đạt luật GUI (trung bình ≤ 3 s, tối đa ≤ 5 s; quá hạn `time_limit` ≤ 0,01 s). FPS khi AB Khó nghĩ (25,8; khung tệ nhất 22,7–24,4) **không tệ hơn** khi MCTS Khó nghĩ (25,7; khung tệ nhất 14,5–16,7); không tụt dưới 15. CSV: `local_out/p64/p64gui_gui_timing.csv` (gitignore).
+- **Đánh giá sức mạnh (B5, chưa chạy):** AB Khó mới vs AB Vừa mới (= Khó cũ) và vs MCTS Khó, ≥ 40 ván/cặp, mỗi ván từ khai cuộc ngẫu nhiên có seed (2–4 nước gần tâm, loại thế có thắng ngay), mỗi khai cuộc 2 ván đổi bên; ghi số khai cuộc phân biệt + số ván trùng chuỗi nước. Ngưỡng: ≥ 0,8 vs AB Vừa mới, ≥ 0,5 vs MCTS Khó, + An tự chơi 5 ván 15×15 mức Khó. Số này chỉ ghi ở đây/PROGRESS (minh họa GUI), không đưa vào report.
+- **B3 (MCTS Khó = `time_limit` + VCF ở gốc):** làm cuối, bỏ nếu P6.4 vượt ~1,5 ngày.

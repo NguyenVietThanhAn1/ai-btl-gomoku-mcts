@@ -39,7 +39,9 @@ def mcts_param(spec, name); def rollout_tag(spec) -> "random"|"h300"|"heavy"; de
 def short_label(spec) -> str                       # "người", "MCTS h300 5000", "Alpha-Beta d2"
 def preset_title(game, x, o) -> str               # tiêu đề preset suy từ spec (PRESETS dùng hàm này)
 def source_of(spec, board) -> str | None             # source_text của spec, None nếu không có trong bảng
-AB3_D1, AB3_D2, AB15_D1                     # 3 spec riêng (chỉ tham số có sẵn của AlphaBetaAgent)
+AB3_D1, AB3_D2, AB15_D1, AB15_HARD          # spec riêng; AB15_HARD (D-36): ID/top-k/TT sâu/VCF (P6.4)
+EXPERIMENT_SPECS = [(15, AB2, "E3/E5")]      # spec thí nghiệm chỉ còn ở Demo (không phải mức độ khó)
+def experiment_source(spec, board) -> str | None   # 'E3/E5' cho AB2 trên 15×15, còn lại None
 ```
 
 | Trò | AI | Dễ | Vừa | Khó |
@@ -47,7 +49,12 @@ AB3_D1, AB3_D2, AB15_D1                     # 3 spec riêng (chỉ tham số có
 | 3×3 | MCTS | `e2.mcts_spec(100)` — E2 | `e2.mcts_spec(1000)` — E2 | `e2.mcts_spec(5000)` — E2 |
 | 3×3 | AB | depth 1 + `evaluate` — riêng | depth 2 + `evaluate` — riêng | `e1.VARIANTS_3["ab_order_tt"]` — E1 |
 | 15×15 | MCTS | `e3.mcts_spec(15, 1.4, 250)` — E3 | `e3.mcts_spec(15, 1.4, 1000)` — E3 | `e3.mcts_spec(15, 1.4, 5000)` — E3 |
-| 15×15 | AB | depth 1 + eval + delta + ordering — riêng | `e3.AB2` — E3/E5 | `e1.variants_15(3)["ab_order"]` — E1 |
+| 15×15 | AB | depth 1 + eval + delta + ordering — riêng | `e1.variants_15(3)["ab_order"]` — E1 (**Khó cũ**) | `AB15_HARD` — riêng (D-36) |
+
+**D-36 (2026-11-18):** bảng trên thay phần bảng độ khó của D-29 ở dòng AB 15×15 (D-29 giữ nguyên làm lịch sử): Vừa = Khó cũ (E1), Khó = `AB15_HARD` =
+`depth` tối đa 12 + `time_limit` 2,4 s (iterative deepening) + `delta_eval` + `move_score` + `top_k` (16, 12, 8) *(tạm, chưa chốt)* + TT sâu +
+VCF ở gốc (`vcf_depth` 8, `vcf_time` 0,3 s). Lý do: Khó cũ quá dễ với người chơi. `e3.AB2` không còn là mức
+độ khó nhưng vẫn là bên O của preset Demo (`15_h300_vs_ab2`, nhãn "cấu hình thí nghiệm · E3/E5").
 
 - **Mọi số hiển thị (c, iter, depth, T) suy từ `AgentSpec`** (thiếu tham số → mặc định của `MCTSAgent`): E2 hiện
   c=1.41 (= √2 mặc định), E3 c=1.4 (trong spec); tiêu đề 3 preset sinh bằng `preset_title` (P6.3 3c, test kiểm).
@@ -69,7 +76,7 @@ AB3_D1, AB3_D2, AB15_D1                     # 3 spec riêng (chỉ tham số có
 - Lưu ý cho video: h300 5000 vs AB2 chỉ thắng 0,22 (`results/tables/e3_ab2.csv`) → ở preset 3 AB thường
   thắng; đúng với số liệu, không phải lỗi.
 - Độ khó (D-29): chỉ ánh xạ sang `AgentSpec`; mức "E" trùng hệt spec thí nghiệm (test `==`), mức riêng chỉ ở AB
-  (An cho phép). Spec E1 `seeded=False` → AB Khó tất định. Thời gian/nước từng mức: D-29.
+  (An cho phép). Spec E1 `seeded=False` → AB tất định. Thời gian/nước từng mức: D-29 (MCTS, 3×3, AB Dễ), D-36 (AB 15×15 mới).
 - Đổi tham số chỉ tạo spec mới (`dataclasses.replace`), preset gốc không đổi.
 
 ## Test

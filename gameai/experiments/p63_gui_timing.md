@@ -14,7 +14,15 @@
 python -m gameai.experiments.p63_gui_timing                 # cả 3×3 và 15×15
 python -m gameai.experiments.p63_gui_timing --boards 15     # chỉ 15×15 (giữ dòng 3×3 cũ trong CSV)
 python -m gameai.experiments.p63_gui_timing --quick         # 1 ván/mức, file p63quick_* (không commit)
+# P6.4 (D-36): bộ lọc + ghi ngoài results/ (không ghi đè p63_* / p63anim_*)
+python -m gameai.experiments.p63_gui_timing --boards 15 --kinds alphabeta mcts --levels medium hard \
+    --table-dir local_out/p64 --tag p64gui
 ```
+- `--kinds` / `--levels` lọc mức; có bộ lọc hoặc `--table-dir` thì **bắt buộc** `--tag` (không bắt đầu bằng `p63`)
+  hoặc `--table-dir` khác `results/tables` → không bao giờ ghi đè `p63_*` / `p63anim_*` (báo cáo trỏ vào). Bench
+  tham chiếu `e5_bench.csv` vẫn đọc từ `results/tables`.
+- Cột mới `fps_think` (số khung hình ÷ tổng thời gian các khung khi AI đang nghĩ) và `fps_worst` (1 / khung dài
+  nhất): FPS vòng lặp chính headless (mục tiêu 30).
 - Không cắm sạc → dừng (D-21); `--allow-battery` để bỏ qua (số đo khi đó không dùng được).
 - Animation GUI bật mặc định → file `p63anim_*` (cột `animations = 1`); `--no-anim` → `p63_*` (bảng gốc D-29).
 - Thời gian: 3×3 ~10 s; 15×15 vài phút (MCTS Khó ~2–5 s/nước chiếm phần lớn).

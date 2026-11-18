@@ -80,6 +80,12 @@
 
 ### An
 
+#### 2026-11-18 — P6.4 B1 + B4 (D-36): AB Khó mới 15×15, mapping dịch mức
+- B1 xong (3 commit local, chờ precheck + An duyệt push): `AlphaBetaAgent` `root_hook`, `top_k`, `time_limit` (ID), `tt_mode="deep"` + 30 test; `kinrow_vcf`. An đổi thiết kế B4: không thêm "Rất khó" — dịch mức AB 15×15 (Vừa = Khó cũ E1, Khó = `AB15_HARD`); D-36. Demo giữ cấu hình thí nghiệm (`AB2` tra qua `EXPERIMENT_SPECS`).
+- Đo GUI (D-36): AB Khó 15×15 trung bình 1,55 s (vs người ngẫu nhiên) / 2,30 s (vs AB2), tối đa 2,41 s; FPS khi nghĩ 25,8 (khung tệ nhất 22,7–24,4), MCTS Khó 25,7 (14,5–16,7). `local_out/p64/` (gitignore), không ghi đè `p63_*`.
+- **Việc cần làm sau P8:** `report/report.md` **Phụ lục B cần sửa** (mapping mức độ khó AB 15×15 + bảng thời gian/nước GUI) ở đợt cập nhật report sau P8; hiện chưa sửa (An chốt). Ảnh Setup/Demo trong `report/figures/gui/` cũng sẽ lệch nhãn (chụp lại ở P7.3/P7.4).
+- Còn: B5 (`p64_strength --quick` cho top_k (16,12,8) và (12,8,6), báo An chọn), An chơi thử 5 ván, B3 cuối (timebox ~1,5 ngày).
+
 #### 2026-11-18 — Sự cố: push 139a5f7 với 2 test E5 đỏ; sửa `fix: e5 guard tests pinned to kinrow-final`
 - Push `139a5f7` (chỉ thêm `heuristics/kinrow_vcf.*`) làm đỏ `test_real_e3_files_reusable_now` và `test_estimate_full_from_fake_quick` (E5): `e3_reusable` so `git diff <commit trong raw> HEAD` trên `gameai/{agents,games,heuristics,core}` nên mọi file mới ở đó là "code đổi" (guard đúng, test phụ thuộc HEAD sai). Tôi đã push vì lấy `$?` của `| tail` thay cho pytest → AGENTS.md thêm luật không pipe pytest/ruff khi cần exit code.
 - Sửa: `git_diff_empty(..., target="HEAD")` (mặc định giữ nguyên); test raw thật đổi tên `..._at_kinrow_final` ghim `target="kinrow-final"` (skip chỉ khi thiếu raw/tag); `test_estimate_full_from_fake_quick` (e5) monkeypatch `e3_reusable` bỏ kiểm git, giữ kiểm raw. Test cùng tên ở `test_e3_c_sweep` không dùng git → không đổi. `e3_reusable`, `e5_rollout` logic, `results/` không đổi. Ghi chú: mọi commit sau đổi `agents/` vẫn hợp lệ với test này.

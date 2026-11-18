@@ -38,3 +38,33 @@ def test_run_writes_tables_and_keeps_other_board(tmp_path, monkeypatch):
     info = read_rows(tmp_path / "p63quick_gui_runinfo.csv")
     assert len(info) == 1 and info[0]["bench_speed_vs_e5"] == "0.5" and info[0]["boards"] == "3"
     assert read_rows(tmp_path / "p63quick_bench.csv")[0]["speed_vs_e5"] == "0.5"
+
+
+def test_measure_level_has_fps_columns():
+    pygame.init()
+    key = (3, "mcts", "easy")
+    row = t.measure_level(3, key, DIFFICULTY[key], "random_human", 1, pygame.Surface((1280, 720)),
+                          "AC")  # fmt: skip
+    assert "fps_think" in row and "fps_worst" in row
+    assert row["fps_think"] == "" or 0 < row["fps_think"] <= 1000
+
+
+def test_filters_and_tag_write_elsewhere(tmp_path, monkeypatch):
+    fake = [{"rollout": "rand", "plies": 8, "seed": 0, "iterations": 10, "agent_time": 1.0,
+             "iter_per_s": 10.0}]  # fmt: skip
+    monkeypatch.setattr(t, "bench", lambda **kw: [dict(r) for r in fake])
+    monkeypatch.setattr(t, "QUICK_GAMES", {3: 1, 15: 1})
+    monkeypatch.setattr(t, "TAG", "p64x")
+    rows = t.run([3], quick=True, table_dir=tmp_path / "o", kinds=["alphabeta"], levels=["hard"])
+    assert [(r["kind"], r["level"]) for r in rows] == [("alphabeta", "hard")]
+    assert (tmp_path / "o" / "p64xquick_gui_timing.csv").exists()
+    assert not list((tmp_path / "o").glob("p63*"))
+
+
+def test_refuses_to_overwrite_report_tables():
+    import pytest
+
+    with pytest.raises(SystemExit):
+        t.main(["--levels", "hard", "--allow-battery"])  # lọc mà không --tag / --table-dir
+    with pytest.raises(SystemExit):
+        t.main(["--tag", "p63x", "--allow-battery"])

@@ -69,6 +69,15 @@ AB3_D1 = AgentSpec("alphabeta", {"depth": 1, "eval": "evaluate"}, label="play_ab
 AB3_D2 = AgentSpec("alphabeta", {"depth": 2, "eval": "evaluate"}, label="play_ab3_d2")
 AB15_D1 = AgentSpec("alphabeta", {"depth": 1, "eval": "evaluate", "delta": "delta_eval",
                                   "order": "move_score"}, label="play_ab15_d1")  # fmt: skip
+# D-36: Khó mới của AB 15×15 = iterative deepening theo thời gian + top-k + TT sâu + VCF ở gốc.
+# `top_k` tạm (16, 12, 8), chưa chốt (B5). `vcf_time` ghi ở đây, không hard-code trong agent.
+AB15_HARD = AgentSpec(
+    "alphabeta",
+    {"depth": 12, "eval": "evaluate", "delta": "delta_eval", "order": "move_score",
+     "use_tt": True, "tt_mode": "deep", "time_limit": 2.4, "top_k": [16, 12, 8],
+     "vcf_depth": 8, "vcf_time": 0.3},
+    label="play_ab15_hard",
+)  # fmt: skip
 
 DIFFICULTY: dict[tuple[int, str, str], Level] = {
     (3, "mcts", "easy"): Level(e2_mcts_spec(100), "E2"),
@@ -81,9 +90,12 @@ DIFFICULTY: dict[tuple[int, str, str], Level] = {
     (15, "mcts", "medium"): Level(e3_mcts_spec(15, 1.4, 1000), "E3"),
     (15, "mcts", "hard"): Level(e3_mcts_spec(15, 1.4, 5000), "E3"),
     (15, "alphabeta", "easy"): Level(AB15_D1, None),
-    (15, "alphabeta", "medium"): Level(AB2, "E3/E5"),
-    (15, "alphabeta", "hard"): Level(variants_15(3)["ab_order"], "E1"),
+    (15, "alphabeta", "medium"): Level(variants_15(3)["ab_order"], "E1"),  # Khó cũ (D-29), D-36
+    (15, "alphabeta", "hard"): Level(AB15_HARD, None),
 }
+
+# Spec thí nghiệm không còn là mức độ khó nhưng vẫn dùng ở Demo (D-36): (bàn, spec, nguồn).
+EXPERIMENT_SPECS: list[tuple[int, AgentSpec, str]] = [(15, AB2, "E3/E5")]
 
 
 def level_for(board: int, ai_kind: str, level: str) -> Level:
@@ -96,6 +108,14 @@ def find_level(spec: AgentSpec | None, board: int) -> tuple[str, Level] | None:
     for (b, _kind, level), lv in DIFFICULTY.items():
         if b == board and lv.spec == spec:
             return level, lv
+    return None
+
+
+def experiment_source(spec: AgentSpec | None, board: int) -> str | None:
+    """Nguồn thí nghiệm của spec chỉ dùng ở Demo (không phải mức độ khó): 'E3/E5' hoặc None."""
+    for b, s, source in EXPERIMENT_SPECS:
+        if b == board and s == spec:
+            return source
     return None
 
 
@@ -168,9 +188,17 @@ def side_label(spec: AgentSpec | None) -> str:
     if spec.kind == "alphabeta":
         p = spec.params
         depth = p.get("depth")
-        text = "Alpha-Beta " + ("đầy đủ" if depth is None else f"depth {depth}")
+        limit = p.get("time_limit")
+        if limit is not None:  # iterative deepening (D-36): depth = độ sâu tối đa
+            text = f"Alpha-Beta ID ≤{depth}, {limit:g} s/nước"
+        else:
+            text = "Alpha-Beta " + ("đầy đủ" if depth is None else f"depth {depth}")
         text += ", ordering" if p.get("order") else ""
+        if p.get("top_k"):
+            ks = p["top_k"]
+            text += ", top-" + (str(ks) if isinstance(ks, int) else "/".join(map(str, ks)))
         text += ", TT" if p.get("use_tt") else ""
+        text += f", VCF {p['vcf_depth']}" if p.get("vcf_depth") else ""
         return text
     return spec.name
 

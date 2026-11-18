@@ -17,6 +17,7 @@ from gameai.gui.presets import (
     PRESET_ORDER,
     PRESETS,
     Preset,
+    experiment_source,
     find_level,
     mcts_iterations,
     side_label,
@@ -455,6 +456,13 @@ class PlayScene(Scene):
             return f"Người chơi {self.side(side)}", "2 người cùng máy"
         found = find_level(spec, self.board_n)
         detail = side_label(spec)
+        exp_source = experiment_source(spec, self.board_n)
+        if found is None and exp_source is not None:  # spec thí nghiệm của Demo, không phải mức
+            name = AI_NAMES.get(spec.kind, spec.name)
+            source = f"cấu hình {exp_source}"
+            if self.state.experiment:
+                source = EXPERIMENT_LABEL + f" ({exp_source})"
+            return name, f"{detail} — {source}"
         if found is not None:
             level, lv = found
             name = f"{AI_NAMES.get(spec.kind, spec.kind)} · {LEVEL_NAMES[level]}"
@@ -474,7 +482,8 @@ class PlayScene(Scene):
             return ("Người chơi" if self.single_human is not None else "2 người cùng máy"), False
         if self.state.experiment:
             found = find_level(spec, self.board_n)
-            src = f" · {found[1].source}" if found is not None and found[1].source else ""
+            tag = found[1].source if found is not None else experiment_source(spec, self.board_n)
+            src = f" · {tag}" if tag else ""
             if self.state.iterations is None:
                 return f"Cấu hình thí nghiệm{src}", True
         return "AI", False

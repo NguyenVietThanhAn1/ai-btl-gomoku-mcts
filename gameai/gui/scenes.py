@@ -23,6 +23,7 @@ from gameai.gui.presets import (
     LEVELS,
     PRESET_ORDER,
     PRESETS,
+    experiment_source,
     find_level,
     side_label,
 )
@@ -386,8 +387,14 @@ class DemoScene(Scene):
         """Nguồn thí nghiệm của các bên AI, tra ngược từ spec (không gõ tay): 'E2', 'E3 · E3/E5'."""
         p = PRESETS[key]
         n = int(p.game.params.get("n", 15))
-        found = [find_level(spec, n) for spec in (p.x, p.o) if spec is not None]
-        tags = [f[1].source for f in found if f is not None and f[1].source]
+        tags = []
+        for spec in (p.x, p.o):
+            if spec is None:
+                continue
+            found = find_level(spec, n)
+            tag = found[1].source if found is not None else experiment_source(spec, n)
+            if tag:
+                tags.append(tag)
         return " · ".join(dict.fromkeys(tags))
 
     def on_enter(self, **_: Any) -> None:

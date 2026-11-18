@@ -317,8 +317,11 @@ def test_displayed_config_numbers_come_from_spec():
             if spec.params.get("rollout") == "heavy_kinrow":
                 assert f"h{spec.params['temperature']:g}" in label
         else:
-            depth = spec.params.get("depth")
-            assert ("đầy đủ" if depth is None else f"depth {depth}") in label
+            depth, limit = spec.params.get("depth"), spec.params.get("time_limit")
+            if limit is not None:  # iterative deepening (D-36): depth = độ sâu tối đa
+                assert f"ID ≤{depth}" in label and f"{limit:g} s/nước" in label
+            else:
+                assert ("đầy đủ" if depth is None else f"depth {depth}") in label
     assert "c=1.41" in side_label(e2_never_lose.mcts_spec(1000))  # E2: c mặc định √2
     assert "c=1.4," in side_label(e3_c_sweep.mcts_spec(15, 1.4, 5000))  # E3: c = 1.4 trong spec
     for p in PRESETS.values():

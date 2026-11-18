@@ -18,14 +18,17 @@ EXPECTED_EXPERIMENT = {
     (15, "mcts", "easy"): (e3_c_sweep.mcts_spec(15, 1.4, 250), "E3"),
     (15, "mcts", "medium"): (e3_c_sweep.mcts_spec(15, 1.4, 1000), "E3"),
     (15, "mcts", "hard"): (e3_c_sweep.mcts_spec(15, 1.4, 5000), "E3"),
-    (15, "alphabeta", "medium"): (e3_c_sweep.AB2, "E3/E5"),
-    (15, "alphabeta", "hard"): (e1_nodes.variants_15(3)["ab_order"], "E1"),
+    (15, "alphabeta", "medium"): (e1_nodes.variants_15(3)["ab_order"], "E1"),  # Khó cũ, D-36
 }
 EXPECTED_OWN = {
     (3, "alphabeta", "easy"): {"depth": 1, "eval": "evaluate"},
     (3, "alphabeta", "medium"): {"depth": 2, "eval": "evaluate"},
     (15, "alphabeta", "easy"): {"depth": 1, "eval": "evaluate", "delta": "delta_eval",
                                 "order": "move_score"},
+    (15, "alphabeta", "hard"): {"depth": 12, "eval": "evaluate", "delta": "delta_eval",
+                                "order": "move_score", "use_tt": True, "tt_mode": "deep",
+                                "time_limit": 2.4, "top_k": [16, 12, 8], "vcf_depth": 8,
+                                "vcf_time": 0.3},  # D-36 (top_k tạm, B5)
 }  # fmt: skip
 
 
@@ -42,6 +45,31 @@ def test_difficulty_table_complete_and_matches_experiments():
         assert lv.source is None and lv.source_text == OWN_CONFIG
     for lv in DIFFICULTY.values():
         make_agent(lv.spec, 0)
+
+
+def test_levels_still_three_and_3x3_untouched():
+    assert LEVELS == ("easy", "medium", "hard")
+    assert {k[2] for k in DIFFICULTY} == set(LEVELS)
+    assert len([k for k in DIFFICULTY if k[0] == 3]) == 6  # 3×3: 2 loại AI × 3 mức, như D-29
+    assert len([k for k in DIFFICULTY if k[0] == 15]) == 6
+
+
+def test_hard_ab_15_is_new_play_config_and_old_hard_is_medium():
+    hard = level_for(15, "alphabeta", "hard")
+    assert hard.source is None and hard.source_text == OWN_CONFIG
+    agent = make_agent(hard.spec, 0)
+    assert agent.time_limit == 2.4 and agent.tt_mode == "deep" and agent.root_hook is not None
+    assert level_for(15, "alphabeta", "medium").spec == e1_nodes.variants_15(3)["ab_order"]
+    assert "ID ≤12, 2.4 s/nước" in side_label(hard.spec) and "VCF 8" in side_label(hard.spec)
+
+
+def test_demo_presets_still_experiment_specs():
+    from gameai.gui.presets import experiment_source
+
+    assert PRESETS["15_h300_vs_ab2"].o == e3_c_sweep.AB2  # Demo giữ cấu hình thí nghiệm
+    assert experiment_source(e3_c_sweep.AB2, 15) == "E3/E5"
+    assert experiment_source(e3_c_sweep.AB2, 3) is None
+    assert experiment_source(level_for(15, "alphabeta", "hard").spec, 15) is None
 
 
 def test_p61_presets_unchanged():
