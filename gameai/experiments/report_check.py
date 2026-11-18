@@ -163,14 +163,22 @@ def _value_digits(before: str) -> int:
     return len(tok.split(",")[1]) if "," in tok else 0
 
 
+def _bound_digits(before: str) -> int:
+    """Số chữ số thập phân của biên dưới trong `x [lo; hi]` cuối văn bản (không có: như `x`)."""
+    m = CI_TAIL.search(norm(before))
+    if m and "[" in m.group(1):
+        lo = m.group(1).split("[")[1].split(";")[0].strip()
+        return len(lo.split(",")[1]) if "," in lo else 0
+    return _value_digits(before)
+
+
 def ci_text(raw: str, before: str) -> str:
-    """Cột `x,lo,hi` → chuỗi `x [lo; hi]`; `x` theo số chữ số thập phân của token trong report,
-    biên theo `plots.ci` (luật làm tròn D-30: có thể thêm một chữ số)."""
+    """Cột `x,lo,hi` → chuỗi `x [lo; hi]`; `x` và biên theo số chữ số thập phân của chúng trong
+    report (vd. `0,503 [0,40; 0,61]`), biên qua `plots.ci` (luật D-30: có thể thêm một chữ số)."""
     vals = [float(v) for v in raw.split(",")]
     if len(vals) != 3:
         raise SourceError("cột dạng khoảng cần đúng 3 cột: giá trị,cận dưới,cận trên")
-    d = _value_digits(before)
-    return f"{vn(vals[0], d)} {ci(vals[1], vals[2], d)}"
+    return f"{vn(vals[0], _value_digits(before))} {ci(vals[1], vals[2], _bound_digits(before))}"
 
 
 def rounding_rule_hit(lo: float, hi: float, d: int) -> bool:
@@ -210,7 +218,7 @@ def check_src(body: str, before: str, read: dict[Path, str]) -> int | None:
     if not ok:
         if len(cols) == 3:
             v = [float(x) for x in raw.split(",")]
-            if rounding_rule_hit(v[1], v[2], _value_digits(before)):
+            if rounding_rule_hit(v[1], v[2], _bound_digits(before)):
                 raise SourceError(
                     f"D-30: không làm tròn biên CI khi làm tròn đổi kết luận chứa 0 / 0,5 hoặc "
                     f"biến biên ≠ 0 thành 0 — cần '{exp}' (nguồn: {raw})"

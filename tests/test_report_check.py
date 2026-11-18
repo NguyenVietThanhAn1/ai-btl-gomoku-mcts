@@ -143,6 +143,9 @@ def test_ci_rounding_rule_d30(src: Path):
     assert "D-30" in bad[0] and "0,08 [0,004; 0,156]" in bad[0]
     assert run(f"hiệu 0,08 [0,004; 0,156] <!-- src: {d} | k=a | diff,lo,hi -->", src) == []
     assert run(f"hiệu 0,04 [−0,01; 0,09] <!-- src: {d} | k=b | diff,lo,hi -->", src) == []
+    # x và biên có số chữ số riêng: x 3 chữ số, biên 2
+    assert run(f"hiệu 0,040 [−0,01; 0,09] <!-- src: {d} | k=b | diff,lo,hi -->", src) == []
+    assert run(f"hiệu 0,040 [−0,015; 0,09] <!-- src: {d} | k=b | diff,lo,hi -->", src) != []
 
 
 def test_const_token_list(src: Path):

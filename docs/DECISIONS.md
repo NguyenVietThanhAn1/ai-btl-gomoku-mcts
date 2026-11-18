@@ -296,3 +296,8 @@
 - **PROGRESS.md:** session log chuyển vào khối từng người (`### An` / `### Thành viên 2`), mới nhất ở đầu khối mình; log cũ giữ nguyên, đặt ở khối An.
 - **Đánh số D-xx:** lấy số ngay sau `git pull`; nếu rebase thấy trùng số thì người rebase sau đổi số của mình.
 - **Lý do:** nhóm 2 người, giảm số branch/PR phải quản lý; bù lại bằng kiểm tra trước push + báo trước khi sửa vùng nhạy cảm.
+
+### D-33 (2026-11-18) — Agent đồng bộ `develop` bằng fetch + rebase (bổ sung D-32)
+- **Quyết định:** bước đồng bộ chuẩn của agent (trước push, khi bắt đầu task) là `git fetch origin` rồi `git rebase origin/develop`, hai lệnh riêng, kiểm exit code từng lệnh; không dùng `git pull --rebase`. Người gõ tay vẫn có thể dùng `git pull` với `pull.rebase true` (docs/SETUP.md). Số D-xx lấy ngay sau khi đồng bộ. D-32 giữ nguyên; quyết định này chỉ thay cách đồng bộ mà D-32 ghi là `git pull --rebase`.
+- **Lý do:** 2/3 lần `git pull --rebase` gần đây báo "Cannot rebase onto multiple branches" vì `.git/FETCH_HEAD` có dòng `develop` trùng; fetch + rebase lên `origin/develop` không đọc FETCH_HEAD nên tránh được lỗi này.
+- **Nơi ghi luật:** AGENTS.md (Lệnh nguy hiểm, Làm việc nhóm), docs/WORKFLOW.md.

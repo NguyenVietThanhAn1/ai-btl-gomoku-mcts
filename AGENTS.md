@@ -35,7 +35,7 @@
 - **Vùng nhạy cảm:** `gameai/agents/`, interface `Game`/`Agent`, `gameai/core/`, `results/`, `report/report.md` → báo người kia trước khi sửa. **Agent phải dừng và hỏi người dùng trước khi sửa vùng này.**
 - `master`: chỉ merge từ `develop` ở mốc, qua PR "Create a merge commit" (không squash); không push thẳng `master`.
 - Trong `PROGRESS.md` chỉ sửa **dòng task của mình** (cột Owner), **khối "Đang ở đâu" của mình** (`### <Tên>`) và **khối session log của mình**; log mới nhất ở đầu khối.
-- Số quyết định `D-xx` trong `docs/DECISIONS.md`: lấy số ngay sau `git pull`; nếu rebase thấy trùng số thì người rebase sau đổi số của mình.
+- Số quyết định `D-xx` trong `docs/DECISIONS.md`: lấy số ngay sau khi đồng bộ (fetch + rebase); nếu rebase thấy trùng số thì người rebase sau đổi số của mình.
 - Golden test `tests/test_regression_kinrow.py` phải luôn xanh.
 
 ## Lệnh

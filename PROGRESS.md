@@ -79,6 +79,11 @@
 
 ### An
 
+#### 2026-11-18 — P7.2 sửa đợt (c) theo review (An duyệt đợt (c))
+- 6.6: bỏ "vừa quá một nửa" (0,50 mà CI chứa 0,5); giữ khẳng định ở 5000 iteration; câu riêng "mức cao nhất mọi ngân sách: h300 100 iteration 0,503 [0,40; 0,61], khoảng chứa 0,5" — src thẳng `e6_choice.csv` (bootstrap, stratum all). `report_check`: số chữ số của biên CI lấy theo biên trong report (trước đây theo `x`) để cho phép `x` 3 chữ số + biên 2 chữ số; thêm test.
+- Văn phong 5.3 ("-->;"), 6.1 ("được so với", bỏ "ở cùng số nút" lặp). AGENTS: số D-xx lấy sau khi đồng bộ (fetch + rebase); thêm D-33 (đồng bộ fetch + rebase, tham chiếu D-32, không sửa D-32).
+- Kiểm: report_check 0 lỗi, plots --check, pytest, ruff xanh; đồng bộ fetch + rebase rồi push `develop` (An yêu cầu).
+
 #### 2026-11-18 — P7.2 đợt (c): mục 6 + Tóm tắt (dừng chờ An duyệt)
 - **Lỗi 5.3** (phát hiện khi viết 6.3): câu "cặp duy nhất có hai khoảng tin cậy tách nhau" sai — `e3_greedy.csv` có 4 cặp tách (1000 và 500 iter: c = 0,5 vs 2,0; 250 iter: c = 1,4 vs 0,5 và vs 1,0). Sửa riêng, commit `P7.2: fix 5.3 CI-separation claim` (chỉ hunk 5.3, `git apply --cached`).
 - Mục 6 (6.1–6.8) + Tóm tắt 198 từ theo dàn ý An duyệt + 5 chỉnh; chỉnh sau duyệt: 6.6 N trung vị ô chặn = 1 (`e6_mechanism.median_n_correct`), viết lại 500–2500 rõ X/O, 6.3 thêm "4 cặp tách trong 36 phép so sánh không hiệu chỉnh".
