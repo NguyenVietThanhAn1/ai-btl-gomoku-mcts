@@ -25,6 +25,8 @@
 - **Cấm:** `git push --force` / `-f`.
 - **Phải hỏi người trước:** cài gói mới (`pip install <gói>`; riêng `python -m pip install -r requirements.txt` thì được), mọi `git push` (xem mục Commit & push).
 - Được chạy không cần hỏi: pytest, ruff, `python -m gameai…`, `git status/diff/log/add/commit`.
+- **Không pipe output của `git pull/push/merge/rebase` qua `| tail`/`| head` trong chuỗi `&&`** — exit code của pipeline là của lệnh cuối, lỗi bị nuốt. Chạy từng lệnh, kiểm exit code trước khi làm bước tiếp.
+- **Nếu `git pull --rebase` báo "Cannot rebase onto multiple branches":** chạy ngay `git branch -vv` và `cat .git/FETCH_HEAD` để lưu bằng chứng, rồi dùng `git fetch origin` + `git rebase origin/develop`.
 
 ## Làm việc nhóm (D-32, thay D-27/D-31 phần branch/push — chi tiết: [README.md § Quy ước làm việc nhóm](README.md#quy-ước-làm-việc-nhóm-d-32))
 - Làm và commit **thẳng trên `develop`**. Feature branch chỉ khi thay đổi lớn/rủi ro (không bắt buộc).

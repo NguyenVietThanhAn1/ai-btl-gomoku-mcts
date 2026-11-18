@@ -5,6 +5,8 @@ Luật dự án: [AGENTS.md](../AGENTS.md). File này chỉ là checklist thao t
 
 ## 1. Làm task
 
+> Lệnh git chạy **từng lệnh một, kiểm exit code** trước bước sau; không pipe `git pull/push/merge/rebase` qua `tail`/`head` trong chuỗi `&&`. Gặp lỗi "Cannot rebase onto multiple branches": xem [AGENTS.md § Lệnh nguy hiểm](../AGENTS.md).
+
 Task: `<ID>` được giao; nếu không có → task 🔄 đang dở của mình, hoặc task ⬜ đầu tiên theo thứ tự trong `PROGRESS.md`. Làm đúng thứ tự, không bỏ bước.
 
 - [ ] **0. Đồng bộ.** Làm trên `develop` (D-32): `git switch develop && git pull --rebase`. Không làm việc trên `master`. (Feature branch chỉ khi thay đổi lớn/rủi ro.) Nếu task đụng vùng nhạy cảm (`gameai/agents/`, interface `Game`/`Agent`, `gameai/core/`, `results/`, `report/report.md`) → **dừng, báo người dùng/người kia trước**.
