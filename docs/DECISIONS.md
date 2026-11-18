@@ -306,3 +306,9 @@
 - **Quyết định (An):** sản phẩm nộp của báo cáo là **PDF** (cùng video demo), không cần `report.docx`. P7.3 đổi từ "Convert sang `report.docx`" thành "Xuất PDF từ `report/report.md`, kiểm tra hình/bảng/công thức hiển thị đúng". **Hoãn P7.3 tới khi An yêu cầu**; trước đó chưa chọn công cụ xuất PDF (pandoc có sẵn trên máy; cần engine PDF, chưa kiểm).
 - **Không đổi:** `report/report.md` vẫn là nguồn duy nhất và vẫn qua `report_check` (D-30); comment `<!-- src … -->` pandoc bỏ qua; ràng buộc "Hình n./Bảng n." đánh số tay không đổi. Các tài liệu cũ còn chữ "docx" (D-1 ở dòng 6, `report_check.md`, AGENTS.md "Sản phẩm nộp") là ghi chép/mô tả cũ — sửa khi An đồng ý (AGENTS.md là nguồn luật).
 - **Lý do:** yêu cầu nộp thực tế là PDF; bỏ một bước chuyển định dạng.
+
+### D-35 (2026-11-18) — Đổi thứ tự: cờ tướng (P8) trước PDF + video (P7.3, P7.4); thêm P6.4
+- **Thứ tự mới** (An chốt, thay phần thứ tự của D-30; nội dung còn lại của D-30 giữ): `P6.4 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4 →` bổ sung mục 3.4 / 5 báo cáo `→ P7.3 (xuất PDF) → P7.4 (video, có cảnh cờ tướng)`. Mốc Bài 1 (PR #2 `develop` → `master`) đã merge.
+- **Lý do:** cờ tướng là điều kiện điểm > 9 và là rủi ro thời gian lớn nhất → làm trước khi đóng gói; PDF và video làm **một lần** khi đã có cờ tướng, khỏi xuất/quay hai lần.
+- **P6.4 (task mới, trước P8.1):** AI "Rất khó" chỉ ở GUI 15×15 — xem PLAN §P6. Thiết kế chi tiết + số đo sẽ ghi ở D-36.
+- **Không đổi:** Dễ/Vừa/Khó (khớp E1/E3), `results/`, `report/report.md`, golden k-in-row.

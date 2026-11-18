@@ -10,9 +10,9 @@
 
 ### An
 
-- **Task hiện tại:** P7.2 ✅ xong (trên `develop`, D-32) — báo cáo `report/report.md`; đang chờ An merge PR `develop` → `master` (mốc Bài 1). Task kế: P7.4 (video). Thứ tự mới D-30: xong Bài 1 (P7.2 → P7.3 → P7.4) trước cờ tướng.
-- **Việc đang dở:** P7.2 — xong đợt (a), (b), (c) (An đã duyệt), dấu thập phân VN trong hình (`1d3c20b`), `plots --check` so cả summary + "tỷ lệ" trong GUI (`9d2aef6`), "tỷ lệ" trong `experiments/*.md` (`1fac6f7`) — cả ba đã push. **spec-reviewer P7.2: PASS** (3 minor, đã xử lý ở `fc418cc`). `help.png` đã sinh lại (Hình B.8), P7.2 ✅. Còn: An merge PR `develop` → `master` (merge commit, không squash).
-- **Bước tiếp theo:** P7.2 → P7.4 (video) (P7.3 xuất PDF hoãn tới khi An yêu cầu, D-34) → P8.1 (luật cờ tướng + perft, trên `develop`). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
+- **Task hiện tại:** P6.4 🔄 (D-35) — AI "Rất khó" cho GUI 15×15. P7.2 ✅ và đã merge `master` (mốc Bài 1). Thứ tự mới D-35: `P6.4 → P8.1–P8.4 (+P6.2)` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
+- **Việc đang dở:** P6.4 vừa bắt đầu (commit D-35 docs; kế: B2 VCF + test → spike TT+delta, báo An trước khi code ID/TT). Lịch sử P7.2 — xong đợt (a), (b), (c) (An đã duyệt), dấu thập phân VN trong hình (`1d3c20b`), `plots --check` so cả summary + "tỷ lệ" trong GUI (`9d2aef6`), "tỷ lệ" trong `experiments/*.md` (`1fac6f7`) — cả ba đã push. **spec-reviewer P7.2: PASS** (3 minor, đã xử lý ở `fc418cc`). `help.png` đã sinh lại (Hình B.8), P7.2 ✅. Còn: An merge PR `develop` → `master` (merge commit, không squash).
+- **Bước tiếp theo:** P6.4 (B2 VCF → B1 spike → … → B3 MCTS cuối, timebox ~1,5 ngày; An chơi thử 5 ván trước khi đóng) → P8.1 (luật cờ tướng + perft, trên `develop`) → … → P7.3/P7.4 sau P8 (D-34/D-35). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ### Thành viên 2
@@ -48,11 +48,12 @@
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
 | P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; GUI thay bởi P6.3 (An chơi thử OK) |
 | P6.3 | GUI: game chơi được hoàn chỉnh | ✅ | An | 2026-11-17 | D-29; spec-reviewer PASS; An chơi thử bằng chuột OK |
+| P6.4 | GUI: AI "Rất khó" 15×15 (ID, top-k, TT, VCF) | 🔄 | An | 2026-11-18 | D-35/D-36; không đổi results/ |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ✅ | An | 2026-11-18 | D-30; spec-reviewer PASS; report_check 0 lỗi; `plots --check` 26/26 |
-| P7.3 | Xuất report.pdf (D-34; thay docx) | ⬜ | An | | hoãn tới khi An yêu cầu |
-| P7.4 | Video demo (script + quay) | ⬜ | An | | |
+| P7.3 | Xuất report.pdf (D-34; thay docx) | ⬜ | An | | sau P8 + bổ sung báo cáo cờ tướng (D-35) |
+| P7.4 | Video demo (script + quay) | ⬜ | An | | sau P7.3 (D-35); có cảnh cờ tướng |
 | P8.0 | Xiangqi design D-22 + golden k-in-row | ✅ | An | 2026-11-17 | tag `kinrow-final`, branch `xiangqi`; golden 12 ván / 123 nước |
 | P8.1 | Xiangqi rules + perft | ⬜ | An | | |
 | P8.2 | Xiangqi eval + AB | ⬜ | An | | |
@@ -78,6 +79,10 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-18 — D-35: đổi thứ tự (P8 trước P7.3/P7.4), mở P6.4
+- An duyệt plan P6.4 + 4 chỉnh: (1) B5 đánh giá từ khai cuộc ngẫu nhiên có seed, mỗi khai cuộc 2 ván đổi bên, ghi số khai cuộc phân biệt + số ván trùng chuỗi nước vào D-36; (2) ngưỡng ≥ 0,8 vs AB Khó, ≥ 0,5 vs MCTS Khó + An tự chơi 5 ván trước khi đóng, không đạt → chỉnh 1 vòng rồi dừng; (3) timebox ~1,5 ngày, B3 (MCTS Rất khó) làm cuối, bỏ nếu quá; (4) `_Timeout` không ghi TT nút dở dang + test cắt rồi search lại = TT rỗng. Quyết: Q1 có (An báo Thành viên 2 trước khi sửa `agents/`), Q2 3×3 không có Rất khó, Q4 không VCT, Q5 ảnh Setup để nguyên (chụp lại ở P7.3/P7.4), Q6 CSV gitignore.
+- Sửa: `docs/DECISIONS.md` (D-35), `PLAN.md` (P6.4, P7.3/P7.4, thứ tự P8 + §4), `PROGRESS.md`. `report/report.md` không đổi (chỉ nhắc "D-30" làm hướng tiếp theo, không nêu thứ tự).
 
 #### 2026-11-18 — P7.2 ✅ xong: help.png sinh lại, AGENTS PDF, PR mốc Bài 1
 - `help.png` (Hình B.8) sinh lại bằng `python -m gameai.gui.screenshots --only help` (headless, theme mặc định, tắt animation): 1280×720, dòng "Phân tích…" có "tỷ lệ thắng"; chỉ file này đổi (các ảnh GUI khác giữ nguyên). Lưu ý: `--help` của script lỗi `UnicodeEncodeError` trên console cp1252 — chạy với `PYTHONIOENCODING=utf-8`.
