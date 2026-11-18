@@ -31,7 +31,7 @@
 
 ## Làm việc nhóm (D-32, thay D-27/D-31 phần branch/push — chi tiết: [README.md § Quy ước làm việc nhóm](README.md#quy-ước-làm-việc-nhóm-d-32))
 - Làm và commit **thẳng trên `develop`**. Feature branch chỉ khi thay đổi lớn/rủi ro (không bắt buộc).
-- **Trước mỗi push `develop`:** đồng bộ (`git fetch origin` rồi `git rebase origin/develop`); `python -m pytest -q` (gồm `tests/test_regression_kinrow.py`) + `python -m ruff check .` xanh; nếu đụng `report/` hoặc `gameai/experiments/`: thêm `report_check` + `python -m gameai.experiments.plots --check`.
+- **Trước mỗi push `develop`:** đồng bộ (`git fetch origin` rồi `git rebase origin/develop`); chạy **`python -m gameai.tools.precheck`** (một lệnh: pytest gồm `tests/test_regression_kinrow.py`, `ruff check`, `ruff format --check`, `report_check`, `plots --check`) — **EXIT phải 0** (chạy trực tiếp, không pipe), mọi bước PASS, rồi mới hỏi push. Không thay bằng chạy tay từng lệnh khi báo "xanh".
 - **Cấm** `git push --force` (và `-f`), cấm rebase commit đã push.
 - **Vùng nhạy cảm:** `gameai/agents/`, interface `Game`/`Agent`, `gameai/core/`, `results/`, `report/report.md` → báo người kia trước khi sửa. **Agent phải dừng và hỏi người dùng trước khi sửa vùng này.**
 - `master`: chỉ merge từ `develop` ở mốc, qua PR "Create a merge commit" (không squash); không push thẳng `master`.

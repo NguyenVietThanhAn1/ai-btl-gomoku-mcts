@@ -19,7 +19,7 @@ python -m gameai.gui.pygame_app --preset 3x3_human_mcts   # GUI; preset: 3x3_hum
 Luật đầy đủ cho người/agent: [AGENTS.md](AGENTS.md).
 
 - **Branch:** làm và commit **thẳng trên `develop`**; feature branch chỉ khi thay đổi lớn/rủi ro (không bắt buộc). `master` = bản ổn định / nộp được: chỉ merge từ `develop` ở mốc, qua PR "Create a merge commit" (không squash), không push thẳng. Quy trình từng bước: [docs/WORKFLOW.md](docs/WORKFLOW.md); review: [docs/REVIEW.md](docs/REVIEW.md).
-- **Trước mỗi push `develop`:** đồng bộ (`git fetch origin` rồi `git rebase origin/develop`; người gõ tay có thể dùng `git pull` với `pull.rebase true`); `python -m pytest -q` (gồm golden) + `python -m ruff check .` xanh; nếu đụng `report/` hoặc `gameai/experiments/`: thêm `report_check` + `python -m gameai.experiments.plots --check`. Cấm `git push --force`, cấm rebase commit đã push.
+- **Trước mỗi push `develop`:** đồng bộ (`git fetch origin` rồi `git rebase origin/develop`; người gõ tay có thể dùng `git pull` với `pull.rebase true`); `python -m gameai.tools.precheck` (pytest gồm golden, ruff check + format, report_check, plots --check) phải **EXIT 0**. Cấm `git push --force`, cấm rebase commit đã push.
 - **Commit:** `<TaskID>: <mô tả ngắn>` (vd. `P3.1: MCTS-UCT core with root stats`). Push `develop` sau khi qua các kiểm tra trên; không push thẳng `master` (D-32).
 - **Golden test:** `tests/test_regression_kinrow.py` phải luôn xanh (hành vi k-in-row khóa ở `kinrow-final`).
 - **Vùng nhạy cảm** (`gameai/agents/`, interface `Game`/`Agent`, `gameai/core/`, `results/`, `report/report.md`): báo người kia trước khi sửa; agent phải dừng và hỏi người dùng. Đổi interface/agent cần ghi lý do vào `docs/DECISIONS.md`; sửa agent thì thêm tham số có mặc định giữ hành vi cũ.

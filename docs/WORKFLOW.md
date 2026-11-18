@@ -21,7 +21,7 @@ Task: `<ID>` được giao; nếu không có → task 🔄 đang dở của mìn
 - [ ] **6. Module doc:** tạo/cập nhật `X.md` cạnh mỗi `X.py` đã đổi theo `docs/MODULE_TEMPLATE.md` (module thuật toán phải có mục "Giải thích cho báo cáo").
 - [ ] **7. Tự kiểm:** review theo [docs/REVIEW.md](REVIEW.md) với task ID — tốt nhất bằng một phiên/agent khác hoặc người khác (Claude Code: subagent `spec-reviewer`). Sửa mọi điểm FAIL.
 - [ ] **8. Cập nhật `PROGRESS.md`:** dòng task → ✅ (hoặc giữ 🔄 + ghi còn dở gì), cột Cập nhật = ngày hôm nay; thêm session log ở đầu khối log của mình (đã làm, số test pass, file đổi, lưu ý); sửa khối "Đang ở đâu" của mình → bước tiếp theo cụ thể. Quyết định thiết kế mới → thêm vào `docs/DECISIONS.md`.
-- [ ] **9. Commit & push:** `git add -A` rồi `git commit -m "<ID>: <mô tả>"`; `git fetch origin` rồi `git rebase origin/develop`; chạy lại `python -m pytest -q` + `python -m ruff check .` (đụng `report/` hoặc `gameai/experiments/`: thêm `report_check` + `python -m gameai.experiments.plots --check`); rồi **hỏi người dùng trước khi** `git push` lên `develop`. Cấm `--force`.
+- [ ] **9. Commit & push:** `git add -A` rồi `git commit -m "<ID>: <mô tả>"`; `git fetch origin` rồi `git rebase origin/develop`; chạy `python -m gameai.tools.precheck` (pytest gồm golden + ruff check + ruff format --check + report_check + plots --check; **EXIT phải 0**, không pipe); rồi **hỏi người dùng trước khi** `git push` lên `develop`. Cấm `--force`.
 - [ ] **10. Báo cáo** (ngắn): đã làm gì, kết quả test, điều cần người quyết định, task tiếp theo.
 
 ## 2. Kết thúc phiên (wrap-up)
