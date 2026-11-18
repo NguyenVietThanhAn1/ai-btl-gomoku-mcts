@@ -11,6 +11,7 @@ Luật dự án: [AGENTS.md](../AGENTS.md) (dùng chung cho mọi công cụ). �
    git switch develop
    git config pull.rebase true
    ```
+   `pull.rebase true` cho người gõ tay `git pull`; agent đồng bộ bằng `git fetch origin` + `git rebase origin/develop` (AGENTS.md).
    Agent đọc `AGENTS.md` / `CLAUDE.md` từ thư mục gốc workspace — mở thư mục cha thì luật không được nạp.
 2. **Tạo môi trường Python** (PowerShell, Python 3.11+):
    ```powershell

@@ -26,11 +26,11 @@
 - **Phải hỏi người trước:** cài gói mới (`pip install <gói>`; riêng `python -m pip install -r requirements.txt` thì được), mọi `git push` (xem mục Commit & push).
 - Được chạy không cần hỏi: pytest, ruff, `python -m gameai…`, `git status/diff/log/add/commit`.
 - **Không pipe output của `git pull/push/merge/rebase` qua `| tail`/`| head` trong chuỗi `&&`** — exit code của pipeline là của lệnh cuối, lỗi bị nuốt. Chạy từng lệnh, kiểm exit code trước khi làm bước tiếp.
-- **Nếu `git pull --rebase` báo "Cannot rebase onto multiple branches":** chạy ngay `git branch -vv` và `cat .git/FETCH_HEAD` để lưu bằng chứng, rồi dùng `git fetch origin` + `git rebase origin/develop`.
+- **Đồng bộ chuẩn (agent):** `git fetch origin` rồi `git rebase origin/develop` (hai lệnh riêng, kiểm exit code từng lệnh), **không** dùng `git pull --rebase`. Lý do: 2/3 lần `git pull --rebase` gần đây báo "Cannot rebase onto multiple branches" vì FETCH_HEAD có dòng `develop` trùng. Người gõ tay vẫn có thể dùng `git pull` với `pull.rebase true` (docs/SETUP.md); nếu gặp lỗi trên: chạy `git branch -vv` và `cat .git/FETCH_HEAD` để lưu bằng chứng, rồi đồng bộ theo cách chuẩn.
 
 ## Làm việc nhóm (D-32, thay D-27/D-31 phần branch/push — chi tiết: [README.md § Quy ước làm việc nhóm](README.md#quy-ước-làm-việc-nhóm-d-32))
 - Làm và commit **thẳng trên `develop`**. Feature branch chỉ khi thay đổi lớn/rủi ro (không bắt buộc).
-- **Trước mỗi push `develop`:** `git pull --rebase`; `python -m pytest -q` (gồm `tests/test_regression_kinrow.py`) + `python -m ruff check .` xanh; nếu đụng `report/` hoặc `gameai/experiments/`: thêm `report_check` + `python -m gameai.experiments.plots --check`.
+- **Trước mỗi push `develop`:** đồng bộ (`git fetch origin` rồi `git rebase origin/develop`); `python -m pytest -q` (gồm `tests/test_regression_kinrow.py`) + `python -m ruff check .` xanh; nếu đụng `report/` hoặc `gameai/experiments/`: thêm `report_check` + `python -m gameai.experiments.plots --check`.
 - **Cấm** `git push --force` (và `-f`), cấm rebase commit đã push.
 - **Vùng nhạy cảm:** `gameai/agents/`, interface `Game`/`Agent`, `gameai/core/`, `results/`, `report/report.md` → báo người kia trước khi sửa. **Agent phải dừng và hỏi người dùng trước khi sửa vùng này.**
 - `master`: chỉ merge từ `develop` ở mốc, qua PR "Create a merge commit" (không squash); không push thẳng `master`.
