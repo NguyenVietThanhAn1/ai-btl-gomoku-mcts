@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -182,13 +183,35 @@ def test_e3_label_ignored(tmp_path: Path) -> None:
     assert e5.e3_reusable(f, spec_a, e5.GREEDY, 2, diff_empty=lambda c: True)[0]
 
 
-def test_real_e3_files_reusable_now() -> None:
+def _has_tag(tag: str) -> bool:
+    r = subprocess.run(
+        ["git", "rev-parse", "--verify", "-q", f"{tag}^{{commit}}"],
+        cwd=e5.ROOT,
+        capture_output=True,
+    )
+    return r.returncode == 0
+
+
+def test_real_e3_files_reusable_at_kinrow_final() -> None:
+    """Raw E3 thật còn dùng lại được **tại tag kinrow-final** (không so HEAD: code agent sau tag
+    đổi hợp lệ, ví dụ P6.4, và e3_reusable đúng khi báo "code đổi")."""
+    if not _has_tag("kinrow-final"):
+        pytest.skip("không có tag kinrow-final")
     pts = [p for p in e5.all_points(False) if p.e3_path is not None]
     if not all(Path(p.e3_path).exists() for p in pts):
         pytest.skip("không có raw E3")
+
+    def pinned(commit: str) -> bool:
+        return e5.git_diff_empty(commit, target="kinrow-final")
+
     for p in pts:
-        ok, reason = e5.e3_reusable(p.e3_path, p.spec_a, p.spec_b, e5.N_PAIRS)
+        ok, reason = e5.e3_reusable(p.e3_path, p.spec_a, p.spec_b, e5.N_PAIRS, diff_empty=pinned)
         assert ok, reason
+
+
+def test_git_diff_empty_target_default_is_head() -> None:
+    assert e5.git_diff_empty("HEAD") is True  # cùng commit → không đổi
+    assert e5.git_diff_empty("HEAD", target="HEAD") is True
 
 
 # ---------------------------------------------------------------- thống kê
@@ -367,7 +390,7 @@ def test_run_point_writes_runinfo(tmp_path: Path) -> None:
     assert r["workers"] == "1" and r["cpu"] and int(r["logical_cpus"]) >= 1 and r["source"] == "e5"
 
 
-def test_estimate_full_from_fake_quick(tmp_path: Path) -> None:
+def test_estimate_full_from_fake_quick(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     raw, tab = tmp_path / "raw", tmp_path / "tab"
     raw.mkdir()
     for p in e5.all_points(True):
@@ -378,6 +401,8 @@ def test_estimate_full_from_fake_quick(tmp_path: Path) -> None:
             w = csv.DictWriter(fh, ["a_time_sum", "b_time_sum"])
             w.writeheader()
             w.writerow({"a_time_sum": str(p.budget / 1000 + 1), "b_time_sum": "1"})
+    orig = e5.e3_reusable  # không phụ thuộc lịch sử git: bỏ qua kiểm "code đổi", giữ kiểm raw E3
+    monkeypatch.setattr(e5, "e3_reusable", lambda *a, **k: orig(*a, diff_empty=lambda c: True, **k))
     out = e5.estimate_full(raw, tab, workers=4)
     steps = [r["step"] for r in out]
     assert steps[-1].startswith("total") and "h2h-time" in steps and "ab2" in steps

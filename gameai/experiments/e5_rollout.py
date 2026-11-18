@@ -269,10 +269,10 @@ def raw_path(pt: Point, quick: bool, raw_dir: Path = RAW_DIR) -> Path:
 # ---------------------------------------------------------------- tái dùng E3
 
 
-def git_diff_empty(commit: str, paths: tuple[str, ...] = CODE_PATHS) -> bool:
-    """`git diff --quiet <commit> HEAD -- paths` (True = không đổi)."""
+def git_diff_empty(commit: str, paths: tuple[str, ...] = CODE_PATHS, target: str = "HEAD") -> bool:
+    """`git diff --quiet <commit> <target> -- paths` (True = không đổi; `target` mặc định HEAD)."""
     r = subprocess.run(
-        ["git", "diff", "--quiet", commit, "HEAD", "--", *paths], cwd=ROOT, capture_output=True
+        ["git", "diff", "--quiet", commit, target, "--", *paths], cwd=ROOT, capture_output=True
     )
     return r.returncode == 0
 

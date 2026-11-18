@@ -11,7 +11,7 @@
 ### An
 
 - **Task hiện tại:** P6.4 🔄 (D-35) — AI "Rất khó" cho GUI 15×15. P7.2 ✅ và đã merge `master` (mốc Bài 1). Thứ tự mới D-35: `P6.4 → P8.1–P8.4 (+P6.2)` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
-- **Việc đang dở:** P6.4 vừa bắt đầu (commit D-35 docs; kế: B2 VCF + test → spike TT+delta, báo An trước khi code ID/TT). Lịch sử P7.2 — xong đợt (a), (b), (c) (An đã duyệt), dấu thập phân VN trong hình (`1d3c20b`), `plots --check` so cả summary + "tỷ lệ" trong GUI (`9d2aef6`), "tỷ lệ" trong `experiments/*.md` (`1fac6f7`) — cả ba đã push. **spec-reviewer P7.2: PASS** (3 minor, đã xử lý ở `fc418cc`). `help.png` đã sinh lại (Hình B.8), P7.2 ✅. Còn: An merge PR `develop` → `master` (merge commit, không squash).
+- **Việc đang dở:** P6.4: D-35 + B2 (VCF) + spike TT+delta xong (delta path-independent 0/1020; AB depth 3 cùng giá trị eval/delta/TT); An cho phép sửa `gameai/agents/` cho P6.4 (Thành viên 2 sẽ báo An trước nếu đụng phần này). Kế: B1 (root_hook + top_k → ID + deep TT). Lịch sử P7.2 — xong đợt (a), (b), (c) (An đã duyệt), dấu thập phân VN trong hình (`1d3c20b`), `plots --check` so cả summary + "tỷ lệ" trong GUI (`9d2aef6`), "tỷ lệ" trong `experiments/*.md` (`1fac6f7`) — cả ba đã push. **spec-reviewer P7.2: PASS** (3 minor, đã xử lý ở `fc418cc`). `help.png` đã sinh lại (Hình B.8), P7.2 ✅. Còn: An merge PR `develop` → `master` (merge commit, không squash).
 - **Bước tiếp theo:** P6.4 (B2 VCF → B1 spike → … → B3 MCTS cuối, timebox ~1,5 ngày; An chơi thử 5 ván trước khi đóng) → P8.1 (luật cờ tướng + perft, trên `develop`) → … → P7.3/P7.4 sau P8 (D-34/D-35). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
@@ -79,6 +79,10 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-18 — Sự cố: push 139a5f7 với 2 test E5 đỏ; sửa `fix: e5 guard tests pinned to kinrow-final`
+- Push `139a5f7` (chỉ thêm `heuristics/kinrow_vcf.*`) làm đỏ `test_real_e3_files_reusable_now` và `test_estimate_full_from_fake_quick` (E5): `e3_reusable` so `git diff <commit trong raw> HEAD` trên `gameai/{agents,games,heuristics,core}` nên mọi file mới ở đó là "code đổi" (guard đúng, test phụ thuộc HEAD sai). Tôi đã push vì lấy `$?` của `| tail` thay cho pytest → AGENTS.md thêm luật không pipe pytest/ruff khi cần exit code.
+- Sửa: `git_diff_empty(..., target="HEAD")` (mặc định giữ nguyên); test raw thật đổi tên `..._at_kinrow_final` ghim `target="kinrow-final"` (skip chỉ khi thiếu raw/tag); `test_estimate_full_from_fake_quick` (e5) monkeypatch `e3_reusable` bỏ kiểm git, giữ kiểm raw. Test cùng tên ở `test_e3_c_sweep` không dùng git → không đổi. `e3_reusable`, `e5_rollout` logic, `results/` không đổi. Ghi chú: mọi commit sau đổi `agents/` vẫn hợp lệ với test này.
 
 #### 2026-11-18 — D-35: đổi thứ tự (P8 trước P7.3/P7.4), mở P6.4
 - An duyệt plan P6.4 + 4 chỉnh: (1) B5 đánh giá từ khai cuộc ngẫu nhiên có seed, mỗi khai cuộc 2 ván đổi bên, ghi số khai cuộc phân biệt + số ván trùng chuỗi nước vào D-36; (2) ngưỡng ≥ 0,8 vs AB Khó, ≥ 0,5 vs MCTS Khó + An tự chơi 5 ván trước khi đóng, không đạt → chỉnh 1 vòng rồi dừng; (3) timebox ~1,5 ngày, B3 (MCTS Rất khó) làm cuối, bỏ nếu quá; (4) `_Timeout` không ghi TT nút dở dang + test cắt rồi search lại = TT rỗng. Quyết: Q1 có (An báo Thành viên 2 trước khi sửa `agents/`), Q2 3×3 không có Rất khó, Q4 không VCT, Q5 ảnh Setup để nguyên (chụp lại ở P7.3/P7.4), Q6 CSV gitignore.
