@@ -9,6 +9,7 @@ Luật dự án: [AGENTS.md](../AGENTS.md) (dùng chung cho mọi công cụ). �
    git clone https://github.com/NguyenVietThanhAn1/ai-btl-gomoku-mcts.git
    cd ai-btl-gomoku-mcts
    git switch develop
+   git config pull.rebase true
    ```
    Agent đọc `AGENTS.md` / `CLAUDE.md` từ thư mục gốc workspace — mở thư mục cha thì luật không được nạp.
 2. **Tạo môi trường Python** (PowerShell, Python 3.11+):
@@ -51,7 +52,7 @@ Luật dự án: [AGENTS.md](../AGENTS.md) (dùng chung cho mọi công cụ). �
    | File | Vai trò |
    |---|---|
    | `CLAUDE.md` | `@AGENTS.md` + ghi chú riêng Claude Code |
-   | `.claude/settings.json` | Permission: tự chạy pytest/ruff/gameai/git commit; hỏi khi pip install/push; cấm sửa `results/raw`, `rm -rf`, `git reset --hard` |
+   | `.claude/settings.json` | Permission: tự chạy pytest/ruff/gameai/git commit; hỏi khi pip install/push; cấm sửa `results/raw`, `rm -rf`, `git reset --hard`, `git push --force` |
    | `.claude/skills/next-task/` | `/next-task [ID]` = WORKFLOW §1 |
    | `.claude/skills/wrap-up/` | `/wrap-up` = WORKFLOW §2 |
    | `.claude/agents/spec-reviewer.md` | Subagent review = REVIEW.md |
@@ -63,7 +64,7 @@ Luật dự án: [AGENTS.md](../AGENTS.md) (dùng chung cho mọi công cụ). �
    { "context": { "fileName": "AGENTS.md" } }
    ```
    Agent không tự đọc thì dán câu đầu tiên: "Đọc AGENTS.md và làm theo".
-2. **Agent khác không bị chặn bằng permission như Claude Code** → tự để ý mục "Lệnh nguy hiểm" trong `AGENTS.md` (không `rm -rf`, `git reset --hard`, sửa `results/raw/`; hỏi trước khi cài gói mới / push). Nên để agent ở chế độ hỏi trước khi chạy lệnh.
+2. **Agent khác không bị chặn bằng permission như Claude Code** → tự để ý mục "Lệnh nguy hiểm" trong `AGENTS.md` (không `rm -rf`, `git reset --hard`, `git push --force`, sửa `results/raw/`; hỏi trước khi cài gói mới / push). Nên để agent ở chế độ hỏi trước khi chạy lệnh.
 3. **Giao task:** "Làm task `<ID>` theo docs/WORKFLOW.md". Dừng phiên: "Wrap-up theo docs/WORKFLOW.md mục 2".
 4. **Review:** mở phiên/agent mới: "Review task `<ID>` theo docs/REVIEW.md".
 5. Code tay: làm theo đúng checklist trong `docs/WORKFLOW.md`.

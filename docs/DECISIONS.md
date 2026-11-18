@@ -288,3 +288,10 @@
 - **Quyết định:** mỗi luật chỉ viết ở một nơi. `AGENTS.md` (root) = toàn bộ luật dự án, gồm luật trước chỉ có trong settings.json (cấm `rm -rf`, `git reset --hard`, sửa `results/raw/`; hỏi trước khi cài gói mới / push) và tóm tắt D-27. `docs/WORKFLOW.md` = checklist làm task + wrap-up (thêm bước 0 kiểm branch `feat/<ID>`); `docs/REVIEW.md` = checklist review. `CLAUDE.md` chỉ còn `@AGENTS.md` + ghi chú riêng Claude Code; skill `next-task`/`wrap-up` và agent `spec-reviewer` chỉ trỏ tới WORKFLOW/REVIEW. `docs/SETUP.md` chia §A chung / §B Claude Code / §C agent khác.
 - **Luật push sửa đổi (thay "không push khi chưa được yêu cầu"):** được push branch `feat/<ID>` của mình để mở PR; không push `develop`/`master`.
 - **PROGRESS.md:** "Đang ở đâu" tách khối theo người (`### An`, `### Thành viên 2`); wrap-up chỉ sửa khối của Owner hiện tại.
+
+### D-32 (2026-11-18) — Push thẳng `develop`; thay D-27/D-31 phần branch/push
+- **Quyết định:** làm và commit thẳng trên `develop`; feature branch `feat/<ID>` chỉ khi thay đổi lớn/rủi ro (không bắt buộc). Trước mỗi push: `git pull --rebase`, pytest (gồm golden k-in-row) + ruff xanh; đụng `report/` hoặc `gameai/experiments/` thì thêm `report_check` + `plots --check`. Cấm `git push --force`, cấm rebase commit đã push. `master` chỉ merge từ `develop` ở mốc qua PR "Create a merge commit" (không squash).
+- **Vùng nhạy cảm** (`gameai/agents/`, interface `Game`/`Agent`, `gameai/core/`, `results/`, `report/report.md`): báo người kia trước khi sửa; agent phải dừng và hỏi người dùng trước khi sửa.
+- **PROGRESS.md:** session log chuyển vào khối từng người (`### An` / `### Thành viên 2`), mới nhất ở đầu khối mình; log cũ giữ nguyên, đặt ở khối An.
+- **Đánh số D-xx:** lấy số ngay sau `git pull`; nếu rebase thấy trùng số thì người rebase sau đổi số của mình.
+- **Lý do:** nhóm 2 người, giảm số branch/PR phải quản lý; bù lại bằng kiểm tra trước push + báo trước khi sửa vùng nhạy cảm.
