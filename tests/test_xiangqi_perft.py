@@ -7,7 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from gameai.experiments.p81_perft import FIELDS, POSITIONS, run_perft
+from gameai.experiments.p81_perft import (
+    FIELDS,
+    POSITIONS,
+    SPEED_FIELDS,
+    measure_speed,
+    run_perft,
+)
 from gameai.games.xiangqi import Xiangqi, perft
 
 CASES = [(name, fen, d, exp[d - 1]) for name, fen, exp in POSITIONS for d in (1, 2, 3)]
@@ -61,3 +67,15 @@ def test_committed_csv_matches_reference() -> None:
 def test_run_perft_quick_rows() -> None:
     rows = run_perft(1)
     assert len(rows) == len(POSITIONS) and all(r["ok"] for r in rows)
+
+
+def test_measure_speed_rows_and_committed_speed_csv() -> None:
+    rows = run_perft(2)
+    sp = measure_speed(rows, games=2, playouts=2)
+    assert {r["metric"] for r in sp} >= {"legal_moves", "winner", "random_rollout_games"}
+    assert all(r["value"] > 0 and set(r) == set(SPEED_FIELDS) for r in sp)
+    path = Path(__file__).resolve().parent.parent / "results" / "tables" / "p81_speed.csv"
+    if path.exists():
+        with path.open(encoding="utf-8") as fh:
+            reader = csv.DictReader(fh)
+            assert reader.fieldnames == SPEED_FIELDS and list(reader)

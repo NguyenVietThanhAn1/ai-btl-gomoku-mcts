@@ -1,7 +1,8 @@
 """P8.1: perft cờ tướng so với số chuẩn của chessprogramming.org + đo tốc độ luật.
 
 Chạy: `python -m gameai.experiments.p81_perft [--max-depth 4] [--out results/tables/p81_perft.csv]`
-Độ sâu mặc định 4 (~12 s tổng, 11 thế). Thoát với mã 1 nếu có số lệch.
+Độ sâu mặc định 4 (~12 s tổng, 11 thế). Ghi thêm `--speed-out` (p81_speed.csv: tốc độ trên máy này).
+Thoát với mã 1 nếu có số lệch.
 """
 
 from __future__ import annotations
@@ -102,8 +103,13 @@ def run_perft(max_depth: int) -> list[dict]:
     return rows
 
 
-def measure_speed(games: int = 20, seed: int = 0) -> dict[str, float]:
-    """Thời gian trung bình của `legal_moves()` / `winner()` trên thế ngẫu nhiên giữa ván."""
+SPEED_FIELDS = ["metric", "value", "unit", "n_samples", "note"]
+
+
+def measure_speed(
+    rows: list[dict], games: int = 20, playouts: int = 150, seed: int = 0
+) -> list[dict]:
+    """Đo tốc độ luật trên máy này (phụ thuộc máy): các dòng cho `p81_speed.csv`."""
     rng = random.Random(seed)
     positions = []
     for _ in range(games):
@@ -116,22 +122,99 @@ def measure_speed(games: int = 20, seed: int = 0) -> dict[str, float]:
         positions.append(g)
     reps = 20
 
-    def per_call(fn_name: str) -> float:
+    def per_call_us(fn_name: str) -> float:
         t0 = time.perf_counter()
         for g in positions:
             for _ in range(reps):
-                g._legal = None
+                g._legal = None  # bỏ cache để đo đúng chi phí sinh nước
                 g._win = False
                 getattr(g, fn_name)()
-        return (time.perf_counter() - t0) / (len(positions) * reps)
+        return (time.perf_counter() - t0) / (len(positions) * reps) * 1e6
 
-    return {"legal_moves_s": per_call("legal_moves"), "winner_s": per_call("winner")}
+    n_calls = len(positions) * reps
+    out = [
+        {
+            "metric": "legal_moves",
+            "value": round(per_call_us("legal_moves"), 1),
+            "unit": "us/call",
+            "n_samples": n_calls,
+            "note": "không cache; thế giữa ván ngẫu nhiên (10-60 ply từ thế khởi đầu)",
+        },
+        {
+            "metric": "winner",
+            "value": round(per_call_us("winner"), 1),
+            "unit": "us/call",
+            "n_samples": n_calls,
+            "note": "không cache, bên đi còn nước (dừng ở nước hợp lệ đầu tiên)",
+        },
+    ]
+    start_d4 = [r for r in rows if r["position"] == "start" and r["depth"] == 4]
+    if start_d4:
+        out.append(
+            {
+                "metric": "perft_start_depth4",
+                "value": start_d4[0]["nodes_per_sec"],
+                "unit": "leaf_nodes/s",
+                "n_samples": 1,
+                "note": "có bulk counting ở lá (độ sâu 1 chỉ đếm len(nước), không play/undo lá)",
+            }
+        )
+    out.append(
+        {
+            "metric": "perft_all_positions",
+            "value": round(sum(r["nodes"] for r in rows) / sum(r["seconds"] for r in rows)),
+            "unit": "leaf_nodes/s",
+            "n_samples": len(rows),
+            "note": "tổng nút / tổng giây của mọi dòng p81_perft.csv; có bulk counting ở lá",
+        }
+    )
+    # rollout ngẫu nhiên đến hết ván (play + winner mỗi ply), hoàn tác sau mỗi ván
+    rng = random.Random(seed + 1)
+    g = Xiangqi()
+    total_plies = draws = 0
+    t0 = time.perf_counter()
+    for _ in range(playouts):
+        n = 0
+        while (w := g.winner()) is None:
+            g.play(rng.choice(g.legal_moves()))
+            n += 1
+        total_plies += n
+        draws += w == 0
+        for _ in range(n):
+            g.undo()
+    dt = time.perf_counter() - t0
+    note = "play + winner mỗi ply, tới hết ván (max_plies=300), seed cố định"
+    out += [
+        {
+            "metric": "random_rollout_games",
+            "value": round(playouts / dt, 1),
+            "unit": "games/s",
+            "n_samples": playouts,
+            "note": note,
+        },
+        {
+            "metric": "random_rollout_plies",
+            "value": round(total_plies / dt),
+            "unit": "plies/s",
+            "n_samples": total_plies,
+            "note": note,
+        },
+        {
+            "metric": "random_rollout_mean_length",
+            "value": round(total_plies / playouts, 1),
+            "unit": "plies/game",
+            "n_samples": playouts,
+            "note": f"{draws}/{playouts} ván hòa (chạm max_plies hoặc lặp thế)",
+        },
+    ]
+    return out
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--max-depth", type=int, default=4)
     ap.add_argument("--out", type=Path, default=Path("results/tables/p81_perft.csv"))
+    ap.add_argument("--speed-out", type=Path, default=Path("results/tables/p81_speed.csv"))
     args = ap.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):  # console Windows cp1252 không in được tiếng Việt
         sys.stdout.reconfigure(encoding="utf-8")
@@ -149,11 +232,13 @@ def main(argv: list[str] | None = None) -> int:
             f"{mark} {r['position']:<6} d{r['depth']} nodes={r['nodes']:>10} "
             f"expected={r['expected']:>10} {r['seconds']:>8.3f}s {r['nodes_per_sec']:>9} n/s"
         )
-    speed = measure_speed()
-    print(
-        f"legal_moves(): {speed['legal_moves_s'] * 1e6:.0f} us/call; "
-        f"winner() (không cache, có nước): {speed['winner_s'] * 1e6:.0f} us/call"
-    )
+    speed = measure_speed(rows)
+    with args.speed_out.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=SPEED_FIELDS)
+        w.writeheader()
+        w.writerows(speed)
+    for r in speed:
+        print(f"{r['metric']:<28} {r['value']:>10} {r['unit']:<13} (n={r['n_samples']})")
     print(f"{len(rows) - len(bad)}/{len(rows)} khớp -> {args.out}")
     return 1 if bad else 0
 

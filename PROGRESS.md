@@ -11,7 +11,7 @@
 ### An
 
 - **Task hiện tại:** P8.2 ⬜ (chưa bắt đầu). P8.1 ✅ 2026-11-21 (luật cờ tướng + perft, thẳng trên `develop`, D-32). P6.4 ✅ (D-36). Thứ tự D-35: `P8.2 → P8.3 → P6.2 → P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
-- **Việc đang dở:** không. P8.1 xong, đã commit local; chờ An duyệt push. Đầu P8.3 quyết định có cần phiên tối ưu cho MCTS: rollout ngẫu nhiên đến cuối ván ~60 ván/s (< 200 iter/s), rollout cắt L ply cận trên ~16 000/L iter/s (`xiangqi.md` mục Tốc độ).
+- **Việc đang dở:** không. P8.1 xong, đã commit local; chờ An duyệt push. Đầu P8.3 quyết định tối ưu MCTS (rollout cắt L ply + eval) sau khi có eval thật; số tham chiếu (`results/tables/p81_speed.csv`, 1 máy): rollout ngẫu nhiên đến hết ván ~60 ván/s (< 200 iter/s), rollout cắt L ply cận trên ~17 000/L iter/s.
 - **Bước tiếp theo:** P8.2 (`heuristics/xiangqi_eval.py`, AB `time_limit` đã có từ P6.4 — xem D-23 trong D-22, registry `GameSpec("xiangqi")`) → P8.3 → P6.2 → P8.4 → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
@@ -82,8 +82,8 @@
 
 #### 2026-11-21 — P8.1 xong: luật cờ tướng + perft
 - `gameai/games/xiangqi.py` (+ `.md`), `experiments/p81_perft.py`, `results/tables/p81_perft.csv` (file MỚI duy nhất trong `results/`, An cho phép), `tests/test_xiangqi.py` (51 test), `tests/test_xiangqi_perft.py`. Thiết kế đúng D-22; không sửa `core/`, `agents/`, `results/raw/`.
-- Perft **44/44 khớp** (11 thế × D1–4) với chessprogramming.org (truy cập 2026-11-21); D4 là test `slow` (~12 s), D1–3 chạy mặc định. Perft có bulk counting ở lá (~0,45–0,77 triệu nút/s). `legal_moves()` ~59 µs, `winner()` ~9 µs. Ghi công perft đính chính ở D-22 (thế 2 = Korzh & Pham, thế 3–11 = Nguyen Pham).
-- Sửa chữ D-32: `git pull --rebase` → `git fetch` + `git rebase origin/develop` (khớp AGENTS.md/D-33). precheck 5/5 EXIT 0; spec-reviewer P8.1 **PASS** (0 blocker/major; minor: số tốc độ chỉ ở `xiangqi.md` không ở CSV — đã ghi rõ; mã talkchess `t=` chưa kiểm được, kiểm lại nếu trích vào báo cáo).
+- Perft **44/44 khớp** (11 thế × D1–4) với chessprogramming.org (truy cập 2026-11-21); D4 là test `slow` (~12 s), D1–3 chạy mặc định. Perft có bulk counting ở lá (~0,66–0,72 triệu nút lá/s). Số tốc độ (`legal_moves()` ~59 µs, `winner()` ~9 µs, rollout ~63 ván/s) nằm ở `results/tables/p81_speed.csv` (file MỚI thứ hai trong `results/`, An cho phép); mã thread talkchess bỏ khỏi `xiangqi.md` (chưa kiểm). Ghi công perft đính chính ở D-22 (thế 2 = Korzh & Pham, thế 3–11 = Nguyen Pham).
+- Sửa chữ D-32: `git pull --rebase` → `git fetch` + `git rebase origin/develop` (khớp AGENTS.md/D-33). precheck 5/5 EXIT 0; spec-reviewer P8.1 **PASS** (0 blocker/major; minor đã xử lý: thêm `p81_speed.csv`; bỏ mã talkchess `t=` chưa kiểm).
 
 #### 2026-11-21 — Đóng P6.4 (D-36)
 - An chơi thử 5 ván 15×15 mức Khó (AB): "khá ổn", không lỗi. Bỏ B3 (MCTS Khó = `time_limit` + VCF) vì vượt timebox ~1,5 ngày (D-35); MCTS Khó giữ nguyên. spec-reviewer P6.4 **PASS** (0 blocker/major; minor `alphabeta.md` "sắp tới" → "đã có" đã sửa). P6.4 ✅.

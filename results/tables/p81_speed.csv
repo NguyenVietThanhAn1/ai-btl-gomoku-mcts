@@ -1,0 +1,8 @@
+metric,value,unit,n_samples,note
+legal_moves,59.2,us/call,400,không cache; thế giữa ván ngẫu nhiên (10-60 ply từ thế khởi đầu)
+winner,8.8,us/call,400,"không cache, bên đi còn nước (dừng ở nước hợp lệ đầu tiên)"
+perft_start_depth4,714968,leaf_nodes/s,1,"có bulk counting ở lá (độ sâu 1 chỉ đếm len(nước), không play/undo lá)"
+perft_all_positions,655972,leaf_nodes/s,44,tổng nút / tổng giây của mọi dòng p81_perft.csv; có bulk counting ở lá
+random_rollout_games,63.4,games/s,150,"play + winner mỗi ply, tới hết ván (max_plies=300), seed cố định"
+random_rollout_plies,17033,plies/s,40308,"play + winner mỗi ply, tới hết ván (max_plies=300), seed cố định"
+random_rollout_mean_length,268.7,plies/game,150,107/150 ván hòa (chạm max_plies hoặc lặp thế)

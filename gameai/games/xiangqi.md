@@ -52,10 +52,10 @@ def perft(game: Xiangqi, depth: int) -> int
 - **Kiểm chứng đúng luật bằng perft:** đếm số thế lá sau `d` nước từ một thế và so với số của người khác. Khớp ở thế khởi đầu (44 / 1 920 / 79 666 / 3 290 240) và 10 thế khó (thiết kế để bắt lỗi chiếu/né chiếu) ⇒ bộ sinh nước hợp lệ đúng với tới độ sâu 4.
 
 ## Nguồn perft tham chiếu
-Trang **Chinese Chess Perft Results**, chessprogramming.org — https://www.chessprogramming.org/Chinese_Chess_Perft_Results — **truy cập 2026-11-21** (lúc đó trang ghi "temporary, read-only recovery"; số liệu chép tay vào `gameai/experiments/p81_perft.py`). Ghi công theo trang/chú thích:
-- Thế khởi đầu: Patrice Duhamel, Nguyen Pham (CCC "Perft for Xiangqi & Shogi", 2013, talkchess t=60445).
-- Thế 2: Maksim Korzh, Nguyen Pham (CCC "Chinese chess Xiangqi perft results", 2021-01-27, t=76430).
-- Thế 3–4 (trung cuộc) và 5–11 (thế có nhiều nước chiếu/né chiếu, "thiết kế để thử bộ sinh nước lười/cập nhật tức thời"): Nguyen Pham (CCC "New Xiangqi (Chinese chess) Perft results", 2026-01-11, t=85880).
+**Nguồn chính:** trang *Chinese Chess Perft Results*, chessprogramming.org — https://www.chessprogramming.org/Chinese_Chess_Perft_Results — **truy cập 2026-11-21** (lúc đó trang ghi "temporary, read-only recovery"; FEN và số liệu chép vào `gameai/experiments/p81_perft.py`, đã đối chiếu từng ký tự với trang). Ghi công theo tác giả + ngày bài CCC (Computer Chess Club) như trang ghi:
+- Thế khởi đầu: Patrice Duhamel, Nguyen Pham — bài CCC "Perft for Xiangqi & Shogi", 2013-05-25.
+- Thế 2: Maksim Korzh, Nguyen Pham — bài CCC "Chinese chess Xiangqi perft results", 2021-01-27.
+- Thế 3–4 (trung cuộc) và 5–11 (thế nhiều nước chiếu/né chiếu, thiết kế để thử bộ sinh nước lười): Nguyen Pham — bài CCC "New Xiangqi (Chinese chess) Perft results", 2026-01-11.
 - Trang nói số đếm tính ở **nút lá**; không nêu quy ước lặp/chiếu dai — perft chỉ đếm nước hợp lệ. (D-22 ghi nhầm "thế 2–11 của Korzh & Pham"; ghi công đúng như trên.)
 
 ## Test
@@ -64,12 +64,13 @@ Trang **Chinese Chess Perft Results**, chessprogramming.org — https://www.ches
 - Chạy riêng: `python -m pytest tests/test_xiangqi.py tests/test_xiangqi_perft.py -q`.
 - Script: `python -m gameai.experiments.p81_perft [--max-depth 4] [--out …]` → `results/tables/p81_perft.csv` (cột `position, depth, nodes, expected, ok, seconds, nodes_per_sec`); thoát mã 1 nếu có số lệch. Hiện **44/44** (11 thế × D1–4) khớp.
 
-## Tốc độ (2026-11-21, máy dev, cắm sạc; số `seconds` / `nodes_per_sec` trong CSV mang tính minh họa, đổi theo máy)
-- **Cách tính nút/giây của perft:** `nodes_per_sec = nodes / seconds`, với `nodes` = số **thế lá** ở độ sâu `d`. Perft có **bulk counting ở lá**: ở độ sâu 1 chỉ sinh nước hợp lệ rồi lấy `len(...)`, **không** đi/hoàn tác từng nước lá. Vì vậy chỉ ~1/40 nút (các nút ở độ sâu `d−1` trở lên) thực sự được `play`/`undo`; n/s ở đây **không** so được trực tiếp với perft không bulk counting. Đo là perft chạy một lần, thời gian bằng `time.perf_counter()` quanh `perft()` (không tính nạp FEN).
-- **CSV chỉ chứa số perft** (nút, giây, nút/giây). Thời gian `legal_moves()`/`winner()`/rollout dưới đây do `p81_perft.py` in ra stdout (hàm `measure_speed`, rollout đo bằng script tạm) và chỉ ghi ở file này — không vào `results/`.
-- Perft: khoảng **0,45–0,77 triệu nút/s** (thế khởi đầu D4: 3 290 240 nút trong ~4,8 s ≈ 0,69 triệu/s; cả 44 phép đo ~12 s).
-- `legal_moves()` (không cache, thế giữa ván ngẫu nhiên): **~59 µs/lần**. `winner()` (không cache, còn nước đi, dừng ở nước hợp lệ đầu): **~9 µs/lần**. `clone()` ở thế khởi đầu: ~0,7 µs (tăng theo `ply` vì copy stack + đếm lặp).
-- Rollout ngẫu nhiên đến hết ván (`play` + `winner` mỗi ply, 484 ván, 8 s): ~**16 000 ply/s**; ván trung bình 269 ply (71 % chạm `max_plies = 300` → hòa; 16 % Đen thắng, 13 % Đỏ thắng) ⇒ ~**60 ván/s**. Rollout **cắt** `L` ply cho cận trên ~16 000/L lần/s (L = 30 → ~530/s, chưa tính eval và duyệt cây). → Ước tính MCTS: rollout đến cuối ván **< 200 iter/s** (không dùng được); phải cắt rollout + eval (đúng thiết kế P8.3). Quyết định có cần phiên tối ưu hay không ở đầu P8.3, sau khi có eval thật.
+## Tốc độ
+**Đo trên một máy** (máy dev của An, Windows, Python 3.13, cắm sạc, 2026-11-21) nên **phụ thuộc tốc độ máy**; chỉ dùng làm cỡ độ lớn. Nguồn số: `results/tables/p81_speed.csv` (cột `metric, value, unit, n_samples, note`) và `results/tables/p81_perft.csv`, đều do `python -m gameai.experiments.p81_perft` sinh; thời gian thay đổi giữa các lần chạy.
+- **Cách tính nút/giây của perft:** `nodes_per_sec = nodes / seconds`, `nodes` = số **thế lá** ở độ sâu `d`, đo bằng `time.perf_counter()` quanh `perft()` (không tính nạp FEN). Perft **có bulk counting ở lá**: ở độ sâu 1 chỉ sinh nước hợp lệ rồi lấy `len(...)`, **không** `play`/`undo` từng nước lá. Vì vậy chỉ khoảng 1/40 số nút thực sự được đi/hoàn tác, và n/s **không** so trực tiếp được với perft không bulk counting.
+- Perft (`p81_speed.csv`): thế khởi đầu D4 = **715 000** nút lá/s (3 290 240 nút); tổng cả 44 phép đo = **656 000** nút lá/s.
+- `legal_moves()` (không cache, thế giữa ván ngẫu nhiên): **59,2 µs/lần**. `winner()` (không cache, bên đi còn nước, dừng ở nước hợp lệ đầu tiên): **8,8 µs/lần**.
+- Rollout ngẫu nhiên đến hết ván (`play` + `winner` mỗi ply, 150 ván, seed cố định): **63,4 ván/s** = 17 033 ply/s; ván trung bình 268,7 ply, 107/150 ván hòa (chạm `max_plies = 300` hoặc lặp thế).
+- **Ước tính MCTS:** rollout đến cuối ván ≈ 60 ván/s, **< 200 iter/s**. Rollout **cắt** `L` ply cho cận trên ≈ 17 000/`L` lần/s (L = 30 → ~570/s, chưa tính eval và duyệt cây). Quyết định có tối ưu hay không (rollout cắt + eval) đưa ra ở đầu P8.3, sau khi có eval thật.
 
 ## Hạn chế / TODO
 - **Không có luật chiếu dai / đuổi dai** (luật cờ tướng châu Á xử thua bên chiếu dai) → bên đang thua có thể cầm hòa bằng chiếu dai (thế lặp lần 3 = hòa). Không có luật 60 nước không ăn quân, không có hòa do thiếu quân. Ghi vào báo cáo, không sửa (D-22).
