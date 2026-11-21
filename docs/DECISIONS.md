@@ -217,7 +217,7 @@
 - **Hạn chế (ghi vào báo cáo, không sửa):**
   - Không có luật chiếu dai / đuổi dai (luật châu Á xử thua bên chiếu dai) → bên đang thua có thể cầm hòa bằng chiếu dai. Không có luật 60 nước không ăn quân, không có hòa do thiếu quân.
   - **TT + lặp thế (graph history interaction):** `key()` không chứa lịch sử, nhưng kết quả của một thế phụ thuộc lịch sử (lặp lần 3 → hòa). Giá trị lưu trong TT của AB vì vậy có thể sai khi cùng thế đạt tới qua lịch sử khác (một bên là hòa do lặp, bên kia không). Không sửa, chỉ ghi nhận.
-- **Nguồn perft:** chessprogramming.org "Chinese Chess Perft Results" (thế khởi đầu: Duhamel & Pham; thế 2–11: Korzh & Pham); khởi đầu 44 / 1 920 / 79 666 / 3 290 240. Ghi URL + ngày truy cập vào `xiangqi.md` ở P8.1.
+- **Nguồn perft:** chessprogramming.org "Chinese Chess Perft Results" (thế khởi đầu: Duhamel & Pham; thế 2–11: Korzh & Pham); khởi đầu 44 / 1 920 / 79 666 / 3 290 240. Ghi URL + ngày truy cập vào `xiangqi.md` ở P8.1. *(Đính chính 2026-11-21, P8.1: theo trang gốc, thế 2 = Korzh & Pham; thế 3–11 = Nguyen Pham; ghi công đúng ở `xiangqi.md`.)*
 - **Quyết định sẽ ghi sau:** D-23 (P8.2) AlphaBeta `time_limit` + iterative deepening (`None` → đường code cũ, không thêm khóa stats; bỏ độ sâu đang dở, luôn xong depth 1, nước tốt nhất độ sâu trước lên đầu ở gốc, `depth_reached` ghi cả vào `max_depth`); D-24 (P8.3) nguồn nhãn hiệu chỉnh `scale` (báo tỉ lệ ván phân thắng thua của AB depth 1 tự đấu; < ~30 % → đổi sang AB depth 2 hoặc nhãn theo chênh lệch vật chất sau L nước) + bật/tắt `check_tactics`; D-25 (P8.4) thiết kế E7 (mục tiêu 50 ván/điểm cho (c), (d); quá đắt → ≥ 20 kèm lý do).
 
 ### D-26 (2026-11-17) — Đổi thứ tự: làm nốt k-in-row trước cờ tướng; tách P6
@@ -291,7 +291,7 @@
 - **PROGRESS.md:** "Đang ở đâu" tách khối theo người (`### An`, `### Thành viên 2`); wrap-up chỉ sửa khối của Owner hiện tại.
 
 ### D-32 (2026-11-18) — Push thẳng `develop`; thay D-27/D-31 phần branch/push
-- **Quyết định:** làm và commit thẳng trên `develop`; feature branch `feat/<ID>` chỉ khi thay đổi lớn/rủi ro (không bắt buộc). Trước mỗi push: `git pull --rebase`, pytest (gồm golden k-in-row) + ruff xanh; đụng `report/` hoặc `gameai/experiments/` thì thêm `report_check` + `plots --check`. Cấm `git push --force`, cấm rebase commit đã push. `master` chỉ merge từ `develop` ở mốc qua PR "Create a merge commit" (không squash).
+- **Quyết định:** làm và commit thẳng trên `develop`; feature branch `feat/<ID>` chỉ khi thay đổi lớn/rủi ro (không bắt buộc). Trước mỗi push: `git fetch origin` + `git rebase origin/develop` (hai lệnh riêng; thay `git pull --rebase` ban đầu, xem quyết định đồng bộ ở dưới), pytest (gồm golden k-in-row) + ruff xanh; đụng `report/` hoặc `gameai/experiments/` thì thêm `report_check` + `plots --check`. Cấm `git push --force`, cấm rebase commit đã push. `master` chỉ merge từ `develop` ở mốc qua PR "Create a merge commit" (không squash).
 - **Vùng nhạy cảm** (`gameai/agents/`, interface `Game`/`Agent`, `gameai/core/`, `results/`, `report/report.md`): báo người kia trước khi sửa; agent phải dừng và hỏi người dùng trước khi sửa.
 - **PROGRESS.md:** session log chuyển vào khối từng người (`### An` / `### Thành viên 2`), mới nhất ở đầu khối mình; log cũ giữ nguyên, đặt ở khối An.
 - **Đánh số D-xx:** lấy số ngay sau `git pull`; nếu rebase thấy trùng số thì người rebase sau đổi số của mình.
