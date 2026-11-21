@@ -10,9 +10,9 @@
 
 ### An
 
-- **Task hiện tại:** P6.4 🔄 (D-35) — AI "Rất khó" cho GUI 15×15. P7.2 ✅ và đã merge `master` (mốc Bài 1). Thứ tự mới D-35: `P6.4 → P8.1–P8.4 (+P6.2)` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
-- **Việc đang dở:** P6.4: D-35 + B2 (VCF) + spike TT+delta xong (delta path-independent 0/1020; AB depth 3 cùng giá trị eval/delta/TT); An cho phép sửa `gameai/agents/` cho P6.4 (Thành viên 2 sẽ báo An trước nếu đụng phần này). Kế: B1 (root_hook + top_k → ID + deep TT). Lịch sử P7.2 — xong đợt (a), (b), (c) (An đã duyệt), dấu thập phân VN trong hình (`1d3c20b`), `plots --check` so cả summary + "tỷ lệ" trong GUI (`9d2aef6`), "tỷ lệ" trong `experiments/*.md` (`1fac6f7`) — cả ba đã push. **spec-reviewer P7.2: PASS** (3 minor, đã xử lý ở `fc418cc`). `help.png` đã sinh lại (Hình B.8), P7.2 ✅. Còn: An merge PR `develop` → `master` (merge commit, không squash).
-- **Bước tiếp theo:** P6.4 (B2 VCF → B1 spike → … → B3 MCTS cuối, timebox ~1,5 ngày; An chơi thử 5 ván trước khi đóng) → P8.1 (luật cờ tướng + perft, trên `develop`) → … → P7.3/P7.4 sau P8 (D-34/D-35). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
+- **Task hiện tại:** P8.1 🔄 (luật cờ tướng + perft, làm thẳng trên `develop`, D-32). P6.4 ✅ 2026-11-21 (spec-reviewer PASS, An chơi thử 5 ván OK, B3 bỏ — D-36). Thứ tự D-35: `P8.1–P8.4 (+P6.2)` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
+- **Việc đang dở:** P8.1 — chưa code (plan An đã duyệt 2026-11-21: `games/xiangqi.py` + `.md`, `experiments/p81_perft.py` → `results/tables/p81_perft.csv` (chỉ file này), test). Dừng báo An sau khi perft D1–3 chạy, trước `xiangqi.md` + spec-reviewer.
+- **Bước tiếp theo:** P8.1 → P8.2 → P8.3 → P6.2 → P8.4 → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ### Thành viên 2
@@ -48,7 +48,7 @@
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
 | P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; GUI thay bởi P6.3 (An chơi thử OK) |
 | P6.3 | GUI: game chơi được hoàn chỉnh | ✅ | An | 2026-11-17 | D-29; spec-reviewer PASS; An chơi thử bằng chuột OK |
-| P6.4 | GUI: AI "Rất khó" 15×15 (ID, top-k, TT, VCF) | 🔄 | An | 2026-11-18 | D-35/D-36; không đổi results/ |
+| P6.4 | GUI: AI "Rất khó" 15×15 (ID, top-k, TT, VCF) | ✅ | An | 2026-11-21 | D-35/D-36; B3 bỏ; An chơi thử 5 ván OK; không đổi results/ |
 | P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ✅ | An | 2026-11-18 | D-30; spec-reviewer PASS; report_check 0 lỗi; `plots --check` 26/26 |
@@ -79,6 +79,10 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-21 — Đóng P6.4 (D-36)
+- An chơi thử 5 ván 15×15 mức Khó (AB): "khá ổn", không lỗi. Bỏ B3 (MCTS Khó = `time_limit` + VCF) vì vượt timebox ~1,5 ngày (D-35); MCTS Khó giữ nguyên. spec-reviewer P6.4 **PASS** (0 blocker/major; minor `alphabeta.md` "sắp tới" → "đã có" đã sửa). P6.4 ✅.
+- Sửa `PLAN.md` §P8 cho khớp D-32 (làm thẳng trên `develop`, bỏ branch `xiangqi`). An cho phép tạo MỚI `results/tables/p81_perft.csv` (chỉ file này) cho P8.1.
 
 #### 2026-11-18 — P6.4 B1 + B4 (D-36): AB Khó mới 15×15, mapping dịch mức
 - B1 xong (3 commit local, chờ precheck + An duyệt push): `AlphaBetaAgent` `root_hook`, `top_k`, `time_limit` (ID), `tt_mode="deep"` + 30 test; `kinrow_vcf`. An đổi thiết kế B4: không thêm "Rất khó" — dịch mức AB 15×15 (Vừa = Khó cũ E1, Khó = `AB15_HARD`); D-36. Demo giữ cấu hình thí nghiệm (`AB2` tra qua `EXPERIMENT_SPECS`).

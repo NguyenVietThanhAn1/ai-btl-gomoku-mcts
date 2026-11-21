@@ -38,7 +38,7 @@ class AlphaBetaAgent(Agent):
   `order_fn` (không có → `ValueError`). **Đây là cắt tỉa xấp xỉ, không phải alpha-beta chính xác:** giá trị gốc có
   thể khác Minimax (nước mạnh nằm ngoài top-k bị bỏ qua). Hệ quả với TT: khóa TT chỉ gồm `(key, độ sâu còn lại)`,
   còn k phụ thuộc **ply** → hai entry cùng thế, cùng độ sâu còn lại nhưng ở ply khác (k khác) có thể mang giá trị
-  khác nhau, và TT dùng lại chúng. Chấp nhận có chủ đích (tìm kiếm đã xấp xỉ); chế độ `tt_mode="deep"` (sắp tới)
+  khác nhau, và TT dùng lại chúng. Chấp nhận có chủ đích (tìm kiếm đã xấp xỉ); chế độ `tt_mode="deep"` (đã có)
   cũng dùng lại entry giữa các ply có k khác nhau. Chỉ dùng `top_k` ở chế độ chơi (GUI), không dùng cho thí nghiệm.
 - `root_hook(game) -> (nước | None, tập nước | None)` (P6.4, mặc định `None`): gọi **một lần ở gốc** trước khi tìm.
   Nước ≠ None → đi ngay, không tìm (`search` trả `(nước, NaN)`, `stats["root_hook"] = 1`, `nodes = 1`). Tập nước →

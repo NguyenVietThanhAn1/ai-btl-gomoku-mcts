@@ -345,4 +345,5 @@
 | MCTS Khó (E3, 5000 iter) | 36/0/4 | **0,90** [0,77; 0,96] | 0,90 / 0,90 | 1,68 / 2,42 | 2,28 / 6,57 | 20 | 0 | 6,61 |
 
   → **Đạt ngưỡng** (≥ 0,8 vs AB Vừa mới; ≥ 0,5 vs MCTS Khó; cận dưới Wilson 0,77 > 0,5 và gần 0,8). Lưu ý: cận dưới vs AB Vừa mới (0,77) hơi dưới 0,8 — ngưỡng áp lên điểm ước lượng. Điểm A là số của một máy, thời gian/nước ảnh hưởng kết quả (agent theo thời gian); chỉ minh họa. MCTS Khó nghĩ tối đa 6,57 s trong ván này (> 5 s; luật GUI vốn chấp nhận, D-29). Còn lại: **An tự chơi 5 ván 15×15 mức Khó** trước khi đóng P6.4.
-- **B3 (MCTS Khó = `time_limit` + VCF ở gốc):** làm cuối, bỏ nếu P6.4 vượt ~1,5 ngày.
+- **An chơi thử (2026-11-21):** 5 ván 15×15 mức Khó (AB) — "khá ổn", không có lỗi cần sửa → duyệt đóng P6.4.
+- **B3 bỏ (An, 2026-11-21):** MCTS Khó = `time_limit` + VCF ở gốc **không làm** vì P6.4 vượt timebox ~1,5 ngày (điều kiện bỏ trong D-35). MCTS Khó giữ nguyên (E3, 5000 iter).
