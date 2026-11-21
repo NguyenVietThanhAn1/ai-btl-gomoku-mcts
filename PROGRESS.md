@@ -10,9 +10,9 @@
 
 ### An
 
-- **Task hiện tại:** P8.2 ⬜ (chưa bắt đầu). P8.1 ✅ 2026-11-21 (luật cờ tướng + perft, thẳng trên `develop`, D-32). P6.4 ✅ (D-36). Thứ tự D-35: `P8.2 → P8.3 → P6.2 → P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
-- **Việc đang dở:** không. P8.1 xong, đã commit local; chờ An duyệt push. Đầu P8.3 quyết định tối ưu MCTS (rollout cắt L ply + eval) sau khi có eval thật; số tham chiếu (`results/tables/p81_speed.csv`, 1 máy): rollout ngẫu nhiên đến hết ván ~60 ván/s (< 200 iter/s), rollout cắt L ply cận trên ~17 000/L iter/s.
-- **Bước tiếp theo:** P8.2 (`heuristics/xiangqi_eval.py`, AB `time_limit` đã có từ P6.4 — xem D-23 trong D-22, registry `GameSpec("xiangqi")`) → P8.3 → P6.2 → P8.4 → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
+- **Task hiện tại:** P8.2 ✅ xong code + test + docs, đã commit local, **chờ An duyệt push** (2026-11-21). P8.1 ✅ (luật + perft). P6.4 ✅ (D-36). Thứ tự D-35: `P8.3 → P6.2 → P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
+- **Việc đang dở:** không. Đầu P8.3 quyết định tối ưu MCTS (rollout cắt L ply + eval) với eval thật (`xq_evaluate`, O(90)/lần gọi); số tham chiếu (`results/tables/p81_speed.csv`, 1 máy): rollout ngẫu nhiên đến hết ván ~60 ván/s (< 200 iter/s), rollout cắt L ply cận trên ~17 000/L iter/s. AB cờ tướng ~58 000 nút/s (depth 3, `p82_ab_speed.csv`).
+- **Bước tiếp theo:** P8.3 (MCTS cắt + `sigmoid_value(xq_evaluate)`; D-24 nguồn nhãn `scale`; `check_tactics`) → P6.2 → P8.4 → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ### Thành viên 2
@@ -56,7 +56,7 @@
 | P7.4 | Video demo (script + quay) | ⬜ | An | | sau P7.3 (D-35); có cảnh cờ tướng |
 | P8.0 | Xiangqi design D-22 + golden k-in-row | ✅ | An | 2026-11-17 | tag `kinrow-final`, branch `xiangqi`; golden 12 ván / 123 nước |
 | P8.1 | Xiangqi rules + perft | ✅ | An | 2026-11-21 | spec-reviewer PASS; perft D1–4 khớp 11 thế (44/44); `p81_perft.csv`; `xiangqi.md` |
-| P8.2 | Xiangqi eval + AB | ⬜ | An | | |
+| P8.2 | Xiangqi eval + AB | ✅ | An | 2026-11-21 | D-23; PST tự thiết kế; AB = Minimax d2 (14 thế × 4 chế độ); AB d2 vs Random/Greedy 10/0/0; `p82_ab_speed.csv`; chỉ sửa additive `registry.py` |
 | P8.3 | Xiangqi MCTS | ⬜ | An | | |
 | P8.4 | Xiangqi experiments | ⬜ | An | | |
 | B2 | Bài 2 (Bonus) | ⬜ | | | chưa chốt phạm vi — chờ An xác nhận yêu cầu với giảng viên (PLAN §0) |
@@ -79,6 +79,12 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-21 — P8.2 xong: eval cờ tướng + AB (D-23)
+- Mới: `heuristics/xiangqi_eval.py` (+ `.md`), `experiments/p82_ab_check.py` (+ `.md`), `tests/test_xiangqi_eval.py`, `tests/test_xiangqi_ab.py`, `results/tables/p82_ab_speed.csv` (file MỚI duy nhất trong `results/`, An cho phép). Sửa: `agents/registry.py` + `.md` (chỉ cộng thêm `xq_*` và `GameSpec("xiangqi")`, An duyệt, An báo Thành viên 2), 1 dòng "Hạn chế" lỗi thời ở `agents/alphabeta.md`, `PLAN.md` §P8.2, D-23. `AlphaBetaAgent`/`core/` không đổi.
+- Eval = vật chất + PST tự thiết kế, không tinh chỉnh bằng dữ liệu. Lỗi tự bắt: lần đầu `MATERIAL` đảo Xe/Pháo (test trace tay bắt được), đã sửa; đo lại trận trên code cuối.
+- Kết quả: AB = Minimax d2 trên 15 thế × 4 chế độ; AB d2 vs Random **10/0/0**, vs Greedy(`xq_delta`) **10/0/0** (seed 0, 5 khai cuộc × 2 ván; 5 khai cuộc phân biệt, 0 ván trùng). Depth 3, 9 thế: nút 89 985 → 17 417 (mvv_lva); ~58 000 nút/s; ID `depth_reached` 4,0 / 4,3 / 4,9 ở 0,5 / 1 / 2 s. `check_bonus` **không bật** (nút −6,5 % nhưng thời gian +19 %).
+- precheck 5/5 EXIT 0; spec-reviewer P8.2 **PASS** (0 blocker; minor: ghi `xq_mvv_lva_check` — đã có trong D-23). Chờ An duyệt push.
 
 #### 2026-11-21 — P8.1 xong: luật cờ tướng + perft
 - `gameai/games/xiangqi.py` (+ `.md`), `experiments/p81_perft.py`, `results/tables/p81_perft.csv` (file MỚI duy nhất trong `results/`, An cho phép), `tests/test_xiangqi.py` (51 test), `tests/test_xiangqi_perft.py`. Thiết kế đúng D-22; không sửa `core/`, `agents/`, `results/raw/`.

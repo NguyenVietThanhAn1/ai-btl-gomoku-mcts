@@ -21,7 +21,8 @@ from gameai.agents.random_agent import RandomAgent
 from gameai.agents.rollout import sigmoid_value
 from gameai.core.game import Game
 from gameai.games.kinrow import KInRow
-from gameai.heuristics import kinrow_eval
+from gameai.games.xiangqi import Xiangqi
+from gameai.heuristics import kinrow_eval, xiangqi_eval
 from gameai.heuristics.kinrow_rollout import KInRowHeavyRollout
 from gameai.heuristics.kinrow_vcf import make_root_hook
 
@@ -30,6 +31,10 @@ FUNCTIONS: dict[str, Callable[..., Any]] = {
     "move_score": kinrow_eval.move_score,
     "evaluate": kinrow_eval.evaluate,
     "delta_eval": kinrow_eval.delta_eval,
+    "xq_evaluate": xiangqi_eval.evaluate,
+    "xq_delta": xiangqi_eval.delta_eval,
+    "xq_mvv_lva": xiangqi_eval.mvv_lva,
+    "xq_mvv_lva_check": xiangqi_eval.mvv_lva_check,
 }
 
 
@@ -54,7 +59,7 @@ class AgentSpec:
 
 @dataclass(frozen=True)
 class GameSpec:
-    """Mô tả game: `kind` ("kinrow" hoặc "module:Class") và `params` (JSON)."""
+    """Mô tả game: `kind` ("kinrow", "xiangqi" hoặc "module:Class") và `params` (JSON)."""
 
     kind: str = "kinrow"
     params: dict[str, Any] = field(default_factory=dict)
@@ -165,6 +170,8 @@ def make_game(spec: GameSpec) -> Game:
     """Dựng ván mới (trạng thái đầu) từ `spec`."""
     if spec.kind == "kinrow":
         return KInRow(**spec.params)
+    if spec.kind == "xiangqi":
+        return Xiangqi(**spec.params)
     if ":" in spec.kind:
         return _import(spec.kind)(**spec.params)
     raise ValueError(f"game kind không hợp lệ: {spec.kind!r}")

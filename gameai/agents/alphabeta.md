@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P2.4, P6.4 (`top_k`, `root_hook`, `time_limit` = iterative deepening, `tt_mode`)  ·  **Cập nhật:** 2026-11-18
+**Trạng thái:** ✅ ổn định  ·  **Task:** P2.4, P6.4 (`top_k`, `root_hook`, `time_limit` = iterative deepening, `tt_mode`)  ·  **Cập nhật:** 2026-11-21 (chỉ sửa mục Hạn chế lỗi thời, không đổi code)
 
 ## Mục đích
 Minimax có cắt tỉa alpha-beta (đề ý 1): **cùng giá trị gốc** với `MinimaxAgent` nhưng thăm ít nút hơn.
@@ -67,7 +67,7 @@ class AlphaBetaAgent(Agent):
 ## Phụ thuộc
 - Dùng: `agents/base.py`, `agents/minimax.py` (`terminal_score`, `WIN_SCORE`, `EvalFn`), `core/game.py`.
 - Hàm truyền vào (không import cứng): `heuristics/kinrow_eval.py` (`evaluate`, `delta_eval`, `move_score`).
-- Được dùng bởi: `experiments/e1_nodes.py`, arena/CLI/GUI (chưa có).
+- Được dùng bởi: `experiments/e1_nodes.py`, arena/GUI; cờ tướng (P8.2) dùng nguyên với `xiangqi_eval` (`tests/test_xiangqi_ab.py`, `experiments/p82_ab_check.py`).
 
 ## Thiết kế & quyết định (D-9)
 - Max/min tường minh theo góc nhìn `root`, **fail-soft** (trả `best` thật, có thể nằm ngoài [α, β]).
@@ -134,6 +134,6 @@ nhưng không phải quét lại toàn bàn.
 - Chạy riêng: `python -m pytest tests/test_alphabeta.py -q` (~30 s, chủ yếu là Minimax tham chiếu).
 
 ## Hạn chế / TODO
-- Không iterative deepening / giới hạn thời gian; TT không dùng lại kết quả sâu hơn và không lưu best move để ordering.
+- Không quiescence search. TT mặc định (`tt_mode="exact"`) không dùng lại kết quả sâu hơn và không lưu best move để ordering (có `tt_mode="deep"`). Iterative deepening / giới hạn thời gian đã có từ P6.4 (`time_limit`).
 - Tie-break có seed chỉ xáo thứ tự gốc, không chọn đều trong các nước bằng điểm.
 - `delta_fn` sai (không đúng bằng hiệu `eval_fn`) → mất tương đương với Minimax; chỉ dùng `delta_eval`.

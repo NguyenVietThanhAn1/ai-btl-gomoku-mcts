@@ -195,8 +195,8 @@ hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp t
   - Đo nút/giây perft, thời gian `legal_moves()` / `winner()`; ghi vào `xiangqi.md` + CSV. Nếu MCTS ước tính < ~200 iter/s →
     tối đa 1 phiên tối ưu trước khi sang P8.2.
 - **P8.2** `heuristics/xiangqi_eval.py` + `.md`: `evaluate` (vật chất + PST), `delta_eval`, `mvv_lva` (ordering ăn quân giá
-  trị cao bằng quân giá trị thấp trước). Dùng lại `AlphaBetaAgent`; thêm `time_limit` + iterative deepening (D-23); registry:
-  `GameSpec("xiangqi")`, `FUNCTIONS` thêm `xq_evaluate`, `xq_delta`, `xq_mvv_lva`.
+  trị cao bằng quân giá trị thấp trước). Dùng lại `AlphaBetaAgent` nguyên vẹn (`time_limit` + iterative deepening đã có từ P6.4, D-36; thiết kế P8.2 ở D-23);
+  registry (chỉ cộng thêm): `GameSpec("xiangqi")`, `FUNCTIONS` thêm `xq_evaluate`, `xq_delta`, `xq_mvv_lva`.
   Done khi: `delta_eval` = hiệu `evaluate` trên thế ngẫu nhiên; AB (eval và delta) cùng giá trị gốc với Minimax depth 2 trên
   ≥ 10 thế; ordering ít nút hơn; AB ăn quân cho không, thoát chiếu, chiếu bí 1 nước; test ID (time_limit nhỏ vẫn trả nước
   depth 1, giờ dư = depth cố định); golden k-in-row xanh.
