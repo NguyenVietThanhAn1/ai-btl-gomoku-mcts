@@ -24,7 +24,7 @@ from typing import Any
 from gameai.agents.registry import AgentSpec, GameSpec, make_agent, make_game
 from gameai.arena import derive_seed, random_opening_moves
 from gameai.core.game import P1, result_for
-from gameai.experiments.p82_ab_check import ab_spec, midgame_fens, run_match
+from gameai.experiments.p82_ab_check import ab_spec, make_openings, midgame_fens, play_one
 from gameai.games.xiangqi import START_FEN, Xiangqi
 from gameai.heuristics.xiangqi_eval import MATERIAL
 
@@ -325,37 +325,103 @@ def cmd_fit(args: argparse.Namespace) -> int:
 
 
 # ---------------------------------------------------------------- lmatch
+LMATCH_FIELDS = [
+    "pair",
+    "pair_seed",
+    "a_is_red",
+    "result_a",
+    "termination",
+    "ply",
+    "seconds",
+    "config",
+]
+
+
 def cmd_lmatch(args: argparse.Namespace) -> int:
     """Tiêu chí (chốt TRƯỚC khi đo, D-24): chọn L điểm cao hơn; ngang (CI Wilson chồng lấn VÀ
-    chênh điểm < 0,1) → L=10."""
+    chênh điểm < 0,1) → L=10.
+
+    Mỗi ván ghi (append + flush) vào `local_out/p83/lmatch_games[_quick].csv` khi xong; chạy lại
+    cùng lệnh sẽ bỏ qua ván đã có (tiếp tục từ cặp chưa xong). Chỉ ghi `p83_speed.csv` khi đủ ván.
+    """
     pairs = args.pairs or (3 if args.quick else 25)
     a = xq_mcts_spec(time_limit=args.time_limit, rollout_limit=0, scale=args.scale, label="L0")
     b = xq_mcts_spec(time_limit=args.time_limit, rollout_limit=10, scale=args.scale, label="L10")
-    t0 = time.perf_counter()
-    res = run_match(a, b, n_pairs=pairs, base_seed=args.base_seed, max_plies=args.max_plies)
-    secs = time.perf_counter() - t0
-    n = len(res["games"])
-    lo, hi = wilson_score(res["score"], n)
+    config = (
+        f"tl={args.time_limit:g};scale={args.scale:g};"
+        f"max_plies={args.max_plies};seed={args.base_seed}"
+    )
+    path = LOCAL / f"lmatch_games{'_quick' if args.quick else ''}.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    done: dict[tuple[int, int], dict[str, str]] = {}
+    if path.exists():
+        with path.open(encoding="utf-8", newline="") as fh:
+            for r in csv.DictReader(fh):
+                if r["config"] != config:
+                    print(
+                        f"LỖI: {path} có ván cấu hình khác ({r['config']} ≠ {config}); "
+                        "đổi tên file cũ."
+                    )
+                    return 2
+                done[(int(r["pair"]), int(r["a_is_red"]))] = r
+    spec = GameSpec("xiangqi", {"max_plies": args.max_plies})
+    openings = make_openings(pairs, args.base_seed, spec)
+    total = 2 * pairs
+    print(f"lmatch: {len(done)}/{total} ván đã có trong {path}", flush=True)
+    new = not path.exists()
+    with path.open("a", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=LMATCH_FIELDS)
+        if new:
+            w.writeheader()
+        for i, (ps, op) in enumerate(openings):
+            for red in (True, False):
+                if (i, int(red)) in done:
+                    continue
+                g = play_one(spec, a, b, ps, op, red)
+                row = {
+                    "pair": i,
+                    "pair_seed": ps,
+                    "a_is_red": int(red),
+                    "result_a": g["result_a"],
+                    "termination": g["termination"],
+                    "ply": g["ply"],
+                    "seconds": round(g["seconds"], 1),
+                    "config": config,
+                }
+                w.writerow(row)
+                fh.flush()
+                done[(i, int(red))] = {k: str(v) for k, v in row.items()}
+                side = "L0=Đỏ" if red else "L0=Đen"
+                print(
+                    f"  cặp {i} {side}: {g['result_a']} ({len(done)}/{total}, "
+                    f"{g['seconds']:.0f} s)",
+                    flush=True,
+                )
+    rs = [float(r["result_a"]) for r in done.values()]
+    n = len(rs)
+    w_, d_, l_ = rs.count(1.0), rs.count(0.5), rs.count(0.0)
+    score = (w_ + 0.5 * d_) / n
+    errors = sum(r["termination"] != "normal" for r in done.values())
+    secs = sum(float(r["seconds"]) for r in done.values())
+    lo, hi = wilson_score(score, n)
     lo2, hi2 = 1 - hi, 1 - lo  # điểm của L=10
     overlap = lo <= hi2 and lo2 <= hi
-    diff = abs(res["score"] - (1 - res["score"]))  # |điểm L0 − điểm L10|
-    if overlap and diff < 0.1:
-        pick = 10
-    else:
-        pick = 0 if res["score"] > 0.5 else 10
+    diff = abs(score - (1 - score))  # |điểm L0 − điểm L10|
+    pick = 10 if (overlap and diff < 0.1) else (0 if score > 0.5 else 10)
     note = (
         f"L=0 vs L=10, time_limit {args.time_limit} s, scale {args.scale:g}, "
-        f"{pairs} khai cuộc × 2 bên, "
-        f"max_plies {args.max_plies}, W/D/L (L=0) = {res['W']}/{res['D']}/{res['L']}, "
-        f"Wilson95 [{lo:.2f}, {hi:.2f}], lỗi {res['errors']}, {secs:.0f} s"
+        f"{n // 2} khai cuộc × 2 bên, max_plies {args.max_plies}, "
+        f"W/D/L (L=0) = {w_}/{d_}/{l_}, Wilson95 [{lo:.2f}, {hi:.2f}], lỗi {errors}, {secs:.0f} s"
     )
-    rows = [
-        _row("lmatch_score_L0", "L0_vs_L10", round(res["score"], 3), "score", n, note),
-        _row("lmatch_pick", "L0_vs_L10", pick, "L", n, "tiêu chí: điểm cao hơn; ngang → L=10"),
-    ]
     print(note)
-    print(f"-> chọn L={pick}")
-    if not args.quick:
+    print(
+        f"-> chọn L={pick}" + ("" if n == total else f"  (CHƯA ĐỦ: {n}/{total} ván, không ghi CSV)")
+    )
+    if not args.quick and n == total:
+        rows = [
+            _row("lmatch_score_L0", "L0_vs_L10", round(score, 3), "score", n, note),
+            _row("lmatch_pick", "L0_vs_L10", pick, "L", n, "tiêu chí: điểm cao hơn; ngang → L=10"),
+        ]
         _write(args.out or TABLES / "p83_speed.csv", rows, keep_prefix=("lmatch",))
     return 0
 

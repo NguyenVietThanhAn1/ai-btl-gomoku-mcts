@@ -23,7 +23,7 @@ Lệnh: `python -m gameai.experiments.p83_mcts_check <speed|labels|fit|lmatch|ta
 | `speed` | iter/s, độ sâu, nút theo `L ∈ {0,10,20,40}`; µs/lần `evaluate` | `results/tables/p83_speed.csv` |
 | `labels --depth d` | AB depth d tự đấu 200 ván (seed 50 000–50 199, khai cuộc ngẫu nhiên 2–8 nước, `max_plies` 300); in tỉ lệ ván phân thắng thua, lý do hòa, vật chất cuối ván | `local_out/p83/labels_d{d}.csv` (không track) |
 | `fit --depth d` | hồi quy logistic `scale` trên lưới (100…5000, mở rộng nếu tốt nhất ở biên); hai bản `main` (hòa = 0,5) và `no_draw` | `results/tables/p83_scale_fit.csv` (cột `label_depth`; giữ dòng các depth khác) |
-| `lmatch` | L=0 vs L=10, mỗi khai cuộc 2 ván đổi bên; tiêu chí chốt trước (xem D-24) | thêm dòng `lmatch_*` vào `p83_speed.csv` |
+| `lmatch` | L=0 vs L=10, mỗi khai cuộc 2 ván đổi bên; tiêu chí chốt trước (xem D-24). **Ghi từng ván** (append) vào `local_out/p83/lmatch_games.csv`; chạy lại cùng lệnh = tiếp tục từ ván chưa có (khác cấu hình → báo lỗi). Chỉ khi đủ 2×25 ván mới ghi `lmatch_*` vào `p83_speed.csv` | `local_out/p83/lmatch_games.csv`, `p83_speed.csv` |
 | `tactics` | ms/nước + % nước đi thẳng của `check_tactics` (12 thế, 300 iteration) | `results/tables/p83_tactics_cost.csv` |
 
 ## Phụ thuộc
