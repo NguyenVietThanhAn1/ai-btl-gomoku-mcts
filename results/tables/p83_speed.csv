@@ -1,0 +1,18 @@
+metric,config,value,unit,n_samples,note
+iter_per_s,L=0,9564,iter/s,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt; min 7957"
+max_depth_mean,L=0,4.0,ply,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+nodes_mean,L=0,9566,nodes,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+rollout_plies_per_iter,L=0,0.0,ply,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+iter_per_s,L=10,1013,iter/s,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt; min 896"
+max_depth_mean,L=10,2.56,ply,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+nodes_mean,L=10,1015,nodes,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+rollout_plies_per_iter,L=10,10.0,ply,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+iter_per_s,L=20,511,iter/s,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt; min 472"
+max_depth_mean,L=20,2.33,ply,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+nodes_mean,L=20,512,nodes,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+rollout_plies_per_iter,L=20,19.98,ply,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+iter_per_s,L=40,274,iter/s,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt; min 236"
+max_depth_mean,L=40,2.22,ply,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+nodes_mean,L=40,276,nodes,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+rollout_plies_per_iter,L=40,39.83,ply,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
+evaluate,xq_evaluate,2.88,us/call,20000,1 thế giữa ván

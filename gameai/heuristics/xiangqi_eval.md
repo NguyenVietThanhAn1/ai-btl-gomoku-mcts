@@ -66,4 +66,4 @@ leaf(AB)    = eval(gốc) + Σ_{dọc nhánh} ± delta     (+ nếu người đi
 
 ## Hạn chế / TODO
 - Không quiescence, không phạt/ thưởng cấu trúc (tướng bị lộ, Sĩ–Tượng đủ bộ, Xe liên hoàn…). Bảng chưa được kiểm so với bảng ngoài (chủ ý: không tinh chỉnh bằng dữ liệu).
-- `evaluate` O(90) mỗi lần gọi; MCTS (P8.3) gọi ở mỗi lá — nếu thành điểm nghẽn thì tối ưu ở P8.3.
+- `evaluate` O(90) mỗi lần gọi, đo **~2,9 µs/lần** (20 000 lần, 1 thế giữa ván, `p83_speed.csv`, 1 máy). MCTS (P8.3) gọi ở mỗi lá nhưng **không phải điểm nghẽn** (`legal_moves` ~59 µs/ply mới là) → không cộng dồn `delta` trong MCTS (D-24).

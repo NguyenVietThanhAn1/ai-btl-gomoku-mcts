@@ -207,6 +207,7 @@ hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp t
   vật chất sau L nước) và ghi D-24. Đo chi phí `check_tactics` (ms/nước, % nước đi thẳng) → quyết định bật/tắt trong E7 (D-24).
   Done khi: MCTS ăn quân cho không và thoát chiếu bí 1 nước (khi bật tactics; tắt thì ghi tỉ lệ); iteration/s + bảng scale
   trong `results/`.
+  **Kết quả (D-24):** nhãn depth 1 bị loại (54 % hòa, LL ≈ −ln 2) → dùng AB depth 2, `scale = 2000`; tactics bật cho E7; `L` chọn bằng `lmatch` (đang chờ chạy full).
 - **P6.2** GUI cờ tướng — xem mục P6 (làm sau P8.3).
 - **P8.4** E7 `experiments/e7_xiangqi.py` + `.md` (thiết kế chi tiết D-25):
   - ✂ (a) AB depth 1/2 cố định vs Random.

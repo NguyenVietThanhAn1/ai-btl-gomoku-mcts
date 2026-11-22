@@ -1,0 +1,5 @@
+metric,config,value,unit,n_samples,note
+ms_per_move,tactics=off,219.5,ms,12,"12 thế, 300 iteration cố định, L=10, tactics tắt; max 245"
+direct_move_pct,tactics=off,0.0,%,12,"12 thế, 300 iteration cố định, L=10, tactics tắt"
+ms_per_move,tactics=on,236.7,ms,12,"12 thế, 300 iteration cố định, L=10, tactics bật; max 259"
+direct_move_pct,tactics=on,0.0,%,12,"12 thế, 300 iteration cố định, L=10, tactics bật"

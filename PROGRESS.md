@@ -10,8 +10,8 @@
 
 ### An
 
-- **Task hiện tại:** P8.2 ✅ xong code + test + docs, đã commit local, **chờ An duyệt push** (2026-11-21). P8.1 ✅ (luật + perft). P6.4 ✅ (D-36). Thứ tự D-35: `P8.3 → P6.2 → P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
-- **Việc đang dở:** không. Đầu P8.3 quyết định tối ưu MCTS (rollout cắt L ply + eval) với eval thật (`xq_evaluate`, O(90)/lần gọi); số tham chiếu (`results/tables/p81_speed.csv`, 1 máy): rollout ngẫu nhiên đến hết ván ~60 ván/s (< 200 iter/s), rollout cắt L ply cận trên ~17 000/L iter/s. AB cờ tướng ~58 000 nút/s (depth 3, `p82_ab_speed.csv`).
+- **Task hiện tại:** P8.3 🔄 code + test + docs xong, còn **`lmatch` L=0 vs L=10 đầy đủ (ước tính ~1,9 h, chờ An quyết)**; `XQ_MCTS_L=10` tạm (2026-11-23). P8.2 ✅ (đã commit local). P8.1 ✅ (luật + perft). P6.4 ✅ (D-36). Thứ tự D-35: `P8.3 → P6.2 → P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
+- **Việc đang dở:** P8.3: chọn `L` (chạy `python -m gameai.experiments.p83_mcts_check lmatch --scale 2000` hoặc giảm `--pairs`), rồi sửa D-24 mục "Chọn L" + `XQ_MCTS_L` nếu L=0 thắng, đóng task. Số tham chiếu (đã đo, D-24: không cần tối ưu thêm): MCTS (rollout cắt L ply + eval) với eval thật (`xq_evaluate`, O(90)/lần gọi); số tham chiếu (`results/tables/p81_speed.csv`, 1 máy): rollout ngẫu nhiên đến hết ván ~60 ván/s (< 200 iter/s), rollout cắt L ply cận trên ~17 000/L iter/s. AB cờ tướng ~58 000 nút/s (depth 3, `p82_ab_speed.csv`).
 - **Bước tiếp theo:** P8.3 (MCTS cắt + `sigmoid_value(xq_evaluate)`; D-24 nguồn nhãn `scale`; `check_tactics`) → P6.2 → P8.4 → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
@@ -57,7 +57,7 @@
 | P8.0 | Xiangqi design D-22 + golden k-in-row | ✅ | An | 2026-11-17 | tag `kinrow-final`, branch `xiangqi`; golden 12 ván / 123 nước |
 | P8.1 | Xiangqi rules + perft | ✅ | An | 2026-11-21 | spec-reviewer PASS; perft D1–4 khớp 11 thế (44/44); `p81_perft.csv`; `xiangqi.md` |
 | P8.2 | Xiangqi eval + AB | ✅ | An | 2026-11-21 | D-23; PST tự thiết kế; AB = Minimax d2 (14 thế × 4 chế độ); AB d2 vs Random/Greedy 10/0/0; `p82_ab_speed.csv`; chỉ sửa additive `registry.py` |
-| P8.3 | Xiangqi MCTS | ⬜ | An | | |
+| P8.3 | Xiangqi MCTS | 🔄 | An | | D-24; scale 2000 (nhãn AB d2); tactics bật; **chờ quyết `lmatch` L=0 vs L=10 (~1,9 h)**; chưa push |
 | P8.4 | Xiangqi experiments | ⬜ | An | | |
 | B2 | Bài 2 (Bonus) | ⬜ | | | chưa chốt phạm vi — chờ An xác nhận yêu cầu với giảng viên (PLAN §0) |
 
@@ -79,6 +79,12 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-23 — P8.3 (code + test + docs xong; chờ quyết lmatch): MCTS cờ tướng (D-24)
+- Mới: `experiments/p83_mcts_check.py` (+ `.md`, có "Giải thích cho báo cáo 3.4"), `tests/test_xiangqi_mcts.py`, `results/tables/p83_speed.csv`, `p83_scale_fit.csv`, `p83_tactics_cost.csv` (3 file MỚI trong `results/`, không đụng `raw/`). Sửa: `xiangqi_eval.md` (2,9 µs), `PLAN.md` §P8.3, D-24. Không sửa `agents/`.
+- Scale: nhãn depth 1 loại (108/200 hòa, LL ≈ −ln 2); AB depth 2 (Đỏ 70/Đen 78/hòa 52, hòa đều do lặp thế) → `main` scale 2000, no_draw 1000, lệch 2,00× ≤ 2× → dùng `main`. Hạn chế: LL −0,651 vs −0,693, σ phẳng.
+- Tactics: +17 ms/nước (+8 %), 0 % đi thẳng trên thế yên tĩnh → bật cho E7. Test trận nhanh 300 iter: vs Random 10/0/0, vs Greedy 10/0/0 (ngưỡng ≥ 0,9).
+- `lmatch --quick` (6 ván) 812 s → full 50 ván ≈ 1,9 h: **chưa chạy**, `L=10` tạm.
 
 #### 2026-11-21 — P8.2 xong: eval cờ tướng + AB (D-23)
 - Mới: `heuristics/xiangqi_eval.py` (+ `.md`), `experiments/p82_ab_check.py` (+ `.md`), `tests/test_xiangqi_eval.py`, `tests/test_xiangqi_ab.py`, `results/tables/p82_ab_speed.csv` (file MỚI duy nhất trong `results/`, An cho phép). Sửa: `agents/registry.py` + `.md` (chỉ cộng thêm `xq_*` và `GameSpec("xiangqi")`, An duyệt, An báo Thành viên 2), 1 dòng "Hạn chế" lỗi thời ở `agents/alphabeta.md`, `PLAN.md` §P8.2, D-23. `AlphaBetaAgent`/`core/` không đổi.
