@@ -45,13 +45,16 @@ def test_mate_in_one_with_tactics():
         assert a.stats["tactic"] == 1 and a.stats["iterations"] == 0
 
 
-def test_mate_in_one_without_tactics_rate_recorded():
-    """Tắt tactics: không đòi đúng; chỉ ghi tỉ lệ (số đo ở D-24)."""
+def test_mate_in_one_without_tactics_collects_rate():
+    """Thu thập số liệu, KHÔNG kiểm hành vi: tắt tactics không đòi tìm được chiếu bí (PLAN P8.3
+    chỉ yêu cầu ghi tỉ lệ; số đo ở D-24). Chỉ kiểm chạy được và nước trả về hợp lệ."""
     g = Xiangqi(MATE1)
     mates = set(mates_of(g))
-    hit = sum(mcts(seed=s, tactics=False).select_move(g) in mates for s in range(10))
+    legal = set(g.legal_moves())
+    moves = [mcts(seed=s, tactics=False).select_move(g) for s in range(10)]
+    assert all(m in legal for m in moves)
+    hit = sum(m in mates for m in moves)
     print(f"mate-in-1, tactics off, {ITERS} iter: {hit}/10")
-    assert 0 <= hit <= 10
 
 
 def test_takes_free_rook():

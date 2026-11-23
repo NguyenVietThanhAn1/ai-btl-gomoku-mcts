@@ -68,7 +68,7 @@ Nguồn: `results/tables/p83_speed.csv`, `p83_scale_fit.csv`, `p83_tactics_cost.
 
 Mọi `L` đều > 200 iter/s nên không cần phiên tối ưu. Số `scale`, `tactics` và trận L=0 vs L=10: xem D-24.
 
-Trận L=0 vs L=10 (`lmatch`, 50 ván, 3 920 s): L=0 W/D/L 23/5/22, điểm 0,51, Wilson 95 % [0,38; 0,64] → **L = 10** (dòng `lmatch_*` trong `p83_speed.csv`). Theo bên: L=0 cầm Đỏ 0,62, cầm Đen 0,40.
+Trận L=0 vs L=10 (`lmatch`, 50 ván, 3 920 s, **tactics tắt** ở cả hai bên — mặc định `xq_mcts_spec`): L=0 W/D/L 23/5/22, điểm 0,51, Wilson 95 % [0,38; 0,64] → **L = 10** (dòng `lmatch_*` trong `p83_speed.csv`). Theo bên: L=0 cầm Đỏ 0,62, cầm Đen 0,40. E7(c) (tactics bật, cấu hình dùng thật) là phép kiểm lại lựa chọn L (D-24).
 
 ## Test
 `tests/test_xiangqi_mcts.py` (xem docstring từng test). Chạy: `python -m pytest tests/test_xiangqi_mcts.py -q` (trận nhanh gắn `slow`).

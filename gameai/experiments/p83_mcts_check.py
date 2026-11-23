@@ -2,10 +2,11 @@
 
 Lệnh con (`python -m gameai.experiments.p83_mcts_check <lệnh> [--quick]`):
   speed   iter/s theo L          -> results/tables/p83_speed.csv (metric `iter_per_s`, ...)
-  labels  sinh nhãn hiệu chỉnh `scale` (AB depth 1 tự đấu, khai cuộc ngẫu nhiên) -> local_out/p83/,
-          IN tỉ lệ ván phân thắng thua (D-24: < 30 % → AB depth 2). Chưa fit.
+  labels  sinh nhãn hiệu chỉnh `scale` (AB depth `--depth` tự đấu, mặc định 2 = nguồn đã chốt
+          ở D-24; depth 1 bị loại), khai cuộc ngẫu nhiên -> local_out/p83/; IN tỉ lệ ván phân
+          thắng thua. Chưa fit.
   fit     hồi quy logistic scale trên lưới -> results/tables/p83_scale_fit.csv
-  lmatch  L=0 vs L=10 đấu trực tiếp (tiêu chí chốt trước, D-24) -> thêm dòng vào p83_speed.csv
+  lmatch  L=0 vs L=10 đấu trực tiếp, tactics TẮT (tiêu chí chốt trước, D-24) -> p83_speed.csv
   tactics ms/nước + % đi thẳng của `check_tactics` -> results/tables/p83_tactics_cost.csv
 Số đo trên **một máy**, minh họa — không phải số liệu thí nghiệm (E7 ở P8.4).
 """
@@ -341,6 +342,9 @@ def cmd_lmatch(args: argparse.Namespace) -> int:
     """Tiêu chí (chốt TRƯỚC khi đo, D-24): chọn L điểm cao hơn; ngang (CI Wilson chồng lấn VÀ
     chênh điểm < 0,1) → L=10.
 
+    Cả hai bên chạy **tactics tắt** (mặc định `xq_mcts_spec`); E7(c) so lại L với tactics bật
+    (D-24).
+
     Mỗi ván ghi (append + flush) vào `local_out/p83/lmatch_games[_quick].csv` khi xong; chạy lại
     cùng lệnh sẽ bỏ qua ván đã có (tiếp tục từ cặp chưa xong). Chỉ ghi `p83_speed.csv` khi đủ ván.
     """
@@ -462,7 +466,7 @@ def main(argv: list[str] | None = None) -> int:
         p.set_defaults(fn=fn)
         p.add_argument("--quick", action="store_true")
         p.add_argument("--out", type=Path)
-        p.add_argument("--depth", type=int, default=1, help="độ sâu AB sinh nhãn")
+        p.add_argument("--depth", type=int, default=2, help="độ sâu AB sinh nhãn (D-24: 2)")
         p.add_argument("--games", type=int, default=0)
         p.add_argument("--time-limit", type=float, default=XQ_MCTS_TIME_LIMIT)
         p.add_argument("--scale", type=float, default=XQ_MCTS_SCALE)

@@ -57,7 +57,7 @@
 | P8.0 | Xiangqi design D-22 + golden k-in-row | ✅ | An | 2026-11-17 | tag `kinrow-final`, branch `xiangqi`; golden 12 ván / 123 nước |
 | P8.1 | Xiangqi rules + perft | ✅ | An | 2026-11-21 | spec-reviewer PASS; perft D1–4 khớp 11 thế (44/44); `p81_perft.csv`; `xiangqi.md` |
 | P8.2 | Xiangqi eval + AB | ✅ | An | 2026-11-21 | D-23; PST tự thiết kế; AB = Minimax d2 (14 thế × 4 chế độ); AB d2 vs Random/Greedy 10/0/0; `p82_ab_speed.csv`; chỉ sửa additive `registry.py` |
-| P8.3 | Xiangqi MCTS | ✅ | An | 2026-11-23 | D-24; scale 2000 (nhãn AB d2); tactics bật; L=10 (`lmatch` 50 ván: L=0 23/5/22, 0,51 [0,38; 0,64] → ngang) |
+| P8.3 | Xiangqi MCTS | ✅ | An | 2026-11-23 | D-24; scale 2000 (nhãn AB d2); tactics bật cho E7; L=10 (`lmatch` 50 ván, tactics tắt: L=0 23/5/22, 0,51 [0,38; 0,64] → ngang); spec-reviewer PASS sau sửa doc |
 | P8.4 | Xiangqi experiments | ⬜ | An | | |
 | B2 | Bài 2 (Bonus) | ⬜ | | | chưa chốt phạm vi — chờ An xác nhận yêu cầu với giảng viên (PLAN §0) |
 
@@ -79,6 +79,10 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-23 — P8.3: spec-reviewer + sửa theo review
+- spec-reviewer: không blocker; **1 major**: D-24/PROGRESS ghi `lmatch` chạy "tactics bật" nhưng code chạy **tactics tắt** (`cmd_lmatch` gọi `xq_mcts_spec` không truyền `tactics`, mặc định `False`; chuỗi config + `lmatch_games.csv` không có tactics). An chọn: **sửa mô tả, không chạy lại**. D-24 thêm: E7(c) (so L với tactics bật) là phép kiểm lại L ở điều kiện dùng thật; L=0 mạnh hơn rõ (CI không chứa 0,5) → xem lại `XQ_MCTS_L` ở P8.4.
+- Minor đã sửa: `--depth` mặc định 1 → 2 + docstring đầu `p83_mcts_check.py` (nguồn nhãn đã chốt); test tactics-off đổi thành `..._collects_rate` (kiểm nước hợp lệ, không assert luôn đúng). Minor còn để: test trận `slow` vẫn chạy trong pytest mặc định (theo cấu hình `pyproject`), `pick` nhánh "chênh ≥ 0,1 nhưng CI chồng" (không xảy ra ở lần chạy này).
 
 #### 2026-11-23 — P8.3 ✅ đóng: chốt L = 10 (`lmatch` đầy đủ)
 - `lmatch` 50 ván (25 khai cuộc × 2 bên, 1 s/nước, scale 2000, `max_plies` 200; 3 920 s ≈ 1,1 h, An chạy ngoài phiên). Số lấy từ `local_out/p83/lmatch_games.csv` (không từ `lmatch_full.log`: UTF-16, lỗi mã hóa console PS 5.1). L=0 W/D/L 23/5/22, điểm 0,51, Wilson [0,38; 0,64] → ngang → **L=10** (tiêu chí chốt trước). Cả 50 ván kết thúc bình thường.
