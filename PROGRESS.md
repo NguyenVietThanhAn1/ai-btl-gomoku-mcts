@@ -10,9 +10,9 @@
 
 ### An
 
-- **Task hiện tại:** P8.3 🔄 code + test + docs xong, còn **`lmatch` L=0 vs L=10 đầy đủ (ước tính ~1,9 h, chờ An quyết)**; `XQ_MCTS_L=10` tạm (2026-11-23). P8.2 ✅ (đã commit local). P8.1 ✅ (luật + perft). P6.4 ✅ (D-36). Thứ tự D-35: `P8.3 → P6.2 → P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
-- **Việc đang dở:** P8.3: **lmatch đầy đủ (25 khai cuộc × 2 ván, ~1,9 h) do An chạy ngoài phiên, qua đêm** (log `local_out/p83/lmatch_full.log`, kết quả từng ván `local_out/p83/lmatch_games.csv`, ghi từng ván; bị ngắt thì chạy lại cùng lệnh để tiếp tục). Bước còn lại: (1) chạy `python -m gameai.experiments.p83_mcts_check lmatch --scale 2000` (hoặc đọc log) để lấy dòng tổng kết + ghi `lmatch_*` vào `results/tables/p83_speed.csv`; (2) áp tiêu chí đã chốt (L điểm cao hơn; CI Wilson chồng lấn và chênh < 0,1 → L=10); (3) sửa D-24 mục "Chọn L" + `XQ_MCTS_L` (và `p83_mcts_check.md`, `PLAN.md` §P8.3) nếu L=0 thắng; (4) precheck EXIT 0; (5) đóng P8.3 ✅ (bảng + session log); (6) hỏi push. Số tham chiếu (đã đo, D-24: không cần tối ưu thêm): iter/s theo L ở `p83_speed.csv`.
-- **Bước tiếp theo:** P8.3 (MCTS cắt + `sigmoid_value(xq_evaluate)`; D-24 nguồn nhãn `scale`; `check_tactics`) → P6.2 → P8.4 → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
+- **Task hiện tại:** P6.2 (GUI cờ tướng) — chưa bắt đầu. P8.3 ✅ (2026-11-23, `XQ_MCTS_L=10` chốt theo `lmatch`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: `P6.2 → P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
+- **Việc đang dở:** (không)
+- **Bước tiếp theo:** P6.2 (view cờ tướng trong GUI; AI dùng `xq_mcts_spec(...)` / `ab_spec`, D-24/D-23) → P8.4 (E7, D-25) → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ### Thành viên 2
@@ -57,7 +57,7 @@
 | P8.0 | Xiangqi design D-22 + golden k-in-row | ✅ | An | 2026-11-17 | tag `kinrow-final`, branch `xiangqi`; golden 12 ván / 123 nước |
 | P8.1 | Xiangqi rules + perft | ✅ | An | 2026-11-21 | spec-reviewer PASS; perft D1–4 khớp 11 thế (44/44); `p81_perft.csv`; `xiangqi.md` |
 | P8.2 | Xiangqi eval + AB | ✅ | An | 2026-11-21 | D-23; PST tự thiết kế; AB = Minimax d2 (14 thế × 4 chế độ); AB d2 vs Random/Greedy 10/0/0; `p82_ab_speed.csv`; chỉ sửa additive `registry.py` |
-| P8.3 | Xiangqi MCTS | 🔄 | An | | D-24; scale 2000 (nhãn AB d2); tactics bật; **chờ quyết `lmatch` L=0 vs L=10 (~1,9 h)**; chưa push |
+| P8.3 | Xiangqi MCTS | ✅ | An | 2026-11-23 | D-24; scale 2000 (nhãn AB d2); tactics bật; L=10 (`lmatch` 50 ván: L=0 23/5/22, 0,51 [0,38; 0,64] → ngang) |
 | P8.4 | Xiangqi experiments | ⬜ | An | | |
 | B2 | Bài 2 (Bonus) | ⬜ | | | chưa chốt phạm vi — chờ An xác nhận yêu cầu với giảng viên (PLAN §0) |
 
@@ -79,6 +79,11 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-23 — P8.3 ✅ đóng: chốt L = 10 (`lmatch` đầy đủ)
+- `lmatch` 50 ván (25 khai cuộc × 2 bên, 1 s/nước, scale 2000, `max_plies` 200; 3 920 s ≈ 1,1 h, An chạy ngoài phiên). Số lấy từ `local_out/p83/lmatch_games.csv` (không từ `lmatch_full.log`: UTF-16, lỗi mã hóa console PS 5.1). L=0 W/D/L 23/5/22, điểm 0,51, Wilson [0,38; 0,64] → ngang → **L=10** (tiêu chí chốt trước). Cả 50 ván kết thúc bình thường.
+- Theo bên: L=0 cầm Đỏ 15/1/9 (0,62), cầm Đen 8/4/13 (0,40); Đỏ đạt 0,61 trên 50 ván. L=0 chạy ~9× iteration mà không mạnh hơn.
+- `p83_speed.csv` thêm 2 dòng `lmatch_score_L0`, `lmatch_pick` (do lệnh `lmatch` ghi). D-24 mục "Chọn L" chốt; `p83_mcts_check.md` (trạng thái ✅, kết quả, ghi chú `[Console]::OutputEncoding = UTF8` khi chạy dài, lấy số từ CSV); PLAN §P8.3.
 
 #### 2026-11-23 — P8.3 (code + test + docs xong; chờ quyết lmatch): MCTS cờ tướng (D-24)
 - Mới: `experiments/p83_mcts_check.py` (+ `.md`, có "Giải thích cho báo cáo 3.4"), `tests/test_xiangqi_mcts.py`, `results/tables/p83_speed.csv`, `p83_scale_fit.csv`, `p83_tactics_cost.csv` (3 file MỚI trong `results/`, không đụng `raw/`). Sửa: `xiangqi_eval.md` (2,9 µs), `PLAN.md` §P8.3, D-24. Không sửa `agents/`.

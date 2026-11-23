@@ -2,7 +2,7 @@
 
 > Cấu hình MCTS cờ tướng (rollout cắt + eval) và các phép đo của P8.3: tốc độ theo L, hiệu chỉnh `scale`, chi phí `check_tactics`, trận L=0 vs L=10. **Không phải số liệu thí nghiệm** (E7 ở P8.4).
 
-**Trạng thái:** 🔄 chờ chốt L (lmatch đầy đủ)  ·  **Task:** P8.3  ·  **Cập nhật:** 2026-11-23
+**Trạng thái:** ✅ (L=10 chốt, D-24)  ·  **Task:** P8.3  ·  **Cập nhật:** 2026-11-23
 
 ## Mục đích
 Dùng nguyên `MCTSAgent` (không sửa `agents/`) cho cờ tướng: rollout ngẫu nhiên cắt `L` ply rồi chấm thế bằng `sigmoid(xq_evaluate / scale)`. Module cho `xq_mcts_spec(...)` (cấu hình mẫu cho test, GUI P6.2, E7) và các lệnh đo kèm quyết định D-24.
@@ -52,7 +52,7 @@ z    = kết quả thật nếu ván kết thúc trong L ply (1 / 0,5 / 0);  ng�
      nếu ván kết thúc: z = kết quả thật
      ngược lại:        z = sigmoid(eval(thế, P1) / scale)
 ```
-Chọn `L`: `L = 0` (chấm eval ngay tại node mới) nhanh nhất; `L` lớn hơn thêm nhiễu ngẫu nhiên nhưng cho thấy đòn ăn quân gần. L chọn bằng trận trực tiếp (D-24).
+Chọn `L`: `L = 0` (chấm eval ngay tại node mới) nhanh nhất; `L` lớn hơn thêm nhiễu ngẫu nhiên nhưng cho thấy đòn ăn quân gần. L chọn bằng trận trực tiếp (D-24): 50 ván L=0 vs L=10, L=0 được 23/5/22 (điểm 0,51, Wilson 95 % [0,38; 0,64]) → ngang → **L = 10**; L=0 chạy ~9× iteration mà không mạnh hơn.
 
 **Ví dụ trace tay** (thế `3k5/9/9/9/r8/9/9/9/9/R3K4`, Đỏ đi, `L = 0`, `scale = 2000`): với `Xa0×a5` (ăn xe Đen): `eval(Đỏ) = 925` (xem `xiangqi_eval.md`) → `v = σ(925/2000) = σ(0,4625) = 0,614`. Với nước yên tĩnh `Tướng e0-e1`: `eval ≈ −20` → `v = σ(−0,01) = 0,497`. Node ăn xe được điểm cao hơn, UCT dồn lượt thăm vào đó. Chú ý với `scale = 2000` chênh một xe chỉ ra 0,61 — sigmoid rất phẳng vì nhãn (ván AB) nhiễu; vì thế cây cần nhiều lượt thăm để phân biệt (nêu ở D-24 mục hạn chế).
 
@@ -68,9 +68,12 @@ Nguồn: `results/tables/p83_speed.csv`, `p83_scale_fit.csv`, `p83_tactics_cost.
 
 Mọi `L` đều > 200 iter/s nên không cần phiên tối ưu. Số `scale`, `tactics` và trận L=0 vs L=10: xem D-24.
 
+Trận L=0 vs L=10 (`lmatch`, 50 ván, 3 920 s): L=0 W/D/L 23/5/22, điểm 0,51, Wilson 95 % [0,38; 0,64] → **L = 10** (dòng `lmatch_*` trong `p83_speed.csv`). Theo bên: L=0 cầm Đỏ 0,62, cầm Đen 0,40.
+
 ## Test
 `tests/test_xiangqi_mcts.py` (xem docstring từng test). Chạy: `python -m pytest tests/test_xiangqi_mcts.py -q` (trận nhanh gắn `slow`).
 
 ## Hạn chế / TODO
 - `local_out/p83/` không track; muốn tái lập: `labels --depth 2` rồi `fit --depth 2` (~1 phút).
+- **Chạy dài (`lmatch`, ~1,1–1,9 h) trên Windows PowerShell 5.1:** đặt `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8` trước khi chạy; nếu không, log chuyển hướng (`> lmatch_full.log`) thành UTF-16 và chữ tiếng Việt/ký hiệu bị lỗi mã hóa. **Lấy số từ CSV** (`local_out/p83/lmatch_games.csv`, dòng `lmatch_*` trong `p83_speed.csv`), không đọc từ log.
 - Nhãn là kết quả của AB depth 2, không phải kết quả "thật" của thế cờ; `scale` phản ánh chất lượng nhãn đó.

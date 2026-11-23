@@ -16,3 +16,5 @@ max_depth_mean,L=40,2.22,ply,9,"9 thế (đầu + giữa ván), time_limit 1.0 s
 nodes_mean,L=40,276,nodes,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
 rollout_plies_per_iter,L=40,39.83,ply,9,"9 thế (đầu + giữa ván), time_limit 1.0 s, scale 2000 seed 1, tactics tắt"
 evaluate,xq_evaluate,2.88,us/call,20000,1 thế giữa ván
+lmatch_score_L0,L0_vs_L10,0.51,score,50,"L=0 vs L=10, time_limit 1.0 s, scale 2000, 25 khai cuộc × 2 bên, max_plies 200, W/D/L (L=0) = 23/5/22, Wilson95 [0.38, 0.64], lỗi 0, 3920 s"
+lmatch_pick,L0_vs_L10,10,L,50,tiêu chí: điểm cao hơn; ngang → L=10
