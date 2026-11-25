@@ -10,9 +10,9 @@
 
 ### An
 
-- **Task hiện tại:** P6.2 (GUI cờ tướng) — chưa bắt đầu. P8.3 ✅ (2026-11-23, `XQ_MCTS_L=10` chốt theo `lmatch`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: `P6.2 → P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video).
+- **Task hiện tại:** P8.4 (thí nghiệm cờ tướng E7, D-25) — chưa bắt đầu. P6.2 ✅ (2026-11-25, GUI cờ tướng, D-37). P8.3 ✅ (`XQ_MCTS_L=10`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: `P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng).
 - **Việc đang dở:** (không)
-- **Bước tiếp theo:** P6.2 (view cờ tướng trong GUI; AI dùng `xq_mcts_spec(...)` / `ab_spec`, D-24/D-23) → P8.4 (E7, D-25) → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
+- **Bước tiếp theo:** P8.4 (E7, D-25; kiểm lại L bằng E7(c) với tactics bật, D-24) → nếu spec E7 trùng `==` mức cờ tướng GUI thì đổi nguồn "riêng" → "E7" (`presets.md` TODO, D-37) → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ### Thành viên 2
@@ -49,7 +49,7 @@
 | P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; GUI thay bởi P6.3 (An chơi thử OK) |
 | P6.3 | GUI: game chơi được hoàn chỉnh | ✅ | An | 2026-11-17 | D-29; spec-reviewer PASS; An chơi thử bằng chuột OK |
 | P6.4 | GUI: AI "Rất khó" 15×15 (ID, top-k, TT, VCF) | ✅ | An | 2026-11-21 | D-35/D-36; B3 bỏ; An chơi thử 5 ván OK; không đổi results/ |
-| P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
+| P6.2 | GUI: view cờ tướng | ✅ | An | 2026-11-25 | D-37; spec-reviewer PASS; An chơi thử + duyệt; Khó MCTS 2,50/2,50 s, AB 2,00/2,00 s (GUI, minh họa) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ✅ | An | 2026-11-18 | D-30; spec-reviewer PASS; report_check 0 lỗi; `plots --check` 26/26 |
 | P7.3 | Xuất report.pdf (D-34; thay docx) | ⬜ | An | | sau P8 + bổ sung báo cáo cờ tướng (D-35) |
@@ -79,6 +79,28 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-25 — P6.2 ✅ đóng: GUI cờ tướng (commit b, c, d)
+- (b) `c7ce6a9`: `XiangqiView` + font Noto Serif TC cắt 18 chữ + `view.get_cjk_font` / hook `status_text` / `end_reason`;
+  đánh dấu theo hình dạng (đĩa chọn dưới quân, vòng ăn quân, khung 4 góc nước cuối), viền đôi cách quân ≥ r + 6 px
+  (cell 62 → 59), file LF; `xiangqi_view.md`; 14 test view. Chọn tướng đang bị chiếu: thứ tự vẽ vốn đã đúng, đĩa bị quầng
+  đỏ trộn màu → đẩy vòng chiếu ra ngoài đĩa (amend). `chore: .gitattributes` (`0794912`, `* text=auto eol=lf`, renormalize
+  không đổi file nào). Push `develop` (`25e8a12`, (b), chore).
+- (c) `8cf25b3`: 6 mức cờ tướng từ `xq_mcts_spec` / `ab_spec` (D-37), `board_key` (khóa trò 3 / 15 / "xiangqi"), Setup
+  Đỏ/Đen + Help luật cờ tướng, xoay bàn khi người duy nhất cầm Đen, dòng trạng thái báo chiếu, modal lý do kết thúc,
+  avatar 帥/將, `screenshots.py` `xq_check` / `xq_flipped` / `xq_end` (thay script Temp); `test_gui_xiangqi_play.py`
+  (click 2 bước, xoay, chiếu, chiếu bí / lặp thế, autoplay 4 chế độ).
+- **An chơi thử cờ tướng trong GUI và duyệt (c).** 2 thay đổi ngoài yêu cầu, An giữ: thẻ người chơi đảo theo bàn xoay;
+  modal bỏ dòng phụ lặp tiêu đề (áp dụng chung).
+- (d): 2 lỗi đã sửa — card Phân tích hiện "0 iter" cho AB (giờ chỉ khi > 0, chung cho k-in-row; `last_move_text`);
+  nút "Đỏ đầu …" bị cắt (`Button.fits` đo font thật; không vừa → "Đầu hàng"; đo cho thấy mọi nhãn có tên, kể cả
+  "X đầu hàng", đều không vừa nút 126 px → mọi chế độ 2 người hiện "Đầu hàng"). `p63_gui_timing --boards xiangqi`
+  (ván cắt 60 ply). Timing (AC, bench 0,966×): Khó MCTS 2,50 / 2,50 s, AB 2,00 / 2,00 s → đạt; FPS trung bình ≥ 25,7,
+  khung tệ nhất MCTS Khó 11,0 (ghi nhận). D-37, PLAN §P6.2, docs module.
+- spec-reviewer P6.2: **PASS**, không blocker/major. Minor đã sửa: assert cứng "Đầu hàng" + đo 4 nhãn; test "N iter" MCTS
+  không còn nhánh bỏ qua; thêm test pháo qua ngòi / mã cản chân (`highlights` == `legal_moves`) và click khi hết ván.
+  Minor để lại: ảnh `xq_*` chưa đưa vào `report/figures/gui/` (chạy `screenshots --only xq_check xq_flipped xq_end
+  --out report/figures/gui` khi làm báo cáo / P7.4).
 
 #### 2026-11-23 — P8.3: spec-reviewer + sửa theo review
 - spec-reviewer: không blocker; **1 major**: D-24/PROGRESS ghi `lmatch` chạy "tactics bật" nhưng code chạy **tactics tắt** (`cmd_lmatch` gọi `xq_mcts_spec` không truyền `tactics`, mặc định `False`; chuỗi config + `lmatch_games.csv` không có tactics). An chọn: **sửa mô tả, không chạy lại**. D-24 thêm: E7(c) (so L với tactics bật) là phép kiểm lại L ở điều kiện dùng thật; L=0 mạnh hơn rõ (CI không chứa 0,5) → xem lại `XQ_MCTS_L` ở P8.4.

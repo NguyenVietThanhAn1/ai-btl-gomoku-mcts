@@ -468,7 +468,9 @@ class PlayScene(Scene):
             self.b_resign.danger, self.b_resign.icon = True, "flag"
             self.b_resign.enabled = side is not None
             named = len(c.human_sides) == 2 and side is not None
-            self.b_resign.text = f"{self.side(side)} đầu hàng" if named else "Đầu hàng"
+            text = f"{self.side(side)} đầu hàng" if named else "Đầu hàng"
+            # Không vừa nút (đo bằng font thật, kèm icon) → chữ ngắn, không để bị cắt "Đỏ đầu …".
+            self.b_resign.text = text if self.b_resign.fits(text) else "Đầu hàng"
         self.t_analysis.value, self.t_wn.value = self.state.overlay.show, self.state.overlay.show_wn
         self.t_analysis.enabled = self.t_wn.enabled = self.has_mcts
 
@@ -675,6 +677,21 @@ class PlayScene(Scene):
             anchor="topright",
         )
 
+    def last_move_text(self, last: MoveInfo) -> str:
+        """Dòng "Nước cuối: …" (card Phân tích): bên + nước; nước AI thêm thời gian, iter, nút."""
+        text = f"Nước cuối: {self.side(last.player)} {self.view.move_label(last.move)}"
+        if last.by_ai:
+            if last.is_tactic:
+                kind = "thắng ngay" if last.tactic == 1 else "chặn ngay"
+                text += f" · tactic ({kind}) · {fmt_s(last.time)}"
+            else:
+                text += f" · {fmt_s(last.time)}"
+                if last.iterations:  # chỉ khi > 0: AB báo 0 iteration → không hiện "0 iter"
+                    text += f" · {last.iterations} iter"
+                if last.nodes is not None:
+                    text += f" · {last.nodes} nút"
+        return text
+
     def _draw_analysis(self, surf: pygame.Surface, overlay_info: MoveInfo | None,
                        last: MoveInfo | None) -> None:  # fmt: skip
         t = T()
@@ -682,18 +699,8 @@ class PlayScene(Scene):
         x, y = r.x + space(2), r.y + 52
         surf.blit(render.rounded_rect(r.w - space(4), 1, 0, t.border), (x, r.y + 44))
         if last is not None:
-            text = f"Nước cuối: {self.side(last.player)} {self.view.move_label(last.move)}"
-            if last.by_ai:
-                if last.is_tactic:
-                    kind = "thắng ngay" if last.tactic == 1 else "chặn ngay"
-                    text += f" · tactic ({kind}) · {fmt_s(last.time)}"
-                else:
-                    text += f" · {fmt_s(last.time)}"
-                    if last.iterations is not None:
-                        text += f" · {last.iterations} iter"
-                    if last.nodes is not None:
-                        text += f" · {last.nodes} nút"
-            draw_text(surf, text, (x, y), CAPTION, t.muted, max_width=r.w - space(4))
+            draw_text(surf, self.last_move_text(last), (x, y), CAPTION, t.muted,
+                      max_width=r.w - space(4))  # fmt: skip
         y += 22
         if not self.has_mcts:
             draw_text(surf, "Ván này không có AI MCTS — không có thống kê gốc (N, W/N).", (x, y),

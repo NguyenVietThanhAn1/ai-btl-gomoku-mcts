@@ -146,6 +146,10 @@ Ghi chú hiệu năng 15×15: nếu 5000 iter quá chậm, giảm số ván ở 
   Done khi: chơi hết 1 ván mỗi chế độ (người vs AI, AI vs AI) × (3×3, 15×15) không lỗi; test controller xanh; ruff sạch.
 - **P6.2** (sau P8.3) view cờ tướng trên khung P6.1: bấm quân → tô sáng nước hợp lệ → bấm ô đích; báo chiếu / chiếu bí /
   hòa. Cờ tướng chơi được là **lõi**; ✂ overlay N/W/N cho cờ tướng. Done khi: chơi hết 1 ván mỗi chế độ cờ tướng không lỗi.
+  **✅ 2026-11-25 (D-37):** `gui/xiangqi_view.py` (font Noto Serif TC cắt 18 chữ, đánh dấu theo hình dạng, viền đôi, xoay bàn khi
+  người duy nhất cầm Đen), 6 mức cờ tướng lấy từ spec P8.2/P8.3, báo chiếu + lý do kết thúc; autoplay hết ván mọi chế độ
+  (test headless) + An chơi thử. Thời gian/nước GUI (headless, minh họa): Khó MCTS 2,50 / 2,50 s, Khó AB 2,00 / 2,00 s
+  (trung bình / tối đa) → đạt ≤ 3 / ≤ 5 s; FPS trung bình khi AI nghĩ ≥ 25,7 (khung tệ nhất MCTS Khó 11,0).
 - **P6.3** (sau P6.1, An thêm; D-29) Nâng GUI thành game chơi được hoàn chỉnh kiểu chess.com: scene manager + widget tự viết
   (Home / Setup / Play / modal Kết thúc / Xem lại / Demo / Hướng dẫn); chế độ người vs AI, AI vs AI, 2 người cùng máy; loại AI
   MCTS / Alpha-Beta × Dễ/Vừa/Khó ánh xạ sang `AgentSpec` (bảng D-29, panel ghi nguồn cấu hình); controller thêm undo / đầu hàng /

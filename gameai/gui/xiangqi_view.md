@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🟡 đang làm (P6.2, chờ đo thời gian + D-37)  ·  **Task:** P6.2 (D-28, D-37)  ·  **Cập nhật:** 2026-11-25
+**Trạng thái:** ✅ ổn định  ·  **Task:** P6.2 (D-28, D-37)  ·  **Cập nhật:** 2026-11-25
 
 ## Mục đích
 `GameView` cho `Xiangqi`: bàn 9×10 giao điểm như bàn thật (sông ngắt đường dọc, chéo cung, dấu chữ thập
@@ -111,6 +111,7 @@ vòng đỏ được đẩy ra ngoài đĩa thay vì chỉ đổi thứ tự v�
 ## Test
 - `tests/test_gui_xiangqi_view.py`: khứ hồi 90 giao điểm (thường + xoay), nhãn khi xoay, lề viền đôi, chọn / bỏ
   chọn / đổi chọn / đi / preview không đổi trạng thái, ô ăn quân trùng ô đến nước cuối, đĩa chọn dưới quân,
+  `highlights` == `legal_moves` (pháo ăn qua ngòi, mã cản chân), click khi hết ván → None,
   font đủ glyph, font dự phòng chữ Việt, `end_reason` (chiếu bí, bí nước, lặp thế, giới hạn nước), `status_text`.
 
 ## Hạn chế / TODO

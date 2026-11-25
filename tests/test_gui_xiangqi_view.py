@@ -146,6 +146,29 @@ def test_selected_king_in_check_shows_disc_and_outer_check_ring():
     assert red.r > red.g + 60
 
 
+@pytest.mark.parametrize(
+    ("fen", "frm"),
+    [
+        (
+            "4k4/9/9/9/4p4/9/4P4/4C4/9/4K4 w - - 0 1",
+            "e2",
+        ),  # pháo: ngòi e3 (quân mình), ăn qua ngòi e5
+        ("4k4/9/9/9/9/9/9/2P6/2H6/4K4 w - - 0 1", "c1"),  # mã bị cản chân ở c2
+    ],
+)
+def test_highlights_equal_legal_moves_cannon_screen_and_horse_leg(fen, frm):
+    g, v = Xiangqi(fen), XiangqiView(BOARD_RECT)
+    assert click(v, g, sq(frm)) is None and v.selected == sq(frm)
+    assert sorted(v.highlights(g)) == sorted(m for m in g.legal_moves() if m // NUM_SQ == sq(frm))
+
+
+def test_click_when_game_over_returns_none():
+    g, v = Xiangqi("3k5/9/9/9/9/9/9/9/3R5/4K4 b - - 0 1"), XiangqiView(BOARD_RECT)  # chiếu bí
+    assert g.is_terminal()
+    assert click(v, g, sq("d9")) is None and v.selected is None and v.highlights(g) == []
+    assert v.preview(v.sq_center(sq("e9")), g) is None
+
+
 # ---------------------------------------------------------------- font
 def test_packaged_font_has_all_glyphs():
     assert view.CJK_FILE.exists()

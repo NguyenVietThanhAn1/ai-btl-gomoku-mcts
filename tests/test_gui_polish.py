@@ -169,7 +169,7 @@ def test_black_white_wording_15x15_and_xo_3x3():
     p = app.play
     app.tick()
     assert p.side(P1) == "Đen" and p.side(P2) == "Trắng"
-    assert p.b_resign.text == "Đen đầu hàng"
+    assert p.b_resign.text == ("Đen đầu hàng" if p.b_resign.fits("Đen đầu hàng") else "Đầu hàng")
     assert p.player_name(P1)[0] == "Người chơi Đen"
     for m in (112, 128, 113, 129, 114, 130, 115, 131, 116):
         app.handle_click(app.view.cell_rect(m).center)
@@ -182,7 +182,9 @@ def test_black_white_wording_15x15_and_xo_3x3():
     assert app3.play.side(P1) == "X" and app3.play.history_rows() == []
     app3.handle_click(app3.view.cell_rect(4).center)
     app3.tick()
-    assert app3.play.history_rows()[0][1] == "X" and app3.play.b_resign.text == "O đầu hàng"
+    b = app3.play.b_resign
+    assert app3.play.history_rows()[0][1] == "X"
+    assert b.text == ("O đầu hàng" if b.fits("O đầu hàng") else "Đầu hàng")
 
 
 def test_status_line_uses_black_white():

@@ -231,9 +231,11 @@ def test_undo_button_disabled_while_ai_thinking():
 def test_two_players_resign_label_and_ai_vs_ai_buttons():
     app = play_app(Preset("t", "t", GAME3, None, None))
     p = app.play
-    assert p.b_resign.text == "X đầu hàng"
+    # "X đầu hàng" (kèm icon) không vừa nút 126 px → chữ ngắn "Đầu hàng"; vẫn đầu hàng bên tới lượt.
+    assert p.b_resign.fits(p.b_resign.text)
+    assert p.b_resign.text == ("X đầu hàng" if p.b_resign.fits("X đầu hàng") else "Đầu hàng")
     click_cell(app, 4)
-    assert p.b_resign.text == "O đầu hàng"
+    assert app.ctrl.resign_side() == P2 and p.b_resign.fits(p.b_resign.text)
     click(app, p.b_resign.rect.center)
     app.tick()
     assert app.ctrl.outcome == P1 and p.result_view()[0] == "O đầu hàng"

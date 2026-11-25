@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P6.3 (D-29; làm lại ở phiên 3a)  ·  **Cập nhật:** 2026-11-17
+**Trạng thái:** ✅ ổn định  ·  **Task:** P6.3 (D-29; làm lại ở phiên 3a), P6.2 (D-37)  ·  **Cập nhật:** 2026-11-25
 
 ## Mục đích
 Design tokens (`Theme`) + widget tự viết bằng pygame (không thêm thư viện UI) cho mọi màn GUI. Mọi hình
@@ -26,6 +26,8 @@ def is_click(ev) -> bool                         # MOUSEBUTTONDOWN nút trái
 class Widget:  rect; visible; enabled; hover;  handle_event(ev) -> bool (True = đã tiêu thụ);  draw(surf)
 class Button(Widget):   (rect, text, on_click=None, *, primary=False, danger=False, size=BODY, enabled=True,
                         hint=None, icon=None, ghost=False)   # icon trái nhãn; ghost = không nền tới khi hover
+    content_width(text) -> int   # bề rộng icon + khoảng cách + chữ (font thật) khi vẽ trên nút
+    fits(text) -> bool           # content_width ≤ rect.w − 16 (không bị cắt); P6.2: nhãn đầu hàng
 class IconButton(Button): (rect, icon_name, on_click=None, *, ghost=True, size=BODY)
 class Toggle(Widget):   (rect, label, value=False, on_change=None)          # click → value đảo, on_change(value)
 class SegmentedControl(Widget): (rect, options=[(key, nhãn)], selected, on_change=None, *, disabled=(), hints={})

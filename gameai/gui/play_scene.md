@@ -31,6 +31,7 @@ class PlayScene(Scene):  name = "play"
     side(p) -> str; result_text() -> str           # tên bên theo view: 15×15 "Đen"/"Trắng", 3×3 "X"/"O", cờ tướng "Đỏ"/"Đen"
                                                    # result_text thêm view.end_reason: "Đen thắng — Chiếu bí", "Hòa — lặp thế 3 lần"
     status_line() -> (chữ, màu)                    # dòng trạng thái; view.status_text ("Đỏ đang bị chiếu") thay "Lượt Đỏ", màu t.lose
+    last_move_text(last) -> str                    # "Nước cuối: …" card Phân tích; "· N iter" chỉ khi N > 0 (AB báo 0)
     card_layout() -> [(bên, Rect)]                 # (O/Đen trên, X/Đỏ dưới); đảo khi view.flipped
     board_n: int; board_key: BoardKey              # cạnh bàn k-in-row (kiểu quân) / khóa trò cho bảng độ khó
     update(dt)                                     # tween: đặt quân, đường thắng, modal, hover
@@ -49,7 +50,7 @@ class PlayScene(Scene):  name = "play"
 | Trạng thái | Nút 1 | Nút 3 |
 |---|---|---|
 | người vs AI | Đi lại (khóa khi AI nghĩ / chưa có nước người) | Đầu hàng |
-| 2 người | Đi lại (1 ply) | "X đầu hàng" / "O đầu hàng" theo bên tới lượt |
+| 2 người | Đi lại (1 ply) | "{bên} đầu hàng" nếu vừa nút (`Button.fits`), không thì "Đầu hàng" (nút 126 px: hiện luôn là "Đầu hàng", D-37); đầu hàng bên tới lượt |
 | AI vs AI | Tạm dừng / Tiếp tục | (ẩn) |
 | hết ván | Đi lại (nếu được) | Kết quả (mở lại modal) |
 | xem lại | ‹ Trước · Sau › | Thoát xem lại |

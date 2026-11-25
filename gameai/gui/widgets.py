@@ -238,6 +238,16 @@ class Button(Widget):
         bg = t.surface3 if self.hover else (None if self.ghost else t.surface2)
         return bg, (t.lose if self.danger else t.ink)
 
+    def content_width(self, text: str) -> int:
+        """Bề rộng (px, font thật) của icon + khoảng cách + `text` khi vẽ trên nút này."""
+        label_w = get_font(self.size, weight="semibold").size(text)[0] if text else 0
+        gap = 8 if text else 0
+        return (self.size + 4 + gap if self.icon else 0) + label_w
+
+    def fits(self, text: str) -> bool:
+        """`text` (kèm icon) vừa nút mà không bị cắt (lề 8 px mỗi bên)."""
+        return self.content_width(text) <= self.rect.w - 16
+
     def draw(self, surf: pygame.Surface) -> None:
         if not self.visible:
             return
@@ -256,10 +266,9 @@ class Button(Widget):
             else:
                 surf.blit(render.rounded_rect(self.rect.w, self.rect.h, r, bg), self.rect)
         cy = self.rect.centery - (9 if self.hint else 0)
-        label_w = get_font(self.size, weight="semibold").size(self.text)[0] if self.text else 0
         icon_size = self.size + 4
         gap = 8 if self.text else 0
-        total = (icon_size + gap if self.icon else 0) + label_w
+        total = self.content_width(self.text)
         x = self.rect.centerx - min(total, self.rect.w - 16) // 2
         if self.icon:
             img = icon(self.icon, icon_size, ink)

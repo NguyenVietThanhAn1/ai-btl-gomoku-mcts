@@ -68,3 +68,24 @@ def test_refuses_to_overwrite_report_tables():
         t.main(["--levels", "hard", "--allow-battery"])  # lọc mà không --tag / --table-dir
     with pytest.raises(SystemExit):
         t.main(["--tag", "p63x", "--allow-battery"])
+
+
+def test_xiangqi_board_key_and_short_games(tmp_path, monkeypatch):
+    """P6.2: --boards xiangqi → 6 mức cờ tướng, ván cắt ngắn, bảng xếp 3 / 15 / xiangqi."""
+    assert [t.parse_board(b) for b in t.BOARD_CHOICES] == [3, 15, "xiangqi"]
+    assert t.GAMES["xiangqi"].params["max_plies"] == t.XQ_TIMING_PLIES
+    assert sorted(["xiangqi", "15", "3"], key=t.board_order) == ["3", "15", "xiangqi"]
+    monkeypatch.setattr(t, "bench", lambda **kw: [])
+    seen = []
+
+    def fake_measure(board, key, lv, opp, n, surface, power):
+        seen.append((board, key, opp))
+        return {c: "" for c in t.TIMING_COLUMNS} | {"board": board, "kind": key[1], "level": key[2]}
+
+    monkeypatch.setattr(t, "measure_level", fake_measure)
+    old = {c: "" for c in t.TIMING_COLUMNS} | {"board": "15", "kind": "mcts", "level": "hard"}
+    t._write(tmp_path / "p63quick_gui_timing.csv", t.TIMING_COLUMNS, [old])
+    t.run(["xiangqi"], quick=True, table_dir=tmp_path)
+    assert len(seen) == 6 and {s[2] for s in seen} == {"random_human"}
+    table = read_rows(tmp_path / "p63quick_gui_timing.csv")
+    assert [r["board"] for r in table] == ["15"] + ["xiangqi"] * 6

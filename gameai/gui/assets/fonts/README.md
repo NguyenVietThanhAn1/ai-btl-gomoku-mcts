@@ -23,6 +23,6 @@
   python -m fontTools.subset NotoSerifTC-Bold.otf --text="帥仕相俥傌炮兵將士象馬車砲卒楚河漢界" \
       --layout-features="" --no-hinting --output-file=gameai/gui/assets/fonts/NotoSerifTC-Bold-xq.otf
   ```
-  Thêm chữ mới → cắt lại từ file gốc với `--text` mới (test `tests/test_gui_xiangqi.py` kiểm mọi chữ có glyph).
+  Thêm chữ mới → cắt lại từ file gốc với `--text` mới (test `tests/test_gui_xiangqi_view.py` kiểm mọi chữ có glyph).
 - Dùng bởi: `gameai/gui/view.py::get_cjk_font` (thiếu file → font CJK hệ thống Microsoft YaHei → SimHei → SimSun →
-  chữ Việt viết tắt trên quân). Quyết định: D-37 (P6.2).
+  chữ Việt trên quân: Tướng, Sĩ, Tượng, Mã, Xe, Pháo, Tốt). Quyết định: D-37 (P6.2).

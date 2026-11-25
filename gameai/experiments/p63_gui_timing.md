@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P6.3 (D-29)  ·  **Cập nhật:** 2026-11-17
+**Trạng thái:** ✅ ổn định  ·  **Task:** P6.3 (D-29), P6.4 (D-36), P6.2 (D-37)  ·  **Cập nhật:** 2026-11-25
 
 ## Mục đích
 Đo thời gian/nước của 12 mức độ khó GUI (`gui/presets.DIFFICULTY`) **qua vòng vẽ GUI thật** để kiểm luật D-29
@@ -13,6 +13,7 @@
 ```
 python -m gameai.experiments.p63_gui_timing                 # cả 3×3 và 15×15
 python -m gameai.experiments.p63_gui_timing --boards 15     # chỉ 15×15 (giữ dòng 3×3 cũ trong CSV)
+python -m gameai.experiments.p63_gui_timing --boards xiangqi --table-dir local_out/p62 --tag p62   # 6 mức cờ tướng (P6.2)
 python -m gameai.experiments.p63_gui_timing --quick         # 1 ván/mức, file p63quick_* (không commit)
 # P6.4 (D-36): bộ lọc + ghi ngoài results/ (không ghi đè p63_* / p63anim_*)
 python -m gameai.experiments.p63_gui_timing --boards 15 --kinds alphabeta mcts --levels medium hard \
@@ -25,7 +26,10 @@ python -m gameai.experiments.p63_gui_timing --boards 15 --kinds alphabeta mcts -
   nhất): FPS vòng lặp chính headless (mục tiêu 30).
 - Không cắm sạc → dừng (D-21); `--allow-battery` để bỏ qua (số đo khi đó không dùng được).
 - Animation GUI bật mặc định → file `p63anim_*` (cột `animations = 1`); `--no-anim` → `p63_*` (bảng gốc D-29).
-- Thời gian: 3×3 ~10 s; 15×15 vài phút (MCTS Khó ~2–5 s/nước chiếm phần lớn).
+- Thời gian: 3×3 ~10 s; 15×15 vài phút (MCTS Khó ~2–5 s/nước chiếm phần lớn); cờ tướng ~4 phút (2 ván/mức).
+- Cờ tướng (P6.2): `--boards xiangqi` (khóa trò = `presets.board_key`), `GAMES["xiangqi"]` = `max_plies`
+  `XQ_TIMING_PLIES` = 60 (ván cắt ngắn, hòa khi chạm), 2 ván/mức (`--quick` 1), chỉ đối thủ người ngẫu nhiên (nước hợp lệ).
+  Cột `board` = "xiangqi"; bảng xếp 3 / 15 / xiangqi (`board_order`). Kết quả: D-37.
 
 ## Điều kiện đo (D-21)
 - **Cắm sạc, máy rảnh** (đóng app nặng). Ghi `power`, `battery_pct` (`e6_tactics.power_status`) và `power_plan`
@@ -51,7 +55,8 @@ python -m gameai.experiments.p63_gui_timing --boards 15 --kinds alphabeta mcts -
   (`bench`, `cpu_name`, `_write`, `_append_csv`), `e6_tactics.power_status`, `common` (`git_info`, `read_rows`).
 
 ## Test
-- `tests/test_p63_gui_timing.py`: `measure_level` 3×3 đủ cột + nhãn; `run` (bench giả) ghi 3 file, giữ dòng bàn khác.
+- `tests/test_p63_gui_timing.py`: `measure_level` 3×3 đủ cột + nhãn; `run` (bench giả) ghi 3 file, giữ dòng bàn khác;
+  cờ tướng: `parse_board`, ván cắt ngắn, 6 mức chỉ vs người ngẫu nhiên, thứ tự bảng.
 
 ## Hạn chế / TODO
 - Thời gian nước người ngẫu nhiên ≈ 0 → không đo; số ván ít (minh họa, không có CI).

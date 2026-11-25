@@ -141,6 +141,39 @@ def test_draw_reason_repetition():
     assert title == "Hòa" and lines[0] == "Lặp thế 3 lần"
 
 
+def test_ab_last_move_has_no_iter_but_mcts_does():
+    """AB báo iterations = 0 → không hiện "0 iter" (chung cho k-in-row); MCTS vẫn hiện."""
+    app = app_for(GameConfig("xiangqi", "human_ai", "O", AIChoice("alphabeta", "easy")))
+    app.ctrl.run_until_idle(60)
+    app.tick()
+    last = app.ctrl.last
+    assert last is not None and last.by_ai and not last.iterations
+    text = app.play.last_move_text(last)
+    assert "iter" not in text and "nút" in text
+    mcts = Preset("xq_mcts", "", SHORT, FAST_MCTS, None)
+    app = App(AppState(None, 0, delay=0.0, base=mcts), surface=pygame.Surface((1280, 720)))
+    app.ctrl.run_until_idle(60)
+    app.tick()
+    last = (
+        app.ctrl.last
+    )  # nước đầu từ thế khai cuộc: không có thắng ngay / chặn ngay → không phải tactic
+    assert last is not None and not last.is_tactic and last.iterations > 0
+    assert f"{last.iterations} iter" in app.play.last_move_text(last)
+
+
+def test_two_player_resign_label_fits_button():
+    app = app_for(GameConfig("xiangqi", "two_players"))
+    b = app.play.b_resign
+    assert b.text in ("Đỏ đầu hàng", "Đầu hàng") and b.fits(b.text)
+    click_sq(app, sq("h2"))
+    click_sq(app, sq("e2"))
+    assert b.text in ("Đen đầu hàng", "Đầu hàng") and b.fits(b.text)
+    # D-37: nút 126 px không chứa nhãn có tên nào (đo font thật) → luôn "Đầu hàng".
+    for label in ("X đầu hàng", "Đỏ đầu hàng", "Đen đầu hàng", "Trắng đầu hàng"):
+        assert not b.fits(label)
+    assert b.text == "Đầu hàng"
+
+
 # ---------------------------------------------------------------- autoplay (D-37: mọi chế độ)
 SHORT = GameSpec("xiangqi", {"max_plies": 24})
 FAST_MCTS = xq_mcts_spec(time_limit=None, iterations=40, tactics=True)

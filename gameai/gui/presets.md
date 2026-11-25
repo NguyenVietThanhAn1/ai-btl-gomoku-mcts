@@ -98,4 +98,4 @@ VCF ở gốc (`vcf_depth` 8, `vcf_time` 0,3 s). Lý do: Khó cũ quá dễ vớ
 
 ## Hạn chế / TODO
 - Chưa có preset Demo cờ tướng (đợi spec E7 ở P8.4); phím 1/2/3 vẫn là 3 preset k-in-row.
-- Thời gian/nước các mức cờ tướng trong GUI: đo ở commit (d) của P6.2, ghi D-37.
+- Thời gian/nước các mức cờ tướng trong GUI: D-37 (Khó MCTS 2,50 s, AB 2,00 s; minh họa).

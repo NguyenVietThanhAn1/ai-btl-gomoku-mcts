@@ -371,3 +371,59 @@
   → **Đạt ngưỡng** (≥ 0,8 vs AB Vừa mới; ≥ 0,5 vs MCTS Khó; cận dưới Wilson 0,77 > 0,5 và gần 0,8). Lưu ý: cận dưới vs AB Vừa mới (0,77) hơi dưới 0,8 — ngưỡng áp lên điểm ước lượng. Điểm A là số của một máy, thời gian/nước ảnh hưởng kết quả (agent theo thời gian); chỉ minh họa. MCTS Khó nghĩ tối đa 6,57 s trong ván này (> 5 s; luật GUI vốn chấp nhận, D-29). Còn lại: **An tự chơi 5 ván 15×15 mức Khó** trước khi đóng P6.4.
 - **An chơi thử (2026-11-21):** 5 ván 15×15 mức Khó (AB) — "khá ổn", không có lỗi cần sửa → duyệt đóng P6.4.
 - **B3 bỏ (An, 2026-11-21):** MCTS Khó = `time_limit` + VCF ở gốc **không làm** vì P6.4 vượt timebox ~1,5 ngày (điều kiện bỏ trong D-35). MCTS Khó giữ nguyên (E3, 5000 iter).
+
+### D-37 (2026-11-25) — P6.2: GUI cờ tướng (font, đánh dấu, độ khó, xoay bàn, thời gian/nước)
+- **Phạm vi:** `gui/xiangqi_view.py` (mới) + sửa nhỏ generic ở `view.py` (hook `status_text` / `end_reason` có mặc định
+  None, `get_cjk_font`), `presets.py`, `game_config.py`, `scenes.py`, `play_scene.py`, `widgets.py` (`Button.fits`),
+  `screenshots.py`, `experiments/p63_gui_timing.py`. **Không** sửa `agents/`, `core/`, `games/`, `results/`, `report/report.md`;
+  controller không đổi. Lý do kết thúc tính trong GUI từ API công khai của `Xiangqi` (`ply < max_plies` ⇒ lặp thế, D-22).
+  ✂ (giữ như PLAN): overlay N/W/N trên bàn cờ tướng (card Phân tích vẫn có top-5 dạng chữ), animation trượt quân,
+  ký hiệu truyền thống, preset Demo cờ tướng (đợi E7, P8.4).
+- **Font:** Noto Serif **TC** Bold (phồn thể — bộ chữ quân truyền thống; plan ghi SC, đổi sang TC vì đủ 18 chữ phồn thể),
+  OFL 1.1, cắt bằng `fontTools.subset` còn 18 chữ (帥仕相俥傌炮兵 將士象馬車砲卒 楚河漢界), 7 408 byte; nguồn, phiên bản,
+  sha256, lệnh cắt: `gameai/gui/assets/fonts/README.md`. Dự phòng: font CJK hệ thống (YaHei/SimHei/SimSun) → chữ Việt trên quân.
+- **Bàn:** giao điểm 9×10, sông ngắt đường dọc, chéo cung, dấu chữ thập pháo/tốt, 楚河 漢界, **viền đôi** cách giao điểm biên
+  ≥ bán kính quân + 6 px (cell 59 px trong `BOARD_RECT` 672 px) → quân hàng 0/9, cột a/i không đè viền. Nhãn ICCS (a–i, 0–9).
+- **Quy ước đánh dấu — phân biệt bằng hình dạng (An duyệt, 2026-11-25):** quân đang chọn = **đĩa** `t.accent` mờ (alpha 90)
+  **dưới** quân; ô đích trống = chấm; ô ăn quân = **vòng** `t.accent` quanh quân; nước cuối = **khung 4 góc vuông**
+  `t.last_move` ở cả ô đi và ô đến; tướng bị chiếu = quầng + vòng đỏ. Ô ăn quân trùng ô đến nước cuối vẫn đọc được
+  (vòng ≠ khung góc). Khi chọn chính tướng đang bị chiếu: bỏ quầng tô, đẩy vòng đỏ ra ngoài đĩa chọn (quầng và đĩa
+  cùng vùng trộn màu thành nâu; đổi thứ tự vẽ không đủ).
+- **Input (máy trạng thái D-28):** click quân mình → chọn; click lại → bỏ; quân mình khác → đổi chọn; đích hợp lệ
+  (`legal_moves` lọc theo ô đi) → nước; chỗ khác → bỏ chọn. Undo / hết lượt người → bỏ chọn.
+- **Xoay bàn:** `view.flipped = (người duy nhất cầm Đen)`, đặt ngay sau `make_view` (cả ván mới, phím S). Thẻ người chơi
+  đảo theo bàn (bên ở dưới bàn có thẻ ở dưới) — **ngoài yêu cầu, An giữ**.
+- **Lời văn:** Đỏ/Đen (Setup "Đỏ · đi trước" / "Đen · đi sau"); dòng trạng thái "Đỏ đang bị chiếu · …" màu đỏ; modal
+  "Đen thắng" + dòng phụ "Chiếu bí" / "Bí nước" / "Lặp thế 3 lần" / "Đạt giới hạn N nước". Modal bỏ dòng phụ lặp tiêu đề
+  (áp dụng chung, k-in-row đầu hàng: "X đầu hàng" + "O thắng") — **ngoài yêu cầu, An giữ**.
+- **6 mức cờ tướng (thay mục "chốt ở P6.2" của D-23/D-36):** spec gọi hàm thí nghiệm, không gõ tay; nguồn = cấu hình riêng
+  (P8.4 đổi sang "E7" nếu spec E7 trùng `==`).
+
+| AI | Dễ | Vừa | Khó |
+|---|---|---|---|
+| MCTS | `xq_mcts_spec(time_limit=0.3, tactics=True)` | `xq_mcts_spec(time_limit=1.0, tactics=True)` | `xq_mcts_spec(time_limit=2.5, tactics=True)` |
+| AB | `ab_spec(1)` | `ab_spec(2, use_tt=True)` (= nguồn nhãn D-24) | `ab_spec(12, use_tt=True, time_limit=2.0)` (ID) |
+
+  MCTS: rollout cắt L = 10 + σ(`xq_evaluate`/2000), c = √2. AB: `xq_evaluate` + `xq_delta` + `xq_mvv_lva`, `seeded: false`,
+  TT "exact", **không** `top_k`/`tt_mode="deep"` (D-23: chưa đo trên cờ tướng).
+- **Sửa GUI chung (An yêu cầu sau khi chơi thử):** (1) card Phân tích chỉ hiện "· N iter" khi N > 0 (AB báo 0 → trước hiện
+  "0 iter"); (2) nút đầu hàng: "{bên} đầu hàng" không vừa nút (đo font thật kèm icon, `Button.fits`) → "Đầu hàng". Đo:
+  nút 126 px còn 110 px cho chữ + icon; "X đầu hàng" 119, "Đỏ đầu hàng" 131, "Đen đầu hàng" 139, "Trắng đầu hàng" 153 px
+  → **mọi chế độ 2 người (cả k-in-row) đều hiện "Đầu hàng"** (từ P6.3 các nhãn này vốn bị cắt chữ); nút vẫn đầu hàng bên
+  tới lượt (dòng trạng thái ghi bên).
+- **Đo thời gian/nước + FPS (2026-11-25, `p63_gui_timing --boards xiangqi --table-dir local_out/p62 --tag p62`, animation bật,
+  headless 30 fps, commit `8cf25b3` + sửa chưa commit; số minh họa GUI, không dùng cho báo cáo thí nghiệm; ngoài `results/`):**
+  cắm sạc (AC, pin 100 %), power plan Balanced, i9-12900H, máy rảnh (CPU nền ~9 %); bench ngắn = **0,966×** `e5_bench.csv`
+  (rand 3 472, h300 2 353 iter/s). Người = nước hợp lệ ngẫu nhiên, 2 ván/mức (đổi bên), ván cắt 60 ply; 250 s wall.
+  Trung bình nước có search / tối đa (s) / FPS vòng chính khi AI nghĩ (trung bình / khung tệ nhất):
+
+| Cờ tướng | Dễ | Vừa | Khó |
+|---|---|---|---|
+| MCTS | 0,30 / 0,30 — 26,6 / 25,0 fps | 1,00 / 1,00 — 25,9 / 23,3 fps | **2,50 / 2,50** — 25,7 / 11,0 fps |
+| AB | 0,00 / 0,00 — 29,9 / 28,6 fps | 0,004 / 0,011 — 29,9 / 28,6 fps | **2,00 / 2,00** — 25,7 / 23,3 fps |
+
+  → **Đạt luật GUI** (Khó: trung bình ≤ 3 s, tối đa ≤ 5 s; quá hạn `time_limit` ≤ 0,003 s). FPS trung bình khi AI nghĩ
+  ≥ 25,7 ở mọi mức; **khung tệ nhất của MCTS Khó 11,0 fps** (một khung, < 15; P6.4 đo MCTS Khó 15×15 khung tệ nhất 14,5) —
+  ghi nhận, không chỉnh. `--quick` trước đó (1 ván/mức, 141 s): cùng kết luận. CSV: `local_out/p62/p62_gui_timing.csv`,
+  `p62_gui_runinfo.csv`, `p62_bench.csv` (gitignore).
+- **An chơi thử (2026-11-25):** chơi cờ tướng trong GUI và duyệt commit (c); yêu cầu 2 sửa ở trên.
