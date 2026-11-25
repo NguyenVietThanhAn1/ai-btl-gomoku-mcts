@@ -10,8 +10,8 @@
 
 ### An
 
-- **Task hiện tại:** P8.4 (thí nghiệm cờ tướng E7, D-25) — plan duyệt 2026-11-25 (+5 chỉnh), code + test xong; đang chạy `all --quick`. P6.2 ✅ (2026-11-25, GUI cờ tướng, D-37). P8.3 ✅ (`XQ_MCTS_L=10`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: `P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng).
-- **Việc đang dở:** E7: quick → báo ước tính + so sánh worker → **chờ An duyệt full** (thứ tự full: b → c1–c4 → luật c4 → d1, d2 → a; L0 mạnh hơn rõ → dừng trước d).
+- **Task hiện tại:** P8.4 (thí nghiệm cờ tướng E7, D-25) — plan duyệt 2026-11-25 (+5 chỉnh), code + test xong (commit `a52bf76`), quick xong; **chờ An duyệt full** (`--workers 2`, ~2,8 h). P6.2 ✅ (2026-11-25, GUI cờ tướng, D-37). P8.3 ✅ (`XQ_MCTS_L=10`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: `P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng).
+- **Việc đang dở:** E7 quick xong (D-25 "Sau quick") → **chờ An duyệt full** (thứ tự full: b → c1–c4 → luật c4 → d1, d2 → a; L0 mạnh hơn rõ → dừng trước d).
 - **Bước tiếp theo:** P8.4 (E7, D-25; kiểm lại L bằng E7(c) với tactics bật, D-24) → nếu spec E7 trùng `==` mức cờ tướng GUI thì đổi nguồn "riêng" → "E7" (`presets.md` TODO, D-37) → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
@@ -79,6 +79,11 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-25 — P8.4 E7: plan duyệt, code + quick (dừng chờ duyệt full)
+- D-38 (An làm một mình), D-25 (thiết kế E7 + 5 chỉnh của An). `experiments/e7_xiangqi.py` + `.md`, `tests/test_e7_xiangqi.py`; `common.run_match` thêm `extra_move_stats` (mặc định rỗng; E7 ghi `depth_reached` của AB vì AB không có `max_depth`). precheck 5/5 PASS, commit `a52bf76` (chưa push).
+- `all --quick`: 0 lệch giá trị gốc (b); c4 ngang → L10; wcheck giảm 25 % → full 2 worker; ước tính full ~2,8 h. Chi tiết D-25.
+- Tiếp: An duyệt → `python -m gameai.experiments.e7_xiangqi all --workers 2` (b → c → luật c4 → d → a; c4 L0 mạnh hơn rõ → tự dừng trước d).
 
 #### 2026-11-25 — P6.2 ✅ đóng: GUI cờ tướng (commit b, c, d)
 - (b) `c7ce6a9`: `XiangqiView` + font Noto Serif TC cắt 18 chữ + `view.get_cjk_font` / hook `status_text` / `end_reason`;
