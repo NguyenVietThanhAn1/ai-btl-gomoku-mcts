@@ -6,12 +6,12 @@
 
 ## Đang ở đâu (đọc mục này trước tiên)
 
-> Mỗi người chỉ sửa khối của mình (D-27, D-31, D-32).
+> Mỗi người chỉ sửa khối của mình (D-27, D-31, D-32). **Từ 2026-11-25 An làm một mình (D-38):** bỏ phối hợp Thành viên 2 / cột Owner.
 
 ### An
 
-- **Task hiện tại:** P8.4 (thí nghiệm cờ tướng E7, D-25) — chưa bắt đầu. P6.2 ✅ (2026-11-25, GUI cờ tướng, D-37). P8.3 ✅ (`XQ_MCTS_L=10`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: `P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng).
-- **Việc đang dở:** (không)
+- **Task hiện tại:** P8.4 (thí nghiệm cờ tướng E7, D-25) — plan duyệt 2026-11-25 (+5 chỉnh), code + test xong; đang chạy `all --quick`. P6.2 ✅ (2026-11-25, GUI cờ tướng, D-37). P8.3 ✅ (`XQ_MCTS_L=10`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: `P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng).
+- **Việc đang dở:** E7: quick → báo ước tính + so sánh worker → **chờ An duyệt full** (thứ tự full: b → c1–c4 → luật c4 → d1, d2 → a; L0 mạnh hơn rõ → dừng trước d).
 - **Bước tiếp theo:** P8.4 (E7, D-25; kiểm lại L bằng E7(c) với tactics bật, D-24) → nếu spec E7 trùng `==` mức cờ tướng GUI thì đổi nguồn "riêng" → "E7" (`presets.md` TODO, D-37) → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 

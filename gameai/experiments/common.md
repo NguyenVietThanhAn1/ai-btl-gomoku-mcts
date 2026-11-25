@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P4.1 (D-13), P4.2 (D-15)  ·  **Cập nhật:** 2026-11-10
+**Trạng thái:** ✅ ổn định  ·  **Task:** P4.1 (D-13), P4.2 (D-15), P8.4 (`extra_move_stats`, D-25)  ·  **Cập nhật:** 2026-11-25
 
 ## Mục đích
 Chạy một match A vs B song song nhiều tiến trình, ghi **mỗi ván một dòng CSV ngay khi xong**, chạy tiếp
@@ -16,7 +16,7 @@ GAME_COLUMNS, MOVE_COLUMNS, SUMMARY_COLUMNS: list[str]
 class ResumeError(ValueError)
 def run_match(out_path, game_spec, spec_a, spec_b, n_pairs, base_seed=0, workers=4,
               max_moves=None, random_opening=0, record_moves=True,
-              allow_code_change=False) -> list[dict[str, str]]   # mọi dòng trong file
+              allow_code_change=False, extra_move_stats=()) -> list[dict[str, str]]   # mọi dòng trong file
 def summarize(rows, moves=None) -> list[dict]   # 3 dòng / cặp (label_a, label_b): "all", "A=X", "A=O"
 #   moves = read_rows(moves_path_for(out_path)) → thêm cột *_search_* (D-15)
 def write_summary(summary, path) -> None
@@ -56,6 +56,8 @@ agent không có khóa đó; `time` do arena đo), rồi meta: `seed_a, seed_b, 
 ### File moves (`<stem>_moves.csv`, 1 dòng/nước, `MOVE_COLUMNS`)
 `game_id, ply, side, player, move, time` (arena đo), `agent_time` (= `stats["time"]`), `nodes, iterations,
 value, cutoffs, tt_hits, max_depth, rollout_plies, tactic`.
+`extra_move_stats` (P8.4, D-25; mặc định rỗng = schema cũ): thêm cột cuối lấy từ `stats` cùng tên (E7: `depth_reached`
+của AB — AB không ghi `max_depth`). Header file moves gồm các cột này → resume khác danh sách → `ResumeError`.
 
 ### Bảng tổng hợp (`SUMMARY_COLUMNS`)
 `label_a, label_b, split, n, wins, draws, losses, win_rate, win_lo, win_hi, nonloss_rate, nonloss_lo,

@@ -244,6 +244,23 @@
   - **Tách theo bên:** L=0 cầm Đỏ 15/1/9 (0,62), cầm Đen 8/4/13 (0,40); bên Đỏ (đi trước) đạt 0,61 trên cả 50 ván → lợi thế đi trước lớn hơn chênh lệch giữa hai L; mỗi khai cuộc chơi cả hai bên nên lợi thế này triệt tiêu trong điểm tổng. (Lần chạy quick trước: 6 ván, 1/3/2, 812 s.)
 - **Test trận nhanh:** `tests/test_xiangqi_mcts.py`, 5 khai cuộc × 2 ván (seed 900, `max_plies` 200), 300 iteration cố định, tactics bật. **Đo một lần:** vs Random **10/0/0**, vs Greedy (`xq_delta`) **10/0/0**. Ngưỡng chốt từ số đo: score ≥ 0,9; không chỉnh lại.
 
+### D-25 (2026-11-25) — P8.4: thiết kế E7 cờ tướng (An duyệt plan + 5 chỉnh)
+- **Hạ tầng:** `experiments/e7_xiangqi.py` dùng `common.run_match` (ghi từng ván + `_moves.csv`, chạy tiếp sau khi ngắt, `config_hash` + git chống trộn). Game `GameSpec("xiangqi", {"max_plies": 200})` (như lmatch/p82), `max_moves=None`; khai cuộc `random_opening=4` (2 nước/bên, seed `derive_seed(pair_seed, "opening")`), mỗi khai cuộc 2 ván đổi bên; `base_seed = 7000` ở mọi điểm (cùng khai cuộc → so cặp được; tách lmatch 0, nhãn 50 000+). Không sửa `gameai/agents/` (registry không cần thêm). Mọi MCTS: `xq_mcts_spec(..., tactics=True)` (c = √2, scale 2000).
+- **Lý do kết thúc** (tính sau ván, replay từ CSV): thắng/thua + bên thua đang bị chiếu → chiếu bí, không → bí nước; hòa với ply < 200 → lặp thế, = 200 → max_plies; `termination ≠ normal` → lỗi.
+- **(a) AB depth 1 / 2 vs Random — giữ** (✂ nếu thiếu giờ, chạy cuối): số 10/0/0 của D-23 chỉ in ra màn hình, không có file `results/` để trích.
+- **(b) Ordering (tất định):** `none` / `mvv_lva` / `mvv_lva+tt` (`ab_spec`, TT exact), depth 2, 3, 4; `START_FEN` + 10 `midgame_fens(10, seed=84)`. Dựng từ FEN → không có lịch sử lặp (né TT + lặp thế, D-22). Đo nút, thời gian, nút/s, tỉ lệ so với `none`; giá trị gốc so với `none` cùng depth — lệch → `value_match = 0`, đếm trong bảng, không giấu.
+- **(c) Rollout tới hết vs cắt** (time_limit 1 s, tactics bật): c1 `Lend` (`rollout_limit=None`) vs `L10`; c2 `Lend` vs Random; c3 `L10` vs Random; c4 `L0` vs `L10` (kiểm lại L, D-24).
+  - **Luật c4 (chốt trước):** Wilson 95 % điểm L0 cận dưới > 0,5 → L0 mạnh hơn rõ → **DỪNG trước (d), báo An** (đổi `XQ_MCTS_L` kéo theo preset GUI D-37). Cận trên < 0,5 → L10 xác nhận. Chứa 0,5 → ngang → giữ L=10.
+  - **"Tốt nhất ở (c)" cho (d):** mặc định L10; thay bằng X ∈ {Lend, L0} chỉ khi X vs L10 có Wilson không chứa 0,5 về phía X (cả hai → điểm cao hơn).
+- **(d) MCTS tốt nhất ở (c) vs AB `time_limit`, cùng s/nước:** AB **theo D-23, không theo GUI**: `ab_spec(12, use_tt=True, time_limit=t)` với `tt_mode="exact"` ghi rõ trong spec, **không `top_k`**. d1 t = 1 s (lõi), d2 t = 2,5 s (✂). Báo s/nước thực đo hai bên, `depth_reached` AB (`max_depth` trong moves, D-22), iter/s MCTS. Hạn chế: AB có TT + lặp thế trong ván thật (D-22) — chỉ ghi nhận.
+- **Báo mỗi điểm:** W/D/L, điểm + Wilson 95 % trên điểm (như lmatch), tách A cầm Đỏ / Đen, lý do kết thúc, độ dài ván (TB, trung vị), iter/s TB + **trung vị + CV** (chỉ nước có search, bỏ tactic 1/2 như D-15; iter/s mỗi ván = Σ iterations / Σ agent_time), `depth_reached` TB/min/max của AB, s/nước TB/max, `distinct_games` → `results/tables/e7_matches.csv`.
+- **Hạn chế thống kê:** Wilson tính trên điểm có hòa (coi như tỉ lệ) và 2 ván cùng khai cuộc không độc lập → khoảng hơi hẹp hơn thật; giống lmatch (D-24), ghi vào báo cáo.
+- **Worker:** quick đo iter/s của c3 ở `--workers 1` và `--workers 3`; trung vị giảm > 15 % → full dùng `--workers 2` (ghi kết quả vào đây). Mỗi khúc chạy ghi `e7_runinfo.csv` (power, pin %, bench ngắn/`e5_bench`, commit, dirty, workers, giờ); full chỉ chạy khi AC.
+- **`depth_reached` của AB (phát hiện khi code):** D-22 dự định ghi `depth_reached` vào `max_depth` nhưng `AlphaBetaAgent` (D-23/D-36) chỉ có `stats["depth_reached"]` (khi có `time_limit`), không có `max_depth` → file moves của `common` không chứa. Không sửa `agents/`: thêm tham số tùy chọn `extra_move_stats` vào `common.run_match` (mặc định rỗng = schema cũ, E1–E6 không đổi); E7 truyền `("depth_reached",)`.
+- **Bảng 3.4:** chỉ dùng stats MCTS sẵn có (`iterations`, `max_depth`, `rollout_plies`, `nodes`); không sửa `agents/`.
+- **Thứ tự full:** (b) → c1–c4 → áp luật c4 → d1, d2 → (a). Mục tiêu 50 ván/điểm (25 khai cuộc × 2); ước tính trước quick ~2,8–3,4 h. Nếu > 8 h: cắt d2 → (a) → c2 xuống 20 ván, ghi lý do ở đây.
+- **File:** raw `results/raw/e7_<điểm>.csv` (+ `_moves`), `e7_ordering.csv`, `e7_runinfo.csv`; bảng `results/tables/e7_ordering.csv`, `e7_matches.csv`; hình `results/figures/e7_scores.png` (điểm + Wilson, đường 0,5); log full `results/e7_full.log`; quick tiền tố `e7quick_` (gitignore).
+
 ### D-26 (2026-11-17) — Đổi thứ tự: làm nốt k-in-row trước cờ tướng; tách P6
 - **Thứ tự mới** (An quyết): `P8.0 → P7.1 → P6.1 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4 → P7.2–P7.4`. Lý do: khép phần k-in-row (bảng/hình báo cáo, GUI k-in-row) khi còn nhớ chi tiết, trước khối việc lớn cờ tướng.
 - **Tách P6:** P6.1 = khung GUI + lớp view theo game + view k-in-row (gộp ✂ P4.3); P6.2 = view cờ tướng, sau P8.3.
@@ -427,3 +444,6 @@
   ghi nhận, không chỉnh. `--quick` trước đó (1 ván/mức, 141 s): cùng kết luận. CSV: `local_out/p62/p62_gui_timing.csv`,
   `p62_gui_runinfo.csv`, `p62_bench.csv` (gitignore).
 - **An chơi thử (2026-11-25):** chơi cờ tướng trong GUI và duyệt commit (c); yêu cầu 2 sửa ở trên.
+
+### D-38 (2026-11-25) — An làm một mình từ P8.4
+- Từ 2026-11-25 An làm một mình: bỏ mọi bước báo/phối hợp Thành viên 2 và cột Owner (thay phần tương ứng của D-32 và AGENTS.md "Làm việc nhóm"); **giữ** đồng bộ fetch + rebase trước push (D-33), precheck EXIT=0, PR "Create a merge commit" khi lên master.
