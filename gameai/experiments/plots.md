@@ -23,6 +23,11 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
   (`common.summarize`, `e2.summarize_*`, `e3.write_table`, `e4.summarize_roots / example_rows / score_ci`).
   E5/E6 dùng thẳng `e5_rollout.build_tables`, `e6_tactics.build_tables`, `e6_mechanism.build_table`; hình dùng
   `make_figures` của từng E, `e4.plot_match`, `e6_mechanism.make_figure`.
+- **Tái dùng raw E3 ghim tag (2026-11-18):** `regenerate` truyền `reuse_check=pinned_reuse` cho `e5.build_tables` và
+  `e6.build_tables` (tham số thêm, mặc định `e3_reusable`): `pinned_reuse` = `e3_reusable` với `diff_empty` so code
+  với tag `PINNED_TAG = "kinrow-final"` thay vì HEAD → sinh lại bảng không phụ thuộc việc sau tag có sửa
+  `agents/`, `heuristics/`… (P6.4, mặc định tắt). Lý do: không ghim thì mọi file mới trong các thư mục đó làm
+  `--check` ném lỗi (E5 coi "code đổi", bỏ hàng E3). `pinned_tag_exists()` cho test.
 - `compare(new_dir, ref_dir, names, ref=committed_bytes) -> [(tên, lý do)]`.
 - `write_summary_md(table_dir, fig_dir) -> Path`; `REPORT_MAP` (mục, nội dung, E, hình, bảng); `SECTIONS[E]`;
   định dạng `vn(x, d)` (dấu phẩy thập phân; số nguyên ≥ 10 000 nhóm nghìn bằng khoảng trắng; số âm dùng "−" U+2212,
@@ -69,7 +74,7 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
 `experiments/{common,e2_never_lose,e3_c_sweep,e4_final_move,e5_rollout,e6_tactics,e6_mechanism}.py`, matplotlib (Agg), `git`.
 
 ## Test
-`tests/test_plots.py`: `vn`/`ci` (gồm luật làm tròn D-30, dấu "−"; tick hình: `tests/test_figfmt.py`); `_one` báo lỗi khi 0 hoặc ≥ 2 dòng; `compare` (giống sau chuẩn hóa CRLF / khác / mới); `check_outputs` (summary giống / lệch một chữ → báo đúng tên + dòng / mới);
+`tests/test_plots.py`: `test_tables_do_not_depend_on_head` (giả lập `git_diff_empty(target="HEAD")` → False, bảng E5/E6 vẫn giống byte); `vn`/`ci` (gồm luật làm tròn D-30, dấu "−"; tick hình: `tests/test_figfmt.py`); `_one` báo lỗi khi 0 hoặc ≥ 2 dòng; `compare` (giống sau chuẩn hóa CRLF / khác / mới); `check_outputs` (summary giống / lệch một chữ → báo đúng tên + dòng / mới);
 lọc 10 cặp đầu + moves tương ứng; tóm tắt mistakes E2 từ chuỗi = từ int (gồm thứ tự); `summary_kinrow.md` sinh được từ
 bảng thật, chứa số lấy từ CSV (mẫu E1/E2/E6), mọi file được nhắc tới tồn tại. P7.2: tiêu đề `###` không trùng; W/D/L E3 khớp CSV, W + D + L = n; ví dụ E4 15×15 có cột tham chiếu. Chạy: `python -m pytest tests/test_plots.py -q`.
 

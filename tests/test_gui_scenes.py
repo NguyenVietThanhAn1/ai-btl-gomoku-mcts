@@ -95,15 +95,36 @@ def test_home_navigation_and_quit():
     assert not app2.running
 
 
-def test_setup_esc_back_home_and_xiangqi_disabled():
+def test_setup_esc_back_home():
     app = new_app()
     click(app, app.manager.current.buttons["play"].rect.center)
-    setup = app.manager.current
-    before = setup.cfg
-    click(app, setup.controls["game"].rect_of("xiangqi").center)
-    assert setup.cfg == before and setup.cfg.game != "xiangqi"
     key(app, pygame.K_ESCAPE)
     assert app.manager.current_name == "home"
+
+
+def test_setup_xiangqi_playable_red_black_names():  # P6.2: không còn "Sắp có"
+    app = new_app()
+    click(app, app.manager.current.buttons["play"].rect.center)
+    s = app.manager.current
+    click(app, s.controls["game"].rect_of("xiangqi").center)
+    assert s.cfg.game == "xiangqi"
+    click(app, s.controls["side"].rect_of("O").center)
+    click(app, s.controls["ai_kind"].rect_of("alphabeta").center)
+    click(app, s.controls["ai_level"].rect_of("easy").center)
+    assert s.cfg == GameConfig("xiangqi", "human_ai", "O", AIChoice("alphabeta", "easy"))
+    labels = dict(s.controls["side"].options)
+    assert labels["X"] == "Đỏ · đi trước" and labels["O"] == "Đen · đi sau"
+    assert s.ai_lines() and OWN_CONFIG in s.ai_lines()[0]
+    click(app, s.controls["mode"].rect_of("ai_ai").center)
+    assert s.ai_lines()[0].startswith("Đỏ: ") and s.ai_lines()[1].startswith("Đen: ")
+    click(app, s.controls["mode"].rect_of("human_ai").center)
+    app.tick()
+    click(app, s.start.rect.center)
+    assert app.manager.current_name == "play"
+    assert app.ctrl.preset == build_preset(s.cfg)
+    assert app.view.flipped  # người duy nhất cầm Đen → bàn xoay
+    name, detail = app.play.player_name(P1)
+    assert name == "Alpha-Beta · Dễ" and OWN_CONFIG in detail
 
 
 def test_setup_choices_to_agent_spec_and_start():
@@ -210,9 +231,11 @@ def test_undo_button_disabled_while_ai_thinking():
 def test_two_players_resign_label_and_ai_vs_ai_buttons():
     app = play_app(Preset("t", "t", GAME3, None, None))
     p = app.play
-    assert p.b_resign.text == "X đầu hàng"
+    # "X đầu hàng" (kèm icon) không vừa nút 126 px → chữ ngắn "Đầu hàng"; vẫn đầu hàng bên tới lượt.
+    assert p.b_resign.fits(p.b_resign.text)
+    assert p.b_resign.text == ("X đầu hàng" if p.b_resign.fits("X đầu hàng") else "Đầu hàng")
     click_cell(app, 4)
-    assert p.b_resign.text == "O đầu hàng"
+    assert app.ctrl.resign_side() == P2 and p.b_resign.fits(p.b_resign.text)
     click(app, p.b_resign.rect.center)
     app.tick()
     assert app.ctrl.outcome == P1 and p.result_view()[0] == "O đầu hàng"

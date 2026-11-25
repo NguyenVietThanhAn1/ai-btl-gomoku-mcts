@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P6.3 (D-29)  ·  **Cập nhật:** 2026-11-17
+**Trạng thái:** ✅ ổn định  ·  **Task:** P6.3 (D-29), P6.2 (D-37)  ·  **Cập nhật:** 2026-11-25
 
 ## Mục đích
 Màn chơi kiểu chess.com: bàn bên trái (nhãn tọa độ), panel phải với thẻ 2 người chơi, lịch sử, nút, Phân tích;
@@ -28,7 +28,12 @@ class PlayScene(Scene):  name = "play"
     subtitle(side) -> (dòng dưới tên, tô nhấn?)   # Demo: "Cấu hình thí nghiệm · E3" hiện rõ
     info_lines(side) -> list[str]                  # tooltip ⓘ: spec, nguồn, seed, độ trễ
     info / tips: dict[side, IconButton / Tooltip]
-    side(p) -> str; result_text() -> str           # tên bên theo view: 15×15 "Đen"/"Trắng", 3×3 "X"/"O"
+    side(p) -> str; result_text() -> str           # tên bên theo view: 15×15 "Đen"/"Trắng", 3×3 "X"/"O", cờ tướng "Đỏ"/"Đen"
+                                                   # result_text thêm view.end_reason: "Đen thắng — Chiếu bí", "Hòa — lặp thế 3 lần"
+    status_line() -> (chữ, màu)                    # dòng trạng thái; view.status_text ("Đỏ đang bị chiếu") thay "Lượt Đỏ", màu t.lose
+    last_move_text(last) -> str                    # "Nước cuối: …" card Phân tích; "· N iter" chỉ khi N > 0 (AB báo 0)
+    card_layout() -> [(bên, Rect)]                 # (O/Đen trên, X/Đỏ dưới); đảo khi view.flipped
+    board_n: int; board_key: BoardKey              # cạnh bàn k-in-row (kiểu quân) / khóa trò cho bảng độ khó
     update(dt)                                     # tween: đặt quân, đường thắng, modal, hover
 ```
 
@@ -45,7 +50,7 @@ class PlayScene(Scene):  name = "play"
 | Trạng thái | Nút 1 | Nút 3 |
 |---|---|---|
 | người vs AI | Đi lại (khóa khi AI nghĩ / chưa có nước người) | Đầu hàng |
-| 2 người | Đi lại (1 ply) | "X đầu hàng" / "O đầu hàng" theo bên tới lượt |
+| 2 người | Đi lại (1 ply) | "{bên} đầu hàng" nếu vừa nút (`Button.fits`), không thì "Đầu hàng" (nút 126 px: hiện luôn là "Đầu hàng", D-37); đầu hàng bên tới lượt |
 | AI vs AI | Tạm dừng / Tiếp tục | (ẩn) |
 | hết ván | Đi lại (nếu được) | Kết quả (mở lại modal) |
 | xem lại | ‹ Trước · Sau › | Thoát xem lại |
@@ -55,6 +60,11 @@ class PlayScene(Scene):  name = "play"
 - Xem lại (chỉ sau khi hết ván; ✂ khi đang chơi): ‹ › / ← →, click dòng lịch sử; `ctrl.position_at(k)` dựng thế, ván thật không đổi; click bàn bị bỏ.
 - 15×15 dùng Đen/Trắng trong lời văn (lượt, modal, nút "Đen đầu hàng", thẻ "Người chơi Đen"), lịch sử
   dùng chấm ●/○ (sprite); 3×3 giữ X/O. Modal (200 px) đặt trên panel phải, chỉ làm mờ panel; dòng phụ bỏ câu trùng tiêu đề.
+- Cờ tướng (P6.2): view tạo bằng `_make_view()` (cả `on_enter` và `restart`): `view.flipped = single_human == P2`
+  (người duy nhất cầm Đen → Đen ở dưới; phím S đổi bên → xoay theo); thẻ người chơi đảo theo `card_layout`. Avatar =
+  quân tướng 帥/將 (`view.avatar`), chấm lịch sử = đĩa đỏ/đen (`view.side_dot`). Modal: tiêu đề "Đen thắng", dòng phụ
+  chỉ còn lý do ("Chiếu bí") khi `result_text` bắt đầu bằng tiêu đề. Card Phân tích vẫn hiện top-5 gốc MCTS (chữ, dùng
+  `move_label` ICCS); overlay trên bàn ✂.
 - Card Phân tích cao 200 px: tiêu đề + công tắc, nước cuối, bảng top-5 có lề dưới (test kiểm).
 - Phím: P6.1 (1/2/3, N, S, [ ], I/K, −/=, O, W, Space) + ← → (xem lại). Esc: modal mở → đóng, không thì thoát.
 
@@ -70,3 +80,6 @@ class PlayScene(Scene):  name = "play"
 - `tests/test_gui_scenes.py`: Đi lại / Đầu hàng / Menu bằng click; Đi lại khóa khi AI nghĩ; nhãn đầu hàng 2 người; AI vs AI
   không có Đầu hàng + Tạm dừng; modal X thắng + đường thắng + Chơi lại; Bạn thắng / Bạn thua; xem lại ‹ / click lịch sử / ←,
   thế = `position_at`, ván thật không đổi; lịch sử không click được khi đang chơi; quân mờ; vẽ mọi trạng thái 15×15.
+- `tests/test_gui_xiangqi_play.py` (P6.2): click 2 bước + nhãn lịch sử ICCS, undo bỏ chọn, xoay bàn chỉ khi người duy nhất
+  cầm Đen (+ phím S, `card_layout`), dòng trạng thái đỏ khi bị chiếu, modal "Chiếu bí" / "Lặp thế 3 lần", autoplay hết ván
+  (AI vs AI, người Đỏ / Đen vs AI, 2 người) + xem lại.

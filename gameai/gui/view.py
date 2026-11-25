@@ -18,6 +18,8 @@ FONT_NAMES = ("segoeui", "arial")  # fallback hệ thống (có dấu tiếng Vi
 FONT_DIR = Path(__file__).resolve().parent / "assets" / "fonts"
 FONT_FILES = {"regular": "Regular", "medium": "Medium", "semibold": "SemiBold", "bold": "Bold"}
 BOLD_WEIGHTS = ("semibold", "bold")
+CJK_FILE = FONT_DIR / "NotoSerifTC-Bold-xq.otf"  # bản cắt 18 chữ quân cờ tướng (P6.2, D-37)
+CJK_SYSTEM = ("microsoftyahei", "msyh", "simhei", "simsun")  # fallback font CJK hệ thống
 
 
 def font_path(weight: str = "regular") -> Path | None:
@@ -47,6 +49,7 @@ _quit_hook = False
 def _on_quit() -> None:
     global _quit_hook
     _load_font.cache_clear()
+    _load_cjk.cache_clear()
     _quit_hook = False
 
 
@@ -63,6 +66,27 @@ def _load_font(size: int, weight: str) -> pygame.font.Font:
     font = pygame.font.Font(None, size)
     font.set_bold(bold)
     return font
+
+
+def get_cjk_font(size: int, path: Path | None = None) -> pygame.font.Font | None:
+    """Font chữ Hán cho quân cờ tướng: file đóng gói (`CJK_FILE`) → font CJK hệ thống → None.
+
+    None = máy không có font chữ Hán → view ghi chữ Việt trên quân. `path` chỉ để test (file
+    khác / không tồn tại). Cache như `get_font`, xóa khi `pygame.quit()`.
+    """
+    get_font(size)  # init font + hook xóa cache khi quit
+    return _load_cjk(size, str(path or CJK_FILE))
+
+
+@lru_cache(maxsize=32)
+def _load_cjk(size: int, path: str) -> pygame.font.Font | None:
+    if Path(path).exists():
+        return pygame.font.Font(path, size)
+    for name in CJK_SYSTEM:
+        sys_path = pygame.font.match_font(name, bold=True)
+        if sys_path:
+            return pygame.font.Font(sys_path, size)
+    return None
 
 
 @dataclass
@@ -124,6 +148,15 @@ class GameView(ABC):
         """Các ô của đường thắng (tính từ bàn + nước cuối); [] nếu không có."""
         return []
 
+    # ---- P6.2: hook có mặc định (k-in-row không cần)
+    def status_text(self, game: Game) -> str | None:
+        """Thông báo trạng thái trong ván (cờ tướng: "Đỏ đang bị chiếu"); None nếu không có."""
+        return None
+
+    def end_reason(self, game: Game) -> str | None:
+        """Lý do kết thúc ván (cờ tướng: "Chiếu bí", "Hòa — lặp thế 3 lần"…); None nếu không có."""
+        return None
+
 
 ViewFactory = Callable[[GameSpec, pygame.Rect], GameView]
 VIEWS: dict[str, ViewFactory] = {}
@@ -136,5 +169,6 @@ def register_view(kind: str, factory: ViewFactory) -> None:
 def make_view(spec: GameSpec, rect: pygame.Rect) -> GameView:
     """View cho `spec.kind` (KeyError nếu chưa đăng ký)."""
     import gameai.gui.kinrow_view  # noqa: F401 — đăng ký view k-in-row
+    import gameai.gui.xiangqi_view  # noqa: F401 — đăng ký view cờ tướng (P6.2)
 
     return VIEWS[spec.kind](spec, rect)

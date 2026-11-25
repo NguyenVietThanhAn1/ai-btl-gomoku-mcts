@@ -217,8 +217,32 @@
 - **Hạn chế (ghi vào báo cáo, không sửa):**
   - Không có luật chiếu dai / đuổi dai (luật châu Á xử thua bên chiếu dai) → bên đang thua có thể cầm hòa bằng chiếu dai. Không có luật 60 nước không ăn quân, không có hòa do thiếu quân.
   - **TT + lặp thế (graph history interaction):** `key()` không chứa lịch sử, nhưng kết quả của một thế phụ thuộc lịch sử (lặp lần 3 → hòa). Giá trị lưu trong TT của AB vì vậy có thể sai khi cùng thế đạt tới qua lịch sử khác (một bên là hòa do lặp, bên kia không). Không sửa, chỉ ghi nhận.
-- **Nguồn perft:** chessprogramming.org "Chinese Chess Perft Results" (thế khởi đầu: Duhamel & Pham; thế 2–11: Korzh & Pham); khởi đầu 44 / 1 920 / 79 666 / 3 290 240. Ghi URL + ngày truy cập vào `xiangqi.md` ở P8.1.
+- **Nguồn perft:** chessprogramming.org "Chinese Chess Perft Results" (thế khởi đầu: Duhamel & Pham; thế 2–11: Korzh & Pham); khởi đầu 44 / 1 920 / 79 666 / 3 290 240. Ghi URL + ngày truy cập vào `xiangqi.md` ở P8.1. *(Đính chính 2026-11-21, P8.1: theo trang gốc, thế 2 = Korzh & Pham; thế 3–11 = Nguyen Pham; ghi công đúng ở `xiangqi.md`.)*
 - **Quyết định sẽ ghi sau:** D-23 (P8.2) AlphaBeta `time_limit` + iterative deepening (`None` → đường code cũ, không thêm khóa stats; bỏ độ sâu đang dở, luôn xong depth 1, nước tốt nhất độ sâu trước lên đầu ở gốc, `depth_reached` ghi cả vào `max_depth`); D-24 (P8.3) nguồn nhãn hiệu chỉnh `scale` (báo tỉ lệ ván phân thắng thua của AB depth 1 tự đấu; < ~30 % → đổi sang AB depth 2 hoặc nhãn theo chênh lệch vật chất sau L nước) + bật/tắt `check_tactics`; D-25 (P8.4) thiết kế E7 (mục tiêu 50 ván/điểm cho (c), (d); quá đắt → ≥ 20 kèm lý do).
+
+### D-23 (2026-11-21) — P8.2: eval cờ tướng + cấu hình Alpha-Beta (số D-23 đã giữ chỗ ở D-22)
+- **Dùng lại AB generic, không sửa `agents/` ngoài registry.** `time_limit` + iterative deepening + `tt_mode` + `top_k` + `root_hook` đã có từ P6.4 (D-36) → bỏ dự định "thêm time_limit + ID" của D-22/PLAN. Sửa duy nhất trong `gameai/agents/`: `registry.py` (+ `registry.md`) **chỉ cộng thêm** `FUNCTIONS["xq_evaluate" | "xq_delta" | "xq_mvv_lva" | "xq_mvv_lva_check"]` và `GameSpec("xiangqi")`; An duyệt 2026-11-21 và tự báo Thành viên 2. Sửa 1 dòng "Hạn chế" lỗi thời ở `alphabeta.md` (không đổi code). Golden k-in-row xanh.
+- **Eval = vật chất + PST, tự thiết kế theo nguyên tắc, không tinh chỉnh bằng dữ liệu** (An duyệt): Tốt 100, Sĩ 200, Tượng 200, Mã 400, Xe 900, Pháo 450, Tướng 0; điểm vị trí là công thức đơn giản (cột giữa, tiến lên, Tốt qua sông +100…) chọn một lần, không chỉnh theo kết quả ván; không dùng bảng ngoài. Công thức từng quân ở `xiangqi_eval.md`. Một bảng cho hai bên (Đen = lật rank) → đối xứng theo cấu trúc. `evaluate` không phụ thuộc bên đi → `delta_eval` chính xác, `AlphaBetaAgent` cộng dồn.
+- **Ordering:** `xq_mvv_lva` (ăn quân: `10 000 + 10·nạn nhân − quân đi`; yên tĩnh: `delta_eval`). **`check_bonus` KHÔNG bật:** đo depth 3 trên 9 thế (`results/tables/p82_ab_speed.csv`) nút 17 417 → 16 277 (−6,5 %) nhưng thời gian 0,299 s → 0,356 s (+19 %). Vẫn đăng ký `xq_mvv_lva_check` để đo lại.
+- **Cấu hình E7/chơi:** AB tất định (`seeded: false`), eval + delta + `xq_mvv_lva`; thí nghiệm dùng TT `"exact"`, không `top_k` (D-36: `deep`/`top_k` chỉ chế độ chơi, chốt ở P6.2). Đo nút/s: ~58 000 (mvv_lva, depth 3); ID `depth_reached` trung bình 4,0 / 4,3 / 4,9 ở `time_limit` 0,5 / 1 / 2 s (một máy, không phải số liệu thí nghiệm).
+- **Lặp thế + TT:** `winner()` trả hòa ở lần lặp thứ 3 và `play/undo` giữ bộ đếm → AB thấy hòa (giá trị 0) trên đường đang tìm (test dùng `use_tt=False`, nước lặp bị ép qua `root_hook`: giá trị 0 với lịch sử, > 0 khi không có lịch sử). **TT + lặp thế** (D-22) chỉ **ghi nhận**: test riêng chạy được và trả nước hợp lệ, không khẳng định nước đúng.
+- **Chiếu bí:** AB kiểm `winner()` trước khi dừng ở độ sâu → chiếu bí 1 nước tìm ở depth 1, "ta–đáp–ta" (2 nước của người chơi) ở depth 3 (test dùng depth 3, và depth 1–2 không thấy).
+- **Test trận thử:** khai cuộc ngẫu nhiên có seed 2–4 nước, mỗi khai cuộc 2 ván đổi bên (như B5), vì AB/Greedy gần như tất định. **Đo một lần** (seed 0, 5 khai cuộc × 2 ván, `max_plies` 200, AB depth 2): vs Random **10/0/0**, vs Greedy (`xq_delta`) **10/0/0**; 5 khai cuộc phân biệt, 0 ván trùng chuỗi nước. **Ngưỡng chốt từ số đo:** không thua ván nào, ≥ 8 thắng, score ≥ 0,9 (Random) / ≥ 0,8 (Greedy); không chỉnh lại. (Lần đo đầu chạy trước khi sửa lỗi đảo giá trị Xe/Pháo trong `MATERIAL`; đo lại trên code cuối ra cùng 10/0/0, ngưỡng giữ nguyên.)
+- **Không làm (ghi rủi ro):** quiescence search (cần sửa `agents/`) → hiệu ứng chân trời ở lá; tempo/di động/an toàn tướng. Đề xuất riêng nếu E7 cho thấy lỗi rõ.
+
+### D-24 (2026-11-23) — P8.3: MCTS cờ tướng (rollout cắt + eval), nguồn nhãn `scale`, tactics
+- **Không sửa `agents/`.** `MCTSAgent` nguyên bản; cấu hình qua registry: `AgentSpec("mcts", {rollout_limit, value_eval: "xq_evaluate", value_scale, check_tactics, ...})`. Hằng `XQ_MCTS_*` và `xq_mcts_spec(...)` ở `experiments/p83_mcts_check.py`. Rollout ngẫu nhiên tới hết ván gần như vô dụng (~60 ván/s, `p81_speed.csv`) → cắt `L` ply + σ(eval/scale) (báo cáo 3.4).
+- **Bỏ ý tưởng cộng dồn `xq_delta` trong MCTS.** `evaluate` ~2,9 µs/lần không phải điểm nghẽn; `legal_moves` ~59 µs/ply mới là. Không cần phiên tối ưu: `L ∈ {0, 10, 20, 40}` đều > 200 iter/s (9 564 / 1 013 / 511 / 274 iter/s, 9 thế, 1 s; `p83_speed.csv`).
+- **Nguồn nhãn `scale` (lệch PLAN: PLAN cho depth 1 trước):** 200 ván AB tự đấu, seed 50 000–50 199 (tách seed ván 0–9, D-12), khai cuộc ngẫu nhiên 2–8 nước, `max_plies` 300; nhãn mỗi thế = kết quả ván (Đỏ 1 / hòa 0,5 / Đen 0). Lưới scale 100…5000 (mở rộng nếu tốt nhất ở biên), cực đại LL trung bình, hai bản: `main` (hòa = 0,5) và `no_draw` (bỏ hòa).
+  - **Depth 1: loại.** Đỏ 64 / Đen 28 / hòa **108** (100 do lặp thế, 8 do `max_plies`); phân thắng thua 46 % (> 30 %) nhưng `main` scale 2000 có LL −0,6657 ≈ −ln 2 = −0,6931 (không thông tin), `no_draw` scale 500 → hai bản lệch 4×. Luật chốt trước: không dùng `main` depth 1; không dùng "chênh vật chất" làm nhãn (vòng tròn).
+  - **Depth 2: dùng.** Đỏ 70 / Đen 78 / hòa **52** (toàn bộ do lặp thế, 0 do `max_plies`); phân thắng thua 74 %; vật chất cuối ván Đỏ−Đen: ván phân thắng thua |·| TB 1 243, ván hòa lặp thế |·| TB 497. Fit: `main` scale **2000** (LL −0,6513), `no_draw` scale 1000 (LL −0,6164) → lệch **2,00×** (≤ 2×) → **chọn `main` depth 2, `scale = 2000`**.
+  - **Hạn chế (ghi thật):** LL −0,651 chỉ hơn −ln 2 = −0,693 một chút và đường LL phẳng ở 1000–2000 (−0,6515 / −0,6513): eval vật chất + PST chỉ dự đoán yếu kết quả ván AB. Hệ quả: σ rất phẳng (hơn một Xe = 925 điểm → 0,61), cây cần nhiều lượt thăm để phân biệt nước. Nếu E7 chọn `no_draw` (scale 1000) sẽ thiên lệch: bỏ hòa làm σ dốc hơn. Bảng đầy đủ: `p83_scale_fit.csv` (cột `label_depth`).
+- **`check_tactics` (12 thế, 300 iteration, L = 10, `p83_tactics_cost.csv`):** tắt 219,5 ms/nước, bật 236,7 ms/nước (**+17 ms ≈ +8 %**); % nước đi thẳng **0 %** trên thế giữa ván yên tĩnh (đi thẳng chỉ khi có chiếu bí 1 nước / chỉ còn một nước không thua ngay). Tactics tính trong `time_limit` nên ở 1 s tốn ~1,7 % ngân sách. **E7: bật** (rẻ, loại lỗi bỏ lỡ chiếu bí 1 nước); P8.4 có thể đo thêm bản tắt như ablation. Test: tắt tactics vẫn tìm chiếu bí 1 nước ở thế `4k4/R8/...` (10/10 seed, 300 iter) vì thế này đơn giản — số ghi lại, không đòi.
+- **Chọn `L` (chốt 2026-11-23): `XQ_MCTS_L = 10`.** Tiêu chí chốt trước: L điểm cao hơn; ngang (CI Wilson chồng lấn **và** chênh < 0,1) → L=10. `lmatch` đầy đủ (25 khai cuộc × 2 bên = 50 ván, 1 s/nước, scale 2000, `max_plies` 200, **tactics tắt** ở cả hai bên — *đính chính 2026-11-23 sau spec-reviewer: bản trước ghi nhầm "tactics bật"; `cmd_lmatch` dùng mặc định `tactics=False` của `xq_mcts_spec`*; 3 920 s): L=0 W/D/L = **23/5/22**, điểm **0,51**, Wilson 95 % **[0,38; 0,64]** (chứa 0,5); chênh với L=10 (0,49) là 0,02 < 0,1 → **ngang → L=10**. Nguồn: `p83_speed.csv` (dòng `lmatch_*`), từng ván `local_out/p83/lmatch_games.csv` (cả 50 ván kết thúc bình thường, 0 do `max_plies`).
+  - L=0 chạy ~**9×** iteration (9 564 vs 1 013 iter/s) mà **không mạnh hơn**: cây sâu hơn (max depth TB 4,0 vs 2,56) không bù được việc chỉ chấm eval tĩnh ở lá; 10 ply rollout cho thêm thông tin về trao đổi quân ngay sau lá.
+  - **Kiểm lại ở điều kiện dùng thật (An, 2026-11-23):** E7 chạy tactics **bật**, khác điều kiện `lmatch`. Không chạy lại `lmatch`; **E7(c)** (so L với tactics bật như cấu hình E7) là phép kiểm lại lựa chọn L. Nếu E7(c) cho thấy L=0 mạnh hơn rõ rệt (CI Wilson không chứa 0,5) → xem lại `XQ_MCTS_L` ở P8.4.
+  - **Tách theo bên:** L=0 cầm Đỏ 15/1/9 (0,62), cầm Đen 8/4/13 (0,40); bên Đỏ (đi trước) đạt 0,61 trên cả 50 ván → lợi thế đi trước lớn hơn chênh lệch giữa hai L; mỗi khai cuộc chơi cả hai bên nên lợi thế này triệt tiêu trong điểm tổng. (Lần chạy quick trước: 6 ván, 1/3/2, 812 s.)
+- **Test trận nhanh:** `tests/test_xiangqi_mcts.py`, 5 khai cuộc × 2 ván (seed 900, `max_plies` 200), 300 iteration cố định, tactics bật. **Đo một lần:** vs Random **10/0/0**, vs Greedy (`xq_delta`) **10/0/0**. Ngưỡng chốt từ số đo: score ≥ 0,9; không chỉnh lại.
 
 ### D-26 (2026-11-17) — Đổi thứ tự: làm nốt k-in-row trước cờ tướng; tách P6
 - **Thứ tự mới** (An quyết): `P8.0 → P7.1 → P6.1 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4 → P7.2–P7.4`. Lý do: khép phần k-in-row (bảng/hình báo cáo, GUI k-in-row) khi còn nhớ chi tiết, trước khối việc lớn cờ tướng.
@@ -291,7 +315,7 @@
 - **PROGRESS.md:** "Đang ở đâu" tách khối theo người (`### An`, `### Thành viên 2`); wrap-up chỉ sửa khối của Owner hiện tại.
 
 ### D-32 (2026-11-18) — Push thẳng `develop`; thay D-27/D-31 phần branch/push
-- **Quyết định:** làm và commit thẳng trên `develop`; feature branch `feat/<ID>` chỉ khi thay đổi lớn/rủi ro (không bắt buộc). Trước mỗi push: `git pull --rebase`, pytest (gồm golden k-in-row) + ruff xanh; đụng `report/` hoặc `gameai/experiments/` thì thêm `report_check` + `plots --check`. Cấm `git push --force`, cấm rebase commit đã push. `master` chỉ merge từ `develop` ở mốc qua PR "Create a merge commit" (không squash).
+- **Quyết định:** làm và commit thẳng trên `develop`; feature branch `feat/<ID>` chỉ khi thay đổi lớn/rủi ro (không bắt buộc). Trước mỗi push: `git fetch origin` + `git rebase origin/develop` (hai lệnh riêng; thay `git pull --rebase` ban đầu, xem quyết định đồng bộ ở dưới), pytest (gồm golden k-in-row) + ruff xanh; đụng `report/` hoặc `gameai/experiments/` thì thêm `report_check` + `plots --check`. Cấm `git push --force`, cấm rebase commit đã push. `master` chỉ merge từ `develop` ở mốc qua PR "Create a merge commit" (không squash).
 - **Vùng nhạy cảm** (`gameai/agents/`, interface `Game`/`Agent`, `gameai/core/`, `results/`, `report/report.md`): báo người kia trước khi sửa; agent phải dừng và hỏi người dùng trước khi sửa.
 - **PROGRESS.md:** session log chuyển vào khối từng người (`### An` / `### Thành viên 2`), mới nhất ở đầu khối mình; log cũ giữ nguyên, đặt ở khối An.
 - **Đánh số D-xx:** lấy số ngay sau `git pull`; nếu rebase thấy trùng số thì người rebase sau đổi số của mình.
@@ -306,3 +330,100 @@
 - **Quyết định (An):** sản phẩm nộp của báo cáo là **PDF** (cùng video demo), không cần `report.docx`. P7.3 đổi từ "Convert sang `report.docx`" thành "Xuất PDF từ `report/report.md`, kiểm tra hình/bảng/công thức hiển thị đúng". **Hoãn P7.3 tới khi An yêu cầu**; trước đó chưa chọn công cụ xuất PDF (pandoc có sẵn trên máy; cần engine PDF, chưa kiểm).
 - **Không đổi:** `report/report.md` vẫn là nguồn duy nhất và vẫn qua `report_check` (D-30); comment `<!-- src … -->` pandoc bỏ qua; ràng buộc "Hình n./Bảng n." đánh số tay không đổi. Các tài liệu cũ còn chữ "docx" (D-1 ở dòng 6, `report_check.md`, AGENTS.md "Sản phẩm nộp") là ghi chép/mô tả cũ — sửa khi An đồng ý (AGENTS.md là nguồn luật).
 - **Lý do:** yêu cầu nộp thực tế là PDF; bỏ một bước chuyển định dạng.
+
+### D-35 (2026-11-18) — Đổi thứ tự: cờ tướng (P8) trước PDF + video (P7.3, P7.4); thêm P6.4
+- **Thứ tự mới** (An chốt, thay phần thứ tự của D-30; nội dung còn lại của D-30 giữ): `P6.4 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4 →` bổ sung mục 3.4 / 5 báo cáo `→ P7.3 (xuất PDF) → P7.4 (video, có cảnh cờ tướng)`. Mốc Bài 1 (PR #2 `develop` → `master`) đã merge.
+- **Lý do:** cờ tướng là điều kiện điểm > 9 và là rủi ro thời gian lớn nhất → làm trước khi đóng gói; PDF và video làm **một lần** khi đã có cờ tướng, khỏi xuất/quay hai lần.
+- **P6.4 (task mới, trước P8.1):** AI "Rất khó" chỉ ở GUI 15×15 — xem PLAN §P6. Thiết kế chi tiết + số đo sẽ ghi ở D-36.
+- **Không đổi:** Dễ/Vừa/Khó (khớp E1/E3), `results/`, `report/report.md`, golden k-in-row.
+
+### D-36 (2026-11-18) — P6.4: AB Khó mới cho 15×15 (dịch mức), thay phần bảng độ khó của D-29
+- **Quyết định (An):** KHÔNG thêm mức "Rất khó". Giữ 3 mức; **chỉ dịch mức AB 15×15**: Dễ giữ (`AB15_D1`); **Vừa = Khó cũ** (`variants_15(3)["ab_order"]`, E1); **Khó = AB mới** `AB15_HARD`. MCTS (mọi bàn), AB 3×3: không đổi. D-29 giữ nguyên làm lịch sử; D-36 thay riêng dòng AB 15×15 của bảng D-29. Lý do: Khó cũ quá dễ với người chơi. Demo vẫn giữ cấu hình thí nghiệm (`15_h300_vs_ab2` = MCTS h300 5000 vs `e3.AB2`, nhãn "cấu hình thí nghiệm · E3/E5" — `AB2` không còn là mức độ khó nên tra qua `EXPERIMENT_SPECS`/`experiment_source`).
+- **AB15_HARD (riêng, chỉ GUI):** `depth` tối đa 12, `time_limit` 2,4 s (iterative deepening, trả nước của độ sâu hoàn tất gần nhất), `delta_eval` + `move_score`, `top_k` (16, 12, 8) **(An chốt sau B5, xem dưới)**, `use_tt` + `tt_mode="deep"`, `vcf_depth` 8, `vcf_time` 0,3 s (giá trị nằm trong spec). Phần tìm kiếm viết generic theo `Game` (move ordering/eval là tham số) để P8 dùng lại.
+- **Không đổi:** Dễ/Vừa/Khó cũ của thí nghiệm (E1/E3, report), `results/`, golden k-in-row, mặc định `AlphaBetaAgent`/`MCTSAgent` (tính năng mới chỉ bật bằng tham số; cả `top_k`/`root_hook` ở AB, `time_limit`/`tt_mode` đều mặc định tắt). Tính năng mới là cắt tỉa **xấp xỉ** (`top_k`) và dùng lại TT giữa các ply có k khác nhau — chỉ dùng ở chế độ chơi, không dùng cho thí nghiệm.
+- **Cần sửa ở đợt cập nhật report sau P8 (chưa sửa, An chốt):** `report/report.md` Phụ lục B (mapping mức độ khó AB 15×15 + bảng thời gian/nước GUI). Báo cáo hiện vẫn ghi bảng D-29.
+- **Đo thời gian/nước + FPS (2026-11-18, `p63_gui_timing --boards 15 --kinds alphabeta mcts --levels medium hard --table-dir local_out/p64 --tag p64gui`, animation bật, headless 30 fps; số minh họa GUI, không dùng cho báo cáo thí nghiệm; ngoài `results/`, không ghi đè `p63_*`/`p63anim_*`):** cắm sạc (AC, pin 100 %), Balanced; bench ngắn = **0,986×** `e5_bench.csv`. Trung bình nước có search / tối đa (s) / FPS vòng chính khi AI đang nghĩ (trung bình / khung tệ nhất):
+
+| 15×15 | vs người ngẫu nhiên | vs AB2 |
+|---|---|---|
+| AB Vừa (= Khó cũ) | 0,10 / 0,16 — 27,9 / 25,0 fps | 0,13 / 0,22 — 28,0 / 25,0 fps |
+| **AB Khó (mới)** | **1,55 / 2,41** — 25,8 / 22,7 fps | **2,30 / 2,41** — 25,8 / 24,4 fps |
+| MCTS Vừa | 0,41 / 0,83 — 26,3 / 19,6 fps | 0,54 / 0,74 — 26,4 / 23,8 fps |
+| MCTS Khó | 2,01 / 4,17 — 25,7 / 16,7 fps | 2,44 / 3,59 — 25,8 / 14,5 fps |
+
+  → AB Khó mới đạt luật GUI (trung bình ≤ 3 s, tối đa ≤ 5 s; quá hạn `time_limit` ≤ 0,01 s). FPS khi AB Khó nghĩ (25,8; khung tệ nhất 22,7–24,4) **không tệ hơn** khi MCTS Khó nghĩ (25,7; khung tệ nhất 14,5–16,7); không tụt dưới 15. CSV: `local_out/p64/p64gui_gui_timing.csv` (gitignore).
+- **Chốt `top_k` = (16, 12, 8) (An, sau `--quick` B5):** điểm cao hơn ở cả 2 cặp (15/16 so với 12/16 gộp) và cấu hình rộng ít rủi ro cắt nước phòng thủ. Bảng `--quick` (2026-11-18, `p64_strength --quick --workers 3`, 4 khai cuộc × 2 ván = 8 ván/ô, 386 s wall; A = AB Khó mới; điểm = thắng 1, hòa 0,5; Wilson 95 %):
+
+| `top_k` | Đối thủ | W/D/L | Điểm A [Wilson] | Điểm khi cầm X / O | Khai cuộc phân biệt / ván trùng chuỗi nước |
+|---|---|---|---|---|---|
+| (16,12,8) | AB Vừa mới | 8/0/0 | 1,00 [0,68; 1,00] | 1,00 / 1,00 | 4 / 0 |
+| (16,12,8) | MCTS Khó | 7/0/1 | 0,875 [0,53; 0,98] | 0,75 / 1,00 | 4 / 0 |
+| (12,8,6) | AB Vừa mới | 7/0/1 | 0,875 [0,53; 0,98] | 1,00 / 0,75 | 4 / 0 |
+| (12,8,6) | MCTS Khó | 5/0/3 | 0,625 [0,31; 0,86] | 0,75 / 0,50 | 4 / 0 |
+
+- **Đánh giá sức mạnh đầy đủ (B5, 2026-11-18, `p64_strength --topk k16_12_8 --workers 3`, commit `b295df5`, git sạch, cắm sạc; số minh họa GUI, không vào report, CSV `local_out/p64/p64strength_*.csv` gitignore; 917 s wall):** A = `AB15_HARD` (`top_k` (16,12,8)), 20 khai cuộc (2–4 nước quanh tâm, loại thế có thắng ngay, đôi một khác nhau) × 2 ván đổi bên = 40 ván/ô; 0 ván lỗi.
+
+| Đối thủ | W/D/L | Điểm A [Wilson 95 %] | Điểm cầm X / O | A giây/nước TB / max | Đối thủ giây/nước TB / max | Khai cuộc phân biệt | Ván trùng chuỗi nước | `depth_reached` TB (A) |
+|---|---|---|---|---|---|---|---|---|
+| AB Vừa mới (= Khó cũ, E1) | 36/0/4 | **0,90** [0,77; 0,96] | 0,95 / 0,85 | 1,52 / 2,42 | 0,15 / 0,61 | 20 | 0 | 6,55 |
+| MCTS Khó (E3, 5000 iter) | 36/0/4 | **0,90** [0,77; 0,96] | 0,90 / 0,90 | 1,68 / 2,42 | 2,28 / 6,57 | 20 | 0 | 6,61 |
+
+  → **Đạt ngưỡng** (≥ 0,8 vs AB Vừa mới; ≥ 0,5 vs MCTS Khó; cận dưới Wilson 0,77 > 0,5 và gần 0,8). Lưu ý: cận dưới vs AB Vừa mới (0,77) hơi dưới 0,8 — ngưỡng áp lên điểm ước lượng. Điểm A là số của một máy, thời gian/nước ảnh hưởng kết quả (agent theo thời gian); chỉ minh họa. MCTS Khó nghĩ tối đa 6,57 s trong ván này (> 5 s; luật GUI vốn chấp nhận, D-29). Còn lại: **An tự chơi 5 ván 15×15 mức Khó** trước khi đóng P6.4.
+- **An chơi thử (2026-11-21):** 5 ván 15×15 mức Khó (AB) — "khá ổn", không có lỗi cần sửa → duyệt đóng P6.4.
+- **B3 bỏ (An, 2026-11-21):** MCTS Khó = `time_limit` + VCF ở gốc **không làm** vì P6.4 vượt timebox ~1,5 ngày (điều kiện bỏ trong D-35). MCTS Khó giữ nguyên (E3, 5000 iter).
+
+### D-37 (2026-11-25) — P6.2: GUI cờ tướng (font, đánh dấu, độ khó, xoay bàn, thời gian/nước)
+- **Phạm vi:** `gui/xiangqi_view.py` (mới) + sửa nhỏ generic ở `view.py` (hook `status_text` / `end_reason` có mặc định
+  None, `get_cjk_font`), `presets.py`, `game_config.py`, `scenes.py`, `play_scene.py`, `widgets.py` (`Button.fits`),
+  `screenshots.py`, `experiments/p63_gui_timing.py`. **Không** sửa `agents/`, `core/`, `games/`, `results/`, `report/report.md`;
+  controller không đổi. Lý do kết thúc tính trong GUI từ API công khai của `Xiangqi` (`ply < max_plies` ⇒ lặp thế, D-22).
+  ✂ (giữ như PLAN): overlay N/W/N trên bàn cờ tướng (card Phân tích vẫn có top-5 dạng chữ), animation trượt quân,
+  ký hiệu truyền thống, preset Demo cờ tướng (đợi E7, P8.4).
+- **Font:** Noto Serif **TC** Bold (phồn thể — bộ chữ quân truyền thống; plan ghi SC, đổi sang TC vì đủ 18 chữ phồn thể),
+  OFL 1.1, cắt bằng `fontTools.subset` còn 18 chữ (帥仕相俥傌炮兵 將士象馬車砲卒 楚河漢界), 7 408 byte; nguồn, phiên bản,
+  sha256, lệnh cắt: `gameai/gui/assets/fonts/README.md`. Dự phòng: font CJK hệ thống (YaHei/SimHei/SimSun) → chữ Việt trên quân.
+- **Bàn:** giao điểm 9×10, sông ngắt đường dọc, chéo cung, dấu chữ thập pháo/tốt, 楚河 漢界, **viền đôi** cách giao điểm biên
+  ≥ bán kính quân + 6 px (cell 59 px trong `BOARD_RECT` 672 px) → quân hàng 0/9, cột a/i không đè viền. Nhãn ICCS (a–i, 0–9).
+- **Quy ước đánh dấu — phân biệt bằng hình dạng (An duyệt, 2026-11-25):** quân đang chọn = **đĩa** `t.accent` mờ (alpha 90)
+  **dưới** quân; ô đích trống = chấm; ô ăn quân = **vòng** `t.accent` quanh quân; nước cuối = **khung 4 góc vuông**
+  `t.last_move` ở cả ô đi và ô đến; tướng bị chiếu = quầng + vòng đỏ. Ô ăn quân trùng ô đến nước cuối vẫn đọc được
+  (vòng ≠ khung góc). Khi chọn chính tướng đang bị chiếu: bỏ quầng tô, đẩy vòng đỏ ra ngoài đĩa chọn (quầng và đĩa
+  cùng vùng trộn màu thành nâu; đổi thứ tự vẽ không đủ).
+- **Input (máy trạng thái D-28):** click quân mình → chọn; click lại → bỏ; quân mình khác → đổi chọn; đích hợp lệ
+  (`legal_moves` lọc theo ô đi) → nước; chỗ khác → bỏ chọn. Undo / hết lượt người → bỏ chọn.
+- **Xoay bàn:** `view.flipped = (người duy nhất cầm Đen)`, đặt ngay sau `make_view` (cả ván mới, phím S). Thẻ người chơi
+  đảo theo bàn (bên ở dưới bàn có thẻ ở dưới) — **ngoài yêu cầu, An giữ**.
+- **Lời văn:** Đỏ/Đen (Setup "Đỏ · đi trước" / "Đen · đi sau"); dòng trạng thái "Đỏ đang bị chiếu · …" màu đỏ; modal
+  "Đen thắng" + dòng phụ "Chiếu bí" / "Bí nước" / "Lặp thế 3 lần" / "Đạt giới hạn N nước". Modal bỏ dòng phụ lặp tiêu đề
+  (áp dụng chung, k-in-row đầu hàng: "X đầu hàng" + "O thắng") — **ngoài yêu cầu, An giữ**.
+- **6 mức cờ tướng (thay mục "chốt ở P6.2" của D-23/D-36):** spec gọi hàm thí nghiệm, không gõ tay; nguồn = cấu hình riêng
+  (P8.4 đổi sang "E7" nếu spec E7 trùng `==`).
+
+| AI | Dễ | Vừa | Khó |
+|---|---|---|---|
+| MCTS | `xq_mcts_spec(time_limit=0.3, tactics=True)` | `xq_mcts_spec(time_limit=1.0, tactics=True)` | `xq_mcts_spec(time_limit=2.5, tactics=True)` |
+| AB | `ab_spec(1)` | `ab_spec(2, use_tt=True)` (= nguồn nhãn D-24) | `ab_spec(12, use_tt=True, time_limit=2.0)` (ID) |
+
+  MCTS: rollout cắt L = 10 + σ(`xq_evaluate`/2000), c = √2. AB: `xq_evaluate` + `xq_delta` + `xq_mvv_lva`, `seeded: false`,
+  TT "exact", **không** `top_k`/`tt_mode="deep"` (D-23: chưa đo trên cờ tướng).
+- **Sửa GUI chung (An yêu cầu sau khi chơi thử):** (1) card Phân tích chỉ hiện "· N iter" khi N > 0 (AB báo 0 → trước hiện
+  "0 iter"); (2) nút đầu hàng: "{bên} đầu hàng" không vừa nút (đo font thật kèm icon, `Button.fits`) → "Đầu hàng". Đo:
+  nút 126 px còn 110 px cho chữ + icon; "X đầu hàng" 119, "Đỏ đầu hàng" 131, "Đen đầu hàng" 139, "Trắng đầu hàng" 153 px
+  → **mọi chế độ 2 người (cả k-in-row) đều hiện "Đầu hàng"** (từ P6.3 các nhãn này vốn bị cắt chữ); nút vẫn đầu hàng bên
+  tới lượt (dòng trạng thái ghi bên).
+- **Đo thời gian/nước + FPS (2026-11-25, `p63_gui_timing --boards xiangqi --table-dir local_out/p62 --tag p62`, animation bật,
+  headless 30 fps, commit `8cf25b3` + sửa chưa commit; số minh họa GUI, không dùng cho báo cáo thí nghiệm; ngoài `results/`):**
+  cắm sạc (AC, pin 100 %), power plan Balanced, i9-12900H, máy rảnh (CPU nền ~9 %); bench ngắn = **0,966×** `e5_bench.csv`
+  (rand 3 472, h300 2 353 iter/s). Người = nước hợp lệ ngẫu nhiên, 2 ván/mức (đổi bên), ván cắt 60 ply; 250 s wall.
+  Trung bình nước có search / tối đa (s) / FPS vòng chính khi AI nghĩ (trung bình / khung tệ nhất):
+
+| Cờ tướng | Dễ | Vừa | Khó |
+|---|---|---|---|
+| MCTS | 0,30 / 0,30 — 26,6 / 25,0 fps | 1,00 / 1,00 — 25,9 / 23,3 fps | **2,50 / 2,50** — 25,7 / 11,0 fps |
+| AB | 0,00 / 0,00 — 29,9 / 28,6 fps | 0,004 / 0,011 — 29,9 / 28,6 fps | **2,00 / 2,00** — 25,7 / 23,3 fps |
+
+  → **Đạt luật GUI** (Khó: trung bình ≤ 3 s, tối đa ≤ 5 s; quá hạn `time_limit` ≤ 0,003 s). FPS trung bình khi AI nghĩ
+  ≥ 25,7 ở mọi mức; **khung tệ nhất của MCTS Khó 11,0 fps** (một khung, < 15; P6.4 đo MCTS Khó 15×15 khung tệ nhất 14,5) —
+  ghi nhận, không chỉnh. `--quick` trước đó (1 ván/mức, 141 s): cùng kết luận. CSV: `local_out/p62/p62_gui_timing.csv`,
+  `p62_gui_runinfo.csv`, `p62_bench.csv` (gitignore).
+- **An chơi thử (2026-11-25):** chơi cờ tướng trong GUI và duyệt commit (c); yêu cầu 2 sửa ở trên.

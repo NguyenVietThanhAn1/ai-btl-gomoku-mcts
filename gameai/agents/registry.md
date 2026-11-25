@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P4.1 (D-13)  ·  **Cập nhật:** 2026-11-10
+**Trạng thái:** ✅ ổn định  ·  **Task:** P4.1 (D-13), P8.2 (hàm + game cờ tướng, D-23)  ·  **Cập nhật:** 2026-11-21
 
 ## Mục đích
 Mô tả agent / game bằng dữ liệu kiểu JSON (`AgentSpec`, `GameSpec`) và dựng object **mới** từ đó. Spec
@@ -20,9 +20,9 @@ class AgentSpec:
     def to_dict(self) -> dict       # TypeError nếu params không phải JSON
 @dataclass(frozen=True)
 class GameSpec:
-    kind: str = "kinrow"; params: dict = {}      # vd. GameSpec("kinrow", {"n": 15, "k": 5})
+    kind: str = "kinrow"; params: dict = {}      # "kinrow" | "xiangqi" | "module:Class"; vd. GameSpec("kinrow", {"n": 15, "k": 5}), GameSpec("xiangqi", {"max_plies": 300})
     def to_dict(self) -> dict
-FUNCTIONS: dict[str, Callable]      # "move_score", "evaluate", "delta_eval"
+FUNCTIONS: dict[str, Callable]      # k-in-row: "move_score", "evaluate", "delta_eval"; cờ tướng (P8.2): "xq_evaluate", "xq_delta", "xq_mvv_lva", "xq_mvv_lva_check"
 def make_agent(spec: AgentSpec, seed: int | None) -> Agent
 def make_game(spec: GameSpec) -> Game
 ```
@@ -33,7 +33,7 @@ def make_game(spec: GameSpec) -> Game
 | `random` | — | `use_candidates` |
 | `greedy` | `score` (mặc định `"move_score"`) | `use_candidates` |
 | `minimax` | `eval` (None) | `depth`, `use_candidates` |
-| `alphabeta` | `eval`, `delta`, `order` (đều None) | `depth`, `use_candidates`, `use_tt` |
+| `alphabeta` | `eval`, `delta`, `order` (đều None), `vcf_depth` + `vcf_time` (P6.4: hook VCF k-in-row ở gốc; **phải đi cùng nhau**, `vcf_time` ghi rõ trong spec) | `depth`, `use_candidates`, `use_tt`, `top_k`, `time_limit`, `tt_mode` (P6.4) |
 | `mcts` | `rollout` (`"random"` / `"heavy"` = `HeavyRollout(score, temperature)` bản chuẩn / `"heavy_kinrow"` = `KInRowHeavyRollout(temperature)`), `temperature` (100), `score` (`"move_score"`), `value_scale` (None; có → `sigmoid_value(value_eval, value_scale)`), `value_eval` (`"evaluate"`) | `iterations`, `time_limit`, `c`, `rollout_limit`, `final_move`, `check_tactics` |
 | `"module:Class"` | — | mọi params, gọi `Class(seed=seed, **params)` |
 
@@ -57,11 +57,14 @@ MCTS_H = AgentSpec("mcts", {"iterations": None, "time_limit": 0.5, "rollout": "h
 ## Thiết kế & quyết định (D-13)
 - Spec thay vì object/lambda: lambda không pickle được với spawn; spec cho nhãn + hash ổn định, và mỗi ván
   dựng agent mới.
-- Đây là module **duy nhất** trong `agents/` import heuristic của k-in-row (tầng ghép nối). Cờ tướng (P8)
-  thêm hàm vào `FUNCTIONS` và `GameSpec` kind mới.
+- Đây là module **duy nhất** trong `agents/` import heuristic của k-in-row và cờ tướng (tầng ghép nối). P8.2 thêm
+  (chỉ cộng thêm, không đổi hành vi k-in-row) 4 hàm `xq_*` vào `FUNCTIONS` (xem `heuristics/xiangqi_eval.md`) và
+  `GameSpec("xiangqi", params)` → `Xiangqi(**params)`. Ví dụ AB cờ tướng: `AgentSpec("alphabeta", {"depth": 2,
+  "eval": "xq_evaluate", "delta": "xq_delta", "order": "xq_mvv_lva"})`; Greedy cờ tướng: `{"score": "xq_delta"}`.
 - `"module:Class"` cho agent thử nghiệm / agent lỗi giả trong test (worker import được qua `sys.path`).
 
 ## Test
+- `tests/test_xiangqi_ab.py::test_registry_xiangqi_game_and_functions` (game `xiangqi`, hàm `xq_*`, tên lạ → lỗi).
 - `tests/test_arena.py` (phần registry): dựng mọi kind, heavy_kinrow đúng object và T, agent mới mỗi lần,
   seed điều khiển lựa chọn, `seeded: false`, đường dẫn `module:Class`, sai config → lỗi, params không JSON →
   `TypeError`, `name` / `to_dict`.

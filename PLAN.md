@@ -146,6 +146,10 @@ Ghi chú hiệu năng 15×15: nếu 5000 iter quá chậm, giảm số ván ở 
   Done khi: chơi hết 1 ván mỗi chế độ (người vs AI, AI vs AI) × (3×3, 15×15) không lỗi; test controller xanh; ruff sạch.
 - **P6.2** (sau P8.3) view cờ tướng trên khung P6.1: bấm quân → tô sáng nước hợp lệ → bấm ô đích; báo chiếu / chiếu bí /
   hòa. Cờ tướng chơi được là **lõi**; ✂ overlay N/W/N cho cờ tướng. Done khi: chơi hết 1 ván mỗi chế độ cờ tướng không lỗi.
+  **✅ 2026-11-25 (D-37):** `gui/xiangqi_view.py` (font Noto Serif TC cắt 18 chữ, đánh dấu theo hình dạng, viền đôi, xoay bàn khi
+  người duy nhất cầm Đen), 6 mức cờ tướng lấy từ spec P8.2/P8.3, báo chiếu + lý do kết thúc; autoplay hết ván mọi chế độ
+  (test headless) + An chơi thử. Thời gian/nước GUI (headless, minh họa): Khó MCTS 2,50 / 2,50 s, Khó AB 2,00 / 2,00 s
+  (trung bình / tối đa) → đạt ≤ 3 / ≤ 5 s; FPS trung bình khi AI nghĩ ≥ 25,7 (khung tệ nhất MCTS Khó 11,0).
 - **P6.3** (sau P6.1, An thêm; D-29) Nâng GUI thành game chơi được hoàn chỉnh kiểu chess.com: scene manager + widget tự viết
   (Home / Setup / Play / modal Kết thúc / Xem lại / Demo / Hướng dẫn); chế độ người vs AI, AI vs AI, 2 người cùng máy; loại AI
   MCTS / Alpha-Beta × Dễ/Vừa/Khó ánh xạ sang `AgentSpec` (bảng D-29, panel ghi nguồn cấu hình); controller thêm undo / đầu hàng /
@@ -161,16 +165,20 @@ Ghi chú hiệu năng 15×15: nếu 5000 iter quá chậm, giảm số ván ở 
   spec-reviewer, commit. Done thêm: Home không còn chữ kỹ thuật, nhãn trò không "k=", Demo vẫn hiện "cấu hình thí nghiệm",
   mọi test GUI chạy với animation tắt, ảnh màn hình sinh bằng script.
 
+- **P6.4** (sau P7.2, trước P8.1; D-35/D-36; An duyệt plan + chỉnh) AI mạnh hơn cho chế độ chơi **15×15**: KHÔNG thêm mức "Rất khó" — giữ 3 mức, dịch mức AB 15×15: Dễ giữ, **Vừa = Khó cũ** (E1), **Khó = AB mới** (ID `time_limit` 2,4 s + `top_k` + TT sâu + VCF ở gốc). MCTS và 3×3 không đổi (B3 đã bỏ — D-36). Không đổi `results/`, report; golden k-in-row xanh; mặc định `AlphaBetaAgent`/`MCTSAgent` không đổi (tính năng mới chỉ bật bằng tham số, generic theo `Game` để P8 dùng lại).
+  (B1) `AlphaBetaAgent`: iterative deepening theo `time_limit` (trả nước của độ sâu hoàn tất gần nhất; `_Timeout` không ghi TT nút dở dang), `top_k`, `tt_mode="deep"`, `root_hook`. (B2) VCF k-in-row `heuristics/kinrow_vcf.py`. (B3) ~~MCTS Khó = `time_limit` + VCF ở gốc~~ — **đã bỏ** (vượt timebox ~1,5 ngày, D-36). (B4) GUI: mapping mới + `p63_gui_timing --kinds/--levels/--table-dir/--tag` (không ghi đè `p63_*`/`p63anim_*`), FPS. (B5) `experiments/p64_strength.py`: AB Khó mới vs AB Vừa mới và vs MCTS Khó, ≥ 40 ván/cặp, mỗi ván từ khai cuộc ngẫu nhiên có seed (2–4 nước gần tâm, loại thế có thắng ngay), mỗi khai cuộc 2 ván đổi bên; `--quick` cả `top_k` (16,12,8) và (12,8,6) rồi An chọn; CSV ngoài `results/` (gitignore `local_out/`).
+  Done khi: test (ID ≡ AB depth cố định khi không top_k; VCF thế dựng tay; hủy search rồi search lại = TT rỗng; GUI mapping mới, 3 mức, 3×3 nguyên) xanh; golden xanh; timing GUI: trung bình ≤ 3 s, tối đa ≤ 5 s; sức mạnh ≥ 0,8 vs AB Vừa mới và ≥ 0,5 vs MCTS Khó (số ghi D-36/PROGRESS, không vào report); **An tự chơi 5 ván 15×15 mức Khó và duyệt** (dừng hỏi An trước khi đóng task); không đạt → chỉnh 1 vòng rồi dừng, ghi kết quả thật; precheck EXIT 0; spec-reviewer PASS. Cần sửa **report Phụ lục B** (mapping mức + timing) ở đợt cập nhật report sau P8.
+
 ### P7 — Báo cáo & video demo
 - **P7.1** `experiments/plots.py` sinh toàn bộ hình/bảng từ `results/raw` (không vẽ tay).
 - **P7.2** `report/report.md` đúng khung đề; số liệu lấy từ `results/tables` (D-30). Mục 3.4 Cờ tướng = placeholder.
   Done khi: `python -m gameai.experiments.report_check` 0 lỗi (mọi số có nguồn `src` khớp CSV / mục summary; bảng `src-table`
   giống byte với summary; hình tồn tại; Tóm tắt ≤ 200 từ); `plots --check` CSV giống byte; pytest + ruff xanh; spec-reviewer PASS.
-- **P7.3** (D-34, **hoãn tới khi An yêu cầu**) Xuất `report.pdf` từ `report/report.md` (thay cho docx), kiểm tra hình/bảng/công thức hiển thị đúng, đánh số Hình/Bảng khớp.
-- **P7.4** Video demo (3–5 phút): `report/video_script.md` gồm kịch bản từng cảnh + lệnh chạy chính xác. Cảnh gợi ý: (1) 3×3 người vs MCTS — MCTS không thua; (2) 15×15 người vs MCTS với overlay N; (3) 15×15 MCTS vs Alpha-Beta (AI vs AI); (4) đồ thị E3/E5 và kết luận; (5) cờ tướng nếu xong P8. Quay bằng OBS hoặc Xbox Game Bar (Win+Alt+R).
+- **P7.3** (D-34; D-35: **sau P8 + bổ sung báo cáo cờ tướng**) Xuất `report.pdf` từ `report/report.md` (thay cho docx), kiểm tra hình/bảng/công thức hiển thị đúng, đánh số Hình/Bảng khớp.
+- **P7.4** Video demo (3–5 phút): `report/video_script.md` gồm kịch bản từng cảnh + lệnh chạy chính xác. Cảnh gợi ý: (1) 3×3 người vs MCTS — MCTS không thua; (2) 15×15 người vs MCTS với overlay N; (3) 15×15 MCTS vs Alpha-Beta (AI vs AI); (4) đồ thị E3/E5 và kết luận; (5) cờ tướng (bắt buộc, D-35: quay sau P8). Quay bằng OBS hoặc Xbox Game Bar (Win+Alt+R).
 
 ### P8 — (*) Cờ tướng — **bắt buộc** (đề: điều kiện điểm > 9)
-Làm trên branch `xiangqi` (tạo lại từ master khi bắt đầu P8.1, D-26); số liệu k-in-row khóa ở tag `kinrow-final` (`aa8e3d5`). **Thứ tự (D-30, thay D-26):** P7.2 → P7.3 → P7.4 (Bài 1 nộp được) rồi mới `P8.1 → P8.2 → P8.3 → P6.2 → P8.4`; sau P8 bổ sung mục 3.4 / 5 / video cờ tướng. Thiết kế: D-22.
+Làm thẳng trên `develop` (D-32, thay D-26/D-27 phần branch; không tạo branch `xiangqi`); số liệu k-in-row khóa ở tag `kinrow-final` (`aa8e3d5`). **Thứ tự (D-35, thay D-30):** P7.2 xong (mốc Bài 1 đã merge master) → `P6.4 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4` → bổ sung mục 3.4 / 5 báo cáo → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng). Thiết kế: D-22.
 
 **Ràng buộc:** không đổi hành vi mặc định của agents / arena / k-in-row. Phải sửa agent → thêm tham số có mặc định giữ nguyên
 hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp từ tag: cùng chuỗi nước + cùng stats) phải xanh.
@@ -191,8 +199,8 @@ hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp t
   - Đo nút/giây perft, thời gian `legal_moves()` / `winner()`; ghi vào `xiangqi.md` + CSV. Nếu MCTS ước tính < ~200 iter/s →
     tối đa 1 phiên tối ưu trước khi sang P8.2.
 - **P8.2** `heuristics/xiangqi_eval.py` + `.md`: `evaluate` (vật chất + PST), `delta_eval`, `mvv_lva` (ordering ăn quân giá
-  trị cao bằng quân giá trị thấp trước). Dùng lại `AlphaBetaAgent`; thêm `time_limit` + iterative deepening (D-23); registry:
-  `GameSpec("xiangqi")`, `FUNCTIONS` thêm `xq_evaluate`, `xq_delta`, `xq_mvv_lva`.
+  trị cao bằng quân giá trị thấp trước). Dùng lại `AlphaBetaAgent` nguyên vẹn (`time_limit` + iterative deepening đã có từ P6.4, D-36; thiết kế P8.2 ở D-23);
+  registry (chỉ cộng thêm): `GameSpec("xiangqi")`, `FUNCTIONS` thêm `xq_evaluate`, `xq_delta`, `xq_mvv_lva`.
   Done khi: `delta_eval` = hiệu `evaluate` trên thế ngẫu nhiên; AB (eval và delta) cùng giá trị gốc với Minimax depth 2 trên
   ≥ 10 thế; ordering ít nút hơn; AB ăn quân cho không, thoát chiếu, chiếu bí 1 nước; test ID (time_limit nhỏ vẫn trả nước
   depth 1, giờ dư = depth cố định); golden k-in-row xanh.
@@ -203,6 +211,7 @@ hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp t
   vật chất sau L nước) và ghi D-24. Đo chi phí `check_tactics` (ms/nước, % nước đi thẳng) → quyết định bật/tắt trong E7 (D-24).
   Done khi: MCTS ăn quân cho không và thoát chiếu bí 1 nước (khi bật tactics; tắt thì ghi tỉ lệ); iteration/s + bảng scale
   trong `results/`.
+  **Kết quả (D-24):** nhãn depth 1 bị loại (54 % hòa, LL ≈ −ln 2) → dùng AB depth 2, `scale = 2000`; tactics bật cho E7; `L = 10` chọn bằng `lmatch` (50 ván, L=0 điểm 0,51 [0,38; 0,64] → ngang → L=10).
 - **P6.2** GUI cờ tướng — xem mục P6 (làm sau P8.3).
 - **P8.4** E7 `experiments/e7_xiangqi.py` + `.md` (thiết kế chi tiết D-25):
   - ✂ (a) AB depth 1/2 cố định vs Random.
@@ -216,7 +225,7 @@ hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp t
 
 ## 4. Thứ tự & phân việc (khi nhóm có thêm người)
 
-`P0 → P1 → P2 → P3 → P4 → P5` (xong, tag `kinrow-final`) `→ P8.0 → P7.1 → P6.1 → P6.3 → P7.2 → P7.3 → P7.4 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4` → bổ sung báo cáo/video cờ tướng (D-26, D-30: xong Bài 1 trước cờ tướng)
+`P0 → P1 → P2 → P3 → P4 → P5` (xong, tag `kinrow-final`) `→ P8.0 → P7.1 → P6.1 → P6.3 → P7.2` (xong, mốc Bài 1 trên master) `→ P6.4 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4` → bổ sung mục 3.4 / 5 báo cáo → `P7.3 → P7.4` (D-35: cờ tướng trước PDF/video)
 
 Chia việc gợi ý khi có thêm người: A = P2 + E1; B = P3 + E2–E5; C = P6 GUI + P8; báo cáo chia theo mục. Ranh giới giữa các phần là interface `Game`/`Agent` — không sửa interface khi chưa ghi vào DECISIONS.md.
 

@@ -11,3 +11,5 @@ report/~$*.docx
 results/**/*quick*
 results/*.log
 !results/*_full.log
+# Số đo/chạy thử ngoài results/ (P6.4, D-36) — không commit
+local_out/

@@ -48,7 +48,7 @@ Cờ chung `--workers` (4, chỉ cho phần iteration; phần time cố định 
   `derive_seed(seed, "mref")`. `MREF` = spec qua registry (`"gameai.experiments.e5_rollout:MRefAgent"`).
 - `Point(part, budget_type, budget, rollout, spec_a, spec_b, n_pairs, workers, e3_path)`; `points(step, quick)`,
   `all_points(quick)`, `raw_path(pt, quick)`.
-- `e3_reusable(path, spec_a, spec_b, n_pairs, game, base_seed, diff_empty) -> (ok, reason)`; `git_diff_empty(commit)`.
+- `e3_reusable(path, spec_a, spec_b, n_pairs, game, base_seed, diff_empty) -> (ok, reason)`; `git_diff_empty(commit, paths=CODE_PATHS, target="HEAD")` (`git diff --quiet <commit> <target> -- paths`; mặc định so HEAD). Test raw E3 thật ghim `target="kinrow-final"` (code sau tag đổi hợp lệ; `e3_reusable` vẫn đúng khi báo "code đổi").
 - `run_point`, `run_step`, `run_pilot`, `run_ab2` (dùng `gate_passes` của E3).
 - `bench(seconds=1.0, plies=(4, 8, 12, 16, 20, 24, 28), seeds=(0, 1, 2), path)`; `bench_rates(rows) -> {rollout: trung
   vị iter/s}`; `bench_phase_rates(rows) -> {(rollout, phase): trung vị}`; `phase_of(stones)`.

@@ -10,9 +10,9 @@
 
 ### An
 
-- **Task hiện tại:** P7.2 ✅ xong (trên `develop`, D-32) — báo cáo `report/report.md`; đang chờ An merge PR `develop` → `master` (mốc Bài 1). Task kế: P7.4 (video). Thứ tự mới D-30: xong Bài 1 (P7.2 → P7.3 → P7.4) trước cờ tướng.
-- **Việc đang dở:** P7.2 — xong đợt (a), (b), (c) (An đã duyệt), dấu thập phân VN trong hình (`1d3c20b`), `plots --check` so cả summary + "tỷ lệ" trong GUI (`9d2aef6`), "tỷ lệ" trong `experiments/*.md` (`1fac6f7`) — cả ba đã push. **spec-reviewer P7.2: PASS** (3 minor, đã xử lý ở `fc418cc`). `help.png` đã sinh lại (Hình B.8), P7.2 ✅. Còn: An merge PR `develop` → `master` (merge commit, không squash).
-- **Bước tiếp theo:** P7.2 → P7.4 (video) (P7.3 xuất PDF hoãn tới khi An yêu cầu, D-34) → P8.1 (luật cờ tướng + perft, trên `develop`). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
+- **Task hiện tại:** P8.4 (thí nghiệm cờ tướng E7, D-25) — chưa bắt đầu. P6.2 ✅ (2026-11-25, GUI cờ tướng, D-37). P8.3 ✅ (`XQ_MCTS_L=10`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: `P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng).
+- **Việc đang dở:** (không)
+- **Bước tiếp theo:** P8.4 (E7, D-25; kiểm lại L bằng E7(c) với tactics bật, D-24) → nếu spec E7 trùng `==` mức cờ tướng GUI thì đổi nguồn "riêng" → "E7" (`presets.md` TODO, D-37) → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ### Thành viên 2
@@ -48,15 +48,16 @@
 | E6 | Tác dụng check_tactics | ✅ | An | 2026-11-17 | spec-reviewer PASS; D-21 (thiết kế lại); full 24 phút, AC |
 | P6.1 | GUI: khung + view k-in-row | ✅ | An | 2026-11-17 | D-28; spec-reviewer PASS; autoplay headless 4 chế độ × bàn; GUI thay bởi P6.3 (An chơi thử OK) |
 | P6.3 | GUI: game chơi được hoàn chỉnh | ✅ | An | 2026-11-17 | D-29; spec-reviewer PASS; An chơi thử bằng chuột OK |
-| P6.2 | GUI: view cờ tướng | ⬜ | An | | sau P8.3 (D-26) |
+| P6.4 | GUI: AI "Rất khó" 15×15 (ID, top-k, TT, VCF) | ✅ | An | 2026-11-21 | D-35/D-36; B3 bỏ; An chơi thử 5 ván OK; không đổi results/ |
+| P6.2 | GUI: view cờ tướng | ✅ | An | 2026-11-25 | D-37; spec-reviewer PASS; An chơi thử + duyệt; Khó MCTS 2,50/2,50 s, AB 2,00/2,00 s (GUI, minh họa) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ✅ | An | 2026-11-18 | D-30; spec-reviewer PASS; report_check 0 lỗi; `plots --check` 26/26 |
-| P7.3 | Xuất report.pdf (D-34; thay docx) | ⬜ | An | | hoãn tới khi An yêu cầu |
-| P7.4 | Video demo (script + quay) | ⬜ | An | | |
+| P7.3 | Xuất report.pdf (D-34; thay docx) | ⬜ | An | | sau P8 + bổ sung báo cáo cờ tướng (D-35) |
+| P7.4 | Video demo (script + quay) | ⬜ | An | | sau P7.3 (D-35); có cảnh cờ tướng |
 | P8.0 | Xiangqi design D-22 + golden k-in-row | ✅ | An | 2026-11-17 | tag `kinrow-final`, branch `xiangqi`; golden 12 ván / 123 nước |
-| P8.1 | Xiangqi rules + perft | ⬜ | An | | |
-| P8.2 | Xiangqi eval + AB | ⬜ | An | | |
-| P8.3 | Xiangqi MCTS | ⬜ | An | | |
+| P8.1 | Xiangqi rules + perft | ✅ | An | 2026-11-21 | spec-reviewer PASS; perft D1–4 khớp 11 thế (44/44); `p81_perft.csv`; `xiangqi.md` |
+| P8.2 | Xiangqi eval + AB | ✅ | An | 2026-11-21 | D-23; PST tự thiết kế; AB = Minimax d2 (14 thế × 4 chế độ); AB d2 vs Random/Greedy 10/0/0; `p82_ab_speed.csv`; chỉ sửa additive `registry.py` |
+| P8.3 | Xiangqi MCTS | ✅ | An | 2026-11-23 | D-24; scale 2000 (nhãn AB d2); tactics bật cho E7; L=10 (`lmatch` 50 ván, tactics tắt: L=0 23/5/22, 0,51 [0,38; 0,64] → ngang); spec-reviewer PASS sau sửa doc |
 | P8.4 | Xiangqi experiments | ⬜ | An | | |
 | B2 | Bài 2 (Bonus) | ⬜ | | | chưa chốt phạm vi — chờ An xác nhận yêu cầu với giảng viên (PLAN §0) |
 
@@ -78,6 +79,74 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-25 — P6.2 ✅ đóng: GUI cờ tướng (commit b, c, d)
+- (b) `c7ce6a9`: `XiangqiView` + font Noto Serif TC cắt 18 chữ + `view.get_cjk_font` / hook `status_text` / `end_reason`;
+  đánh dấu theo hình dạng (đĩa chọn dưới quân, vòng ăn quân, khung 4 góc nước cuối), viền đôi cách quân ≥ r + 6 px
+  (cell 62 → 59), file LF; `xiangqi_view.md`; 14 test view. Chọn tướng đang bị chiếu: thứ tự vẽ vốn đã đúng, đĩa bị quầng
+  đỏ trộn màu → đẩy vòng chiếu ra ngoài đĩa (amend). `chore: .gitattributes` (`0794912`, `* text=auto eol=lf`, renormalize
+  không đổi file nào). Push `develop` (`25e8a12`, (b), chore).
+- (c) `8cf25b3`: 6 mức cờ tướng từ `xq_mcts_spec` / `ab_spec` (D-37), `board_key` (khóa trò 3 / 15 / "xiangqi"), Setup
+  Đỏ/Đen + Help luật cờ tướng, xoay bàn khi người duy nhất cầm Đen, dòng trạng thái báo chiếu, modal lý do kết thúc,
+  avatar 帥/將, `screenshots.py` `xq_check` / `xq_flipped` / `xq_end` (thay script Temp); `test_gui_xiangqi_play.py`
+  (click 2 bước, xoay, chiếu, chiếu bí / lặp thế, autoplay 4 chế độ).
+- **An chơi thử cờ tướng trong GUI và duyệt (c).** 2 thay đổi ngoài yêu cầu, An giữ: thẻ người chơi đảo theo bàn xoay;
+  modal bỏ dòng phụ lặp tiêu đề (áp dụng chung).
+- (d): 2 lỗi đã sửa — card Phân tích hiện "0 iter" cho AB (giờ chỉ khi > 0, chung cho k-in-row; `last_move_text`);
+  nút "Đỏ đầu …" bị cắt (`Button.fits` đo font thật; không vừa → "Đầu hàng"; đo cho thấy mọi nhãn có tên, kể cả
+  "X đầu hàng", đều không vừa nút 126 px → mọi chế độ 2 người hiện "Đầu hàng"). `p63_gui_timing --boards xiangqi`
+  (ván cắt 60 ply). Timing (AC, bench 0,966×): Khó MCTS 2,50 / 2,50 s, AB 2,00 / 2,00 s → đạt; FPS trung bình ≥ 25,7,
+  khung tệ nhất MCTS Khó 11,0 (ghi nhận). D-37, PLAN §P6.2, docs module.
+- spec-reviewer P6.2: **PASS**, không blocker/major. Minor đã sửa: assert cứng "Đầu hàng" + đo 4 nhãn; test "N iter" MCTS
+  không còn nhánh bỏ qua; thêm test pháo qua ngòi / mã cản chân (`highlights` == `legal_moves`) và click khi hết ván.
+  Minor để lại: ảnh `xq_*` chưa đưa vào `report/figures/gui/` (chạy `screenshots --only xq_check xq_flipped xq_end
+  --out report/figures/gui` khi làm báo cáo / P7.4).
+
+#### 2026-11-23 — P8.3: spec-reviewer + sửa theo review
+- spec-reviewer: không blocker; **1 major**: D-24/PROGRESS ghi `lmatch` chạy "tactics bật" nhưng code chạy **tactics tắt** (`cmd_lmatch` gọi `xq_mcts_spec` không truyền `tactics`, mặc định `False`; chuỗi config + `lmatch_games.csv` không có tactics). An chọn: **sửa mô tả, không chạy lại**. D-24 thêm: E7(c) (so L với tactics bật) là phép kiểm lại L ở điều kiện dùng thật; L=0 mạnh hơn rõ (CI không chứa 0,5) → xem lại `XQ_MCTS_L` ở P8.4.
+- Minor đã sửa: `--depth` mặc định 1 → 2 + docstring đầu `p83_mcts_check.py` (nguồn nhãn đã chốt); test tactics-off đổi thành `..._collects_rate` (kiểm nước hợp lệ, không assert luôn đúng). Minor còn để: test trận `slow` vẫn chạy trong pytest mặc định (theo cấu hình `pyproject`), `pick` nhánh "chênh ≥ 0,1 nhưng CI chồng" (không xảy ra ở lần chạy này).
+
+#### 2026-11-23 — P8.3 ✅ đóng: chốt L = 10 (`lmatch` đầy đủ)
+- `lmatch` 50 ván (25 khai cuộc × 2 bên, 1 s/nước, scale 2000, `max_plies` 200; 3 920 s ≈ 1,1 h, An chạy ngoài phiên). Số lấy từ `local_out/p83/lmatch_games.csv` (không từ `lmatch_full.log`: UTF-16, lỗi mã hóa console PS 5.1). L=0 W/D/L 23/5/22, điểm 0,51, Wilson [0,38; 0,64] → ngang → **L=10** (tiêu chí chốt trước). Cả 50 ván kết thúc bình thường.
+- Theo bên: L=0 cầm Đỏ 15/1/9 (0,62), cầm Đen 8/4/13 (0,40); Đỏ đạt 0,61 trên 50 ván. L=0 chạy ~9× iteration mà không mạnh hơn.
+- `p83_speed.csv` thêm 2 dòng `lmatch_score_L0`, `lmatch_pick` (do lệnh `lmatch` ghi). D-24 mục "Chọn L" chốt; `p83_mcts_check.md` (trạng thái ✅, kết quả, ghi chú `[Console]::OutputEncoding = UTF8` khi chạy dài, lấy số từ CSV); PLAN §P8.3.
+
+#### 2026-11-23 — P8.3 (code + test + docs xong; chờ quyết lmatch): MCTS cờ tướng (D-24)
+- Mới: `experiments/p83_mcts_check.py` (+ `.md`, có "Giải thích cho báo cáo 3.4"), `tests/test_xiangqi_mcts.py`, `results/tables/p83_speed.csv`, `p83_scale_fit.csv`, `p83_tactics_cost.csv` (3 file MỚI trong `results/`, không đụng `raw/`). Sửa: `xiangqi_eval.md` (2,9 µs), `PLAN.md` §P8.3, D-24. Không sửa `agents/`.
+- Scale: nhãn depth 1 loại (108/200 hòa, LL ≈ −ln 2); AB depth 2 (Đỏ 70/Đen 78/hòa 52, hòa đều do lặp thế) → `main` scale 2000, no_draw 1000, lệch 2,00× ≤ 2× → dùng `main`. Hạn chế: LL −0,651 vs −0,693, σ phẳng.
+- Tactics: +17 ms/nước (+8 %), 0 % đi thẳng trên thế yên tĩnh → bật cho E7. Test trận nhanh 300 iter: vs Random 10/0/0, vs Greedy 10/0/0 (ngưỡng ≥ 0,9).
+- `lmatch --quick` (6 ván) 812 s → full 50 ván ≈ 1,9 h: **chưa chạy**, `L=10` tạm.
+
+#### 2026-11-21 — P8.2 xong: eval cờ tướng + AB (D-23)
+- Mới: `heuristics/xiangqi_eval.py` (+ `.md`), `experiments/p82_ab_check.py` (+ `.md`), `tests/test_xiangqi_eval.py`, `tests/test_xiangqi_ab.py`, `results/tables/p82_ab_speed.csv` (file MỚI duy nhất trong `results/`, An cho phép). Sửa: `agents/registry.py` + `.md` (chỉ cộng thêm `xq_*` và `GameSpec("xiangqi")`, An duyệt, An báo Thành viên 2), 1 dòng "Hạn chế" lỗi thời ở `agents/alphabeta.md`, `PLAN.md` §P8.2, D-23. `AlphaBetaAgent`/`core/` không đổi.
+- Eval = vật chất + PST tự thiết kế, không tinh chỉnh bằng dữ liệu. Lỗi tự bắt: lần đầu `MATERIAL` đảo Xe/Pháo (test trace tay bắt được), đã sửa; đo lại trận trên code cuối.
+- Kết quả: AB = Minimax d2 trên 15 thế × 4 chế độ; AB d2 vs Random **10/0/0**, vs Greedy(`xq_delta`) **10/0/0** (seed 0, 5 khai cuộc × 2 ván; 5 khai cuộc phân biệt, 0 ván trùng). Depth 3, 9 thế: nút 89 985 → 17 417 (mvv_lva); ~58 000 nút/s; ID `depth_reached` 4,0 / 4,3 / 4,9 ở 0,5 / 1 / 2 s. `check_bonus` **không bật** (nút −6,5 % nhưng thời gian +19 %).
+- precheck 5/5 EXIT 0; spec-reviewer P8.2 **PASS** (0 blocker; minor: ghi `xq_mvv_lva_check` — đã có trong D-23). Chờ An duyệt push.
+
+#### 2026-11-21 — P8.1 xong: luật cờ tướng + perft
+- `gameai/games/xiangqi.py` (+ `.md`), `experiments/p81_perft.py`, `results/tables/p81_perft.csv` (file MỚI duy nhất trong `results/`, An cho phép), `tests/test_xiangqi.py` (51 test), `tests/test_xiangqi_perft.py`. Thiết kế đúng D-22; không sửa `core/`, `agents/`, `results/raw/`.
+- Perft **44/44 khớp** (11 thế × D1–4) với chessprogramming.org (truy cập 2026-11-21); D4 là test `slow` (~12 s), D1–3 chạy mặc định. Perft có bulk counting ở lá (~0,66–0,72 triệu nút lá/s). Số tốc độ (`legal_moves()` ~59 µs, `winner()` ~9 µs, rollout ~63 ván/s) nằm ở `results/tables/p81_speed.csv` (file MỚI thứ hai trong `results/`, An cho phép); mã thread talkchess bỏ khỏi `xiangqi.md` (chưa kiểm). Ghi công perft đính chính ở D-22 (thế 2 = Korzh & Pham, thế 3–11 = Nguyen Pham).
+- Sửa chữ D-32: `git pull --rebase` → `git fetch` + `git rebase origin/develop` (khớp AGENTS.md/D-33). precheck 5/5 EXIT 0; spec-reviewer P8.1 **PASS** (0 blocker/major; minor đã xử lý: thêm `p81_speed.csv`; bỏ mã talkchess `t=` chưa kiểm).
+
+#### 2026-11-21 — Đóng P6.4 (D-36)
+- An chơi thử 5 ván 15×15 mức Khó (AB): "khá ổn", không lỗi. Bỏ B3 (MCTS Khó = `time_limit` + VCF) vì vượt timebox ~1,5 ngày (D-35); MCTS Khó giữ nguyên. spec-reviewer P6.4 **PASS** (0 blocker/major; minor `alphabeta.md` "sắp tới" → "đã có" đã sửa). P6.4 ✅.
+- Sửa `PLAN.md` §P8 cho khớp D-32 (làm thẳng trên `develop`, bỏ branch `xiangqi`). An cho phép tạo MỚI `results/tables/p81_perft.csv` (chỉ file này) cho P8.1.
+
+#### 2026-11-18 — P6.4 B1 + B4 (D-36): AB Khó mới 15×15, mapping dịch mức
+- B1 xong (3 commit local, chờ precheck + An duyệt push): `AlphaBetaAgent` `root_hook`, `top_k`, `time_limit` (ID), `tt_mode="deep"` + 30 test; `kinrow_vcf`. An đổi thiết kế B4: không thêm "Rất khó" — dịch mức AB 15×15 (Vừa = Khó cũ E1, Khó = `AB15_HARD`); D-36. Demo giữ cấu hình thí nghiệm (`AB2` tra qua `EXPERIMENT_SPECS`).
+- Đo GUI (D-36): AB Khó 15×15 trung bình 1,55 s (vs người ngẫu nhiên) / 2,30 s (vs AB2), tối đa 2,41 s; FPS khi nghĩ 25,8 (khung tệ nhất 22,7–24,4), MCTS Khó 25,7 (14,5–16,7). `local_out/p64/` (gitignore), không ghi đè `p63_*`.
+- **Việc cần làm sau P8:** `report/report.md` **Phụ lục B cần sửa** (mapping mức độ khó AB 15×15 + bảng thời gian/nước GUI) ở đợt cập nhật report sau P8; hiện chưa sửa (An chốt). Ảnh Setup/Demo trong `report/figures/gui/` cũng sẽ lệch nhãn (chụp lại ở P7.3/P7.4).
+- **B5 xong (2026-11-18):** `--quick` cả 2 `top_k` → An chốt (16,12,8). Full (20 khai cuộc × 2 ván, commit `b295df5`): vs AB Vừa mới 36/0/4 = **0,90** [0,77; 0,96] (X 0,95 / O 0,85), vs MCTS Khó 36/0/4 = **0,90** [0,77; 0,96] (X 0,90 / O 0,90); 20 khai cuộc phân biệt, 0 ván trùng chuỗi nước, 0 lỗi; AB Khó 1,52–1,68 s/nước TB, max 2,42 s. **Đạt ngưỡng** (≥ 0,8 / ≥ 0,5). Chi tiết + bảng quick: D-36. CSV ở `local_out/p64/` (gitignore).
+- **Dừng chờ An chơi thử 5 ván 15×15 mức Khó (AB)**, rồi mới đóng P6.4 (spec-reviewer, ✅). B3 (MCTS Khó = `time_limit` + VCF) làm cuối, timebox ~1,5 ngày — chưa làm.
+
+#### 2026-11-18 — Sự cố: push 139a5f7 với 2 test E5 đỏ; sửa `fix: e5 guard tests pinned to kinrow-final`
+- Push `139a5f7` (chỉ thêm `heuristics/kinrow_vcf.*`) làm đỏ `test_real_e3_files_reusable_now` và `test_estimate_full_from_fake_quick` (E5): `e3_reusable` so `git diff <commit trong raw> HEAD` trên `gameai/{agents,games,heuristics,core}` nên mọi file mới ở đó là "code đổi" (guard đúng, test phụ thuộc HEAD sai). Tôi đã push vì lấy `$?` của `| tail` thay cho pytest → AGENTS.md thêm luật không pipe pytest/ruff khi cần exit code.
+- Sửa: `git_diff_empty(..., target="HEAD")` (mặc định giữ nguyên); test raw thật đổi tên `..._at_kinrow_final` ghim `target="kinrow-final"` (skip chỉ khi thiếu raw/tag); `test_estimate_full_from_fake_quick` (e5) monkeypatch `e3_reusable` bỏ kiểm git, giữ kiểm raw. Test cùng tên ở `test_e3_c_sweep` không dùng git → không đổi. `e3_reusable`, `e5_rollout` logic, `results/` không đổi. Ghi chú: mọi commit sau đổi `agents/` vẫn hợp lệ với test này.
+- **Phát hiện tiếp:** `plots --check` cũng đỏ từ `139a5f7` (cùng nguyên nhân: `e5/e6.build_tables` dùng `e3_reusable` so HEAD). Sửa `fix: plots reuse check pinned to kinrow-final`: `plots.regenerate` truyền `reuse_check=pinned_reuse` (ghim tag) cho `e5.build_tables` và `e6.build_tables` (e6 thêm tham số `reuse_check`/`on_source`, mặc định cũ); test `test_tables_do_not_depend_on_head`; `plots --check` 26/26 giống byte. Thêm `python -m gameai.tools.precheck` (pytest + ruff check + ruff format --check + report_check + plots --check, exit thật); AGENTS/WORKFLOW/README: trước mỗi push chạy precheck, EXIT phải 0.
+
+#### 2026-11-18 — D-35: đổi thứ tự (P8 trước P7.3/P7.4), mở P6.4
+- An duyệt plan P6.4 + 4 chỉnh: (1) B5 đánh giá từ khai cuộc ngẫu nhiên có seed, mỗi khai cuộc 2 ván đổi bên, ghi số khai cuộc phân biệt + số ván trùng chuỗi nước vào D-36; (2) ngưỡng ≥ 0,8 vs AB Khó, ≥ 0,5 vs MCTS Khó + An tự chơi 5 ván trước khi đóng, không đạt → chỉnh 1 vòng rồi dừng; (3) timebox ~1,5 ngày, B3 (MCTS Rất khó) làm cuối, bỏ nếu quá; (4) `_Timeout` không ghi TT nút dở dang + test cắt rồi search lại = TT rỗng. Quyết: Q1 có (An báo Thành viên 2 trước khi sửa `agents/`), Q2 3×3 không có Rất khó, Q4 không VCT, Q5 ảnh Setup để nguyên (chụp lại ở P7.3/P7.4), Q6 CSV gitignore.
+- Sửa: `docs/DECISIONS.md` (D-35), `PLAN.md` (P6.4, P7.3/P7.4, thứ tự P8 + §4), `PROGRESS.md`. `report/report.md` không đổi (chỉ nhắc "D-30" làm hướng tiếp theo, không nêu thứ tự).
 
 #### 2026-11-18 — P7.2 ✅ xong: help.png sinh lại, AGENTS PDF, PR mốc Bài 1
 - `help.png` (Hình B.8) sinh lại bằng `python -m gameai.gui.screenshots --only help` (headless, theme mặc định, tắt animation): 1280×720, dòng "Phân tích…" có "tỷ lệ thắng"; chỉ file này đổi (các ảnh GUI khác giữ nguyên). Lưu ý: `--help` của script lỗi `UnicodeEncodeError` trên console cp1252 — chạy với `PYTHONIOENCODING=utf-8`.

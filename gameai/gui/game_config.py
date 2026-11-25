@@ -7,12 +7,28 @@ from dataclasses import dataclass
 
 from gameai.agents.registry import GameSpec
 from gameai.arena import derive_seed
-from gameai.gui.presets import GAME3, GAME15, LEVEL_NAMES, Level, Preset, level_for
+from gameai.gui.presets import (
+    GAME3,
+    GAME15,
+    LEVEL_NAMES,
+    XIANGQI,
+    BoardKey,
+    Level,
+    Preset,
+    board_key,
+    level_for,
+)
 
-GAMES: dict[str, tuple[GameSpec | None, str]] = {
+GAMES: dict[str, tuple[GameSpec, str]] = {
     "3x3": (GAME3, "Caro 3×3"),
     "15x15": (GAME15, "Caro 15×15 · 5 quân thắng"),
-    "xiangqi": (None, "Cờ tướng"),  # sắp có — P6.2
+    "xiangqi": (XIANGQI, "Cờ tướng"),  # P6.2
+}
+# Tên bên đi trước / đi sau theo trò (Setup, lời văn). Lựa chọn bên trong GameConfig vẫn là "X"/"O".
+SIDE_NAMES: dict[str, tuple[str, str]] = {
+    "3x3": ("X", "O"),
+    "15x15": ("Đen", "Trắng"),
+    "xiangqi": ("Đỏ", "Đen"),
 }
 MODES = {"human_ai": "Người vs AI", "ai_ai": "AI vs AI", "two_players": "2 người cùng máy"}
 SIDES = {"X": "X (đi trước)", "O": "O (đi sau)", "random": "Ngẫu nhiên"}
@@ -44,11 +60,14 @@ class GameConfig:
     delay: float = DEFAULT_AI_DELAY  # chỉ AI vs AI
 
     @property
-    def board(self) -> int:
-        spec = GAMES[self.game][0]
-        if spec is None:
-            raise ValueError(f"trò {self.game!r} chưa chơi được")
-        return int(spec.params["n"])
+    def board(self) -> BoardKey:
+        """Khóa trò trong bảng độ khó: 3 / 15 / "xiangqi"."""
+        return board_key(GAMES[self.game][0])
+
+    def side_name(self, side: str) -> str:
+        """'X'/'O' → tên bên của trò: X/O (3×3), Đen/Trắng (15×15), Đỏ/Đen (cờ tướng)."""
+        first, second = SIDE_NAMES[self.game]
+        return first if side == "X" else second
 
     def human_side(self) -> str | None:
         """'X' / 'O' cho người vs AI (ngẫu nhiên → tất định theo seed); None ở chế độ khác."""
@@ -65,8 +84,6 @@ class GameConfig:
 def build_preset(cfg: GameConfig) -> Preset:
     """GameConfig → Preset (spec theo bảng độ khó D-29)."""
     spec, game_name = GAMES[cfg.game]
-    if spec is None:
-        raise ValueError(f"trò {cfg.game!r} chưa chơi được")
     if cfg.mode == "two_players":
         return Preset(f"cfg_{cfg.game}_2p", f"{game_name} · 2 người", spec, None, None)
     if cfg.mode == "ai_ai":

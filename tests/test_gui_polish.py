@@ -169,7 +169,7 @@ def test_black_white_wording_15x15_and_xo_3x3():
     p = app.play
     app.tick()
     assert p.side(P1) == "Đen" and p.side(P2) == "Trắng"
-    assert p.b_resign.text == "Đen đầu hàng"
+    assert p.b_resign.text == ("Đen đầu hàng" if p.b_resign.fits("Đen đầu hàng") else "Đầu hàng")
     assert p.player_name(P1)[0] == "Người chơi Đen"
     for m in (112, 128, 113, 129, 114, 130, 115, 131, 116):
         app.handle_click(app.view.cell_rect(m).center)
@@ -182,7 +182,9 @@ def test_black_white_wording_15x15_and_xo_3x3():
     assert app3.play.side(P1) == "X" and app3.play.history_rows() == []
     app3.handle_click(app3.view.cell_rect(4).center)
     app3.tick()
-    assert app3.play.history_rows()[0][1] == "X" and app3.play.b_resign.text == "O đầu hàng"
+    b = app3.play.b_resign
+    assert app3.play.history_rows()[0][1] == "X"
+    assert b.text == ("O đầu hàng" if b.fits("O đầu hàng") else "Đầu hàng")
 
 
 def test_status_line_uses_black_white():
@@ -313,12 +315,17 @@ def test_displayed_config_numbers_come_from_spec():
         spec, label = lv.spec, side_label(lv.spec)
         if spec.kind == "mcts":
             c = spec.params.get("c", MCTS_DEFAULTS["c"])
-            assert f"{spec.params['iterations']} iter" in label and f"c={c:.3g}" in label
+            iters, limit = spec.params.get("iterations"), spec.params.get("time_limit")
+            budget = f"{iters} iter" if iters is not None else f"{limit:g} s/nước"  # cờ tướng
+            assert budget in label and f"c={c:.3g}" in label
             if spec.params.get("rollout") == "heavy_kinrow":
                 assert f"h{spec.params['temperature']:g}" in label
         else:
-            depth = spec.params.get("depth")
-            assert ("đầy đủ" if depth is None else f"depth {depth}") in label
+            depth, limit = spec.params.get("depth"), spec.params.get("time_limit")
+            if limit is not None:  # iterative deepening (D-36): depth = độ sâu tối đa
+                assert f"ID ≤{depth}" in label and f"{limit:g} s/nước" in label
+            else:
+                assert ("đầy đủ" if depth is None else f"depth {depth}") in label
     assert "c=1.41" in side_label(e2_never_lose.mcts_spec(1000))  # E2: c mặc định √2
     assert "c=1.4," in side_label(e3_c_sweep.mcts_spec(15, 1.4, 5000))  # E3: c = 1.4 trong spec
     for p in PRESETS.values():

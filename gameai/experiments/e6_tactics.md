@@ -36,8 +36,8 @@ Choice và match resume được (choice theo khóa `pos_id, rollout, seed`; mat
 - Spec: `spec_off(rollout, iterations)` = `e5_rollout.mcts_spec` với `check_tactics = False`, nhãn `<rollout>off_i<N>`.
 - (a): `run_sanity`, `checkpoint_moves(game, agent, checkpoints)` (yield `(k, root, giây)`), `choice_task(pos, rollout,
   seed, checkpoints)`, `run_choice`.
-- (b): `MatchPoint`, `match_points()`, `match_raw`, `on_source(pt, quick) -> (source, path, lý do)`, `run_matches`.
-- (c): `run_cost`. Bảng: `choice_table(choice, positions, sanity, weights)`, `_weighted_block`, `build_tables`, `_boot_ci`, `_side_rows`; `estimate_full`, `make_figures`.
+- (b): `MatchPoint`, `match_points()`, `match_raw`, `on_source(pt, quick, raw_dir, reuse_check=e3_reusable) -> (source, path, lý do)`, `run_matches`.
+- (c): `run_cost`. Bảng: `choice_table(choice, positions, sanity, weights)`, `_weighted_block`, `build_tables(quick, raw_dir, table_dir, reuse_check=e3_reusable)` (`plots` truyền bản ghim tag `kinrow-final`), `_boot_ci`, `_side_rows`; `estimate_full`, `make_figures`.
 
 ## File
 - Raw (`results/raw/`): `e6_positions.csv` (`pos_id, type ∈ {block, win, quiet}, source, game_id, ply, mover,

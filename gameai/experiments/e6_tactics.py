@@ -22,7 +22,7 @@ import random
 import statistics
 import sys
 import time
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
 from dataclasses import dataclass
 from datetime import datetime
@@ -611,11 +611,16 @@ def match_raw(part: str, label_a: str, quick: bool, raw_dir: Path = RAW_DIR) -> 
     return raw_dir / f"{prefix(quick)}{part}_{label_a}.csv"
 
 
-def on_source(pt: MatchPoint, quick: bool, raw_dir: Path = RAW_DIR) -> tuple[str, Path, str]:
+def on_source(
+    pt: MatchPoint,
+    quick: bool,
+    raw_dir: Path = RAW_DIR,
+    reuse_check: Callable[..., tuple[bool, str]] = e3_reusable,
+) -> tuple[str, Path, str]:
     """(source, file, lý do) của bản bật: 'e3'/'e5' nếu tái dùng được, ngược lại 'e6'."""
     assert pt.on_a is not None
     if pt.on_path is not None:
-        ok, reason = e3_reusable(pt.on_path, pt.on_a, pt.spec_b, N_PAIRS)
+        ok, reason = reuse_check(pt.on_path, pt.on_a, pt.spec_b, N_PAIRS)
         if ok:
             return Path(pt.on_path).name[:2], Path(pt.on_path), reason
     else:
@@ -1083,7 +1088,10 @@ def _side_rows(
 
 
 def build_tables(
-    quick: bool, raw_dir: Path = RAW_DIR, table_dir: Path = TABLE_DIR
+    quick: bool,
+    raw_dir: Path = RAW_DIR,
+    table_dir: Path = TABLE_DIR,
+    reuse_check: Callable[..., tuple[bool, str]] = e3_reusable,
 ) -> dict[str, list[dict[str, Any]]]:
     p = prefix(quick)
     out: dict[str, list[dict[str, Any]]] = {}
@@ -1116,7 +1124,7 @@ def build_tables(
             rates.append(r)
             times.append(t)
             continue
-        src, on_path, _ = on_source(pt, quick, raw_dir)
+        src, on_path, _ = on_source(pt, quick, raw_dir, reuse_check)
         on_rows, on_moves = _load_match(on_path, n_pairs)
         if not on_rows:
             continue
