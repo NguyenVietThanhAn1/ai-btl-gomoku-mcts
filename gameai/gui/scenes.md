@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ ổn định  ·  **Task:** P6.3 (D-29)  ·  **Cập nhật:** 2026-11-17
+**Trạng thái:** ✅ ổn định  ·  **Task:** P6.3 (D-29), P6.2 (D-37)  ·  **Cập nhật:** 2026-11-25
 
 ## Mục đích
 Các màn Home, Setup (chọn chế độ), Demo thí nghiệm, Hướng dẫn.
@@ -38,14 +38,16 @@ def level_line(cfg, choice) -> str
   dưới hàng AI là tóm tắt "Đối thủ: MCTS · Khó" + ⓘ (tooltip: spec + nguồn); seed trong "Tùy chọn nâng cao"
   (`controls["advanced"]`, thu gọn mặc định). Demo: 3 card, nhãn "CẤU HÌNH THÍ NGHIỆM · E2/E3" hiện rõ.
   Help: card Luật chơi / Trong ván (gói dòng) + card Phím tắt (chip).
-- Setup: Cờ tướng disabled ("sắp có — P6.2"). "Bạn cầm" chỉ ở người vs AI; AI vs AI có 2 hàng AI (X, O) + **Độ trễ AI**
+- Setup: Cờ tướng chọn được (P6.2): "Đỏ · đi trước" / "Đen · đi sau", "AI Đỏ" / "AI Đen" (`GameConfig.side_name`).
+  Help: thêm dòng luật cờ tướng (chiếu bí / hết nước = thua; lặp lần 3 / quá 300 nước = hòa; không xét chiếu dai — D-22)
+  và cách đi 2 bước. "Bạn cầm" chỉ ở người vs AI; AI vs AI có 2 hàng AI (X, O) + **Độ trễ AI**
   (0–5 s, bước 0,25); 2 người không có hàng AI. Hộp dưới cùng ghi tên cấu hình thật + nguồn của từng bên.
 
 ## Phụ thuộc
 - Dùng: `gui/game_config.py`, `gui/presets.py`, `gui/play_scene.py` (`AppState`), `gui/scene.py`, `gui/widgets.py`.
 
 ## Test
-- `tests/test_gui_scenes.py`: điều hướng Home/Setup/Demo/Help + Esc; Cờ tướng không chọn được; click lựa chọn → `cfg` →
+- `tests/test_gui_scenes.py`: điều hướng Home/Setup/Demo/Help + Esc; Setup Cờ tướng → nhãn Đỏ/Đen → Play (bàn xoay khi cầm Đen); click lựa chọn → `cfg` →
   `build_preset` → spec trong ván + nguồn trên thẻ; control theo chế độ (độ trễ, seed); Demo giữ spec P6.1.
 
 ## Hạn chế / TODO

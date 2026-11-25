@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🟡 đang làm (P6.2 commit b)  ·  **Task:** P6.2 (D-28, D-37)  ·  **Cập nhật:** 2026-11-25
+**Trạng thái:** 🟡 đang làm (P6.2, chờ đo thời gian + D-37)  ·  **Task:** P6.2 (D-28, D-37)  ·  **Cập nhật:** 2026-11-25
 
 ## Mục đích
 `GameView` cho `Xiangqi`: bàn 9×10 giao điểm như bàn thật (sông ngắt đường dọc, chéo cung, dấu chữ thập
@@ -36,6 +36,9 @@ class XiangqiView(GameView):
     # lời văn
     def move_label(move) -> str              # ICCS, vd "h2e2"
     def side_name(p) -> "Đỏ" | "Đen"
+    def side_symbol(p) -> "●" | "○"          # PlayScene thay bằng side_dot trong lịch sử
+    def side_dot(p, d) -> Surface            # đĩa trơn đỏ / đen (chấm lịch sử)
+    def avatar(p, d) -> Surface              # quân tướng 帥 / 將 (avatar thẻ người chơi)
     def status_text(game) -> "Đỏ đang bị chiếu" | "Đen đang bị chiếu" | None   # None khi hết ván
     def end_reason(game) -> str | None       # = end_reason(game) bên dưới
     # vẽ
@@ -96,7 +99,8 @@ vòng đỏ được đẩy ra ngoài đĩa thay vì chỉ đổi thứ tự v�
 - Dùng: `gui/view.py` (`GameView`, `get_font`, `get_cjk_font`, `register_view`), `gui/render.py`
   (sprite khử răng cưa, cache), `gui/widgets.py` (theme, `draw_text`), `games/xiangqi.py` (`board`, `legal_moves`,
   `in_check`, `winner`, `ply`, `max_plies`, `move_to_iccs`), `gui/controller.py` (`MoveInfo`).
-- Được dùng bởi: `gui/play_scene.py` qua `make_view` (scene đặt `flipped` khi người duy nhất cầm Đen — commit c).
+- Được dùng bởi: `gui/play_scene.py` qua `make_view` (scene đặt `flipped` khi người duy nhất cầm Đen, hiện
+  `status_text` ở dòng trạng thái và `end_reason` trong modal), `gui/screenshots.py` (`xq_*`).
 
 ## Thiết kế & quyết định
 - Chỉ dùng API công khai của `Xiangqi`; `end_reason` suy lý do hòa: `ply < max_plies` ⇒ lặp thế (D-22: lặp lần 3
@@ -111,4 +115,3 @@ vòng đỏ được đẩy ra ngoài đĩa thay vì chỉ đổi thứ tự v�
 
 ## Hạn chế / TODO
 - Chưa có animation đi quân (k-in-row có `anim_move`); overlay MCTS không vẽ trên bàn.
-- Nối vào scene/preset (xoay bàn, hiện `status_text`/`end_reason`) ở commit (c) của P6.2.

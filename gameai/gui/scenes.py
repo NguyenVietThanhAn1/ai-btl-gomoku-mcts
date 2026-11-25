@@ -204,15 +204,9 @@ class SetupScene(Scene):
         self.advanced = open_
         self._build()
 
-    @property
-    def stones(self) -> bool:
-        return self.cfg.game == "15x15"
-
     def side_name(self, side: str) -> str:
-        """'X'/'O' → 'Đen'/'Trắng' ở 15×15."""
-        if self.stones:
-            return "Đen" if side == "X" else "Trắng"
-        return side
+        """'X'/'O' → tên bên của trò (X/O, Đen/Trắng ở 15×15, Đỏ/Đen ở cờ tướng)."""
+        return self.cfg.side_name(side)
 
     def _row(self, label: str, height: int = 44) -> int:
         """Cấp một hàng: ghi nhãn, trả y của control, dời con trỏ."""
@@ -235,8 +229,6 @@ class SetupScene(Scene):
             [(k, v[1]) for k, v in GAMES.items()],
             cfg.game,
             lambda k: self.set(game=k),
-            disabled=["xiangqi"],
-            hints={"xiangqi": "Sắp có"},
         )
         y = self._row("Chế độ")
         c["mode"] = SegmentedControl(
@@ -333,8 +325,8 @@ class SetupScene(Scene):
     def ai_lines(self) -> list[str]:
         """Chi tiết cấu hình thật + nguồn của từng bên AI (nội dung tooltip ⓘ)."""
         cfg = self.cfg
-        if cfg.game == "xiangqi" or cfg.mode == "two_players":
-            return ["2 người cùng máy: không có AI."] if cfg.mode == "two_players" else []
+        if cfg.mode == "two_players":
+            return ["2 người cùng máy: không có AI."]
         if cfg.mode == "human_ai":
             return [f"AI: {level_line(cfg, cfg.ai)}"]
         return [
@@ -471,15 +463,17 @@ HELP_CARDS = [
     (
         "Luật chơi",
         [
-            "Hai bên lần lượt đặt quân; bên đi trước là X (3×3) hoặc Đen (15×15).",
-            "Caro 3×3: 3 quân thẳng hàng thắng. Caro 15×15: 5 quân thẳng hàng thắng.",
-            "Thẳng hàng theo hàng ngang, dọc hoặc chéo. Bàn đầy mà không ai thắng là hòa.",
+            "Caro: lần lượt đặt quân, X (3×3) / Đen (15×15) đi trước; 3 (3×3) hoặc 5 (15×15) quân "
+            "thẳng hàng ngang, dọc, chéo là thắng; bàn đầy là hòa.",
+            "Cờ tướng: luật chuẩn, Đỏ đi trước. Chiếu bí hoặc hết nước đi là thua; lặp thế lần 3 "
+            "hoặc quá 300 nước là hòa (không xét chiếu dai).",
         ],
     ),
     (
         "Trong ván",
         [
-            "Click ô trống để đi; quân mờ cho biết nước sẽ đặt.",
+            "Click ô trống để đi; quân mờ cho biết nước sẽ đặt. Cờ tướng: click quân để chọn "
+            "(chấm = nước đi, vòng = ăn quân), rồi click giao điểm đích.",
             "Đi lại: lùi về lượt trước của bạn (khóa khi AI đang nghĩ).",
             "Phân tích: tô nước ở gốc cây MCTS theo số lần thăm N; W/N là tỷ lệ thắng ước lượng.",
             "Hết ván: Xem lại bằng nút ‹ ›, phím mũi tên trái / phải, hoặc click một dòng lịch sử.",

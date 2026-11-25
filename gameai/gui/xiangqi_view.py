@@ -202,6 +202,19 @@ class XiangqiView(GameView):
     def side_name(self, player: int) -> str:
         return "Đỏ" if player == P1 else "Đen"
 
+    def side_symbol(self, player: int) -> str:
+        """Ký hiệu cột "bên" của lịch sử: PlayScene thay "●"/"○" bằng `side_dot`."""
+        return "●" if player == P1 else "○"
+
+    def side_dot(self, player: int, d: int) -> pygame.Surface:
+        """Đĩa trơn màu bên (Đỏ / Đen) đường kính `d` — chấm lịch sử."""
+        ink = RED_INK if player == P1 else BLACK_INK
+        return render.stone(d, ink, PIECE_HI if player == P1 else (90, 90, 90), PIECE_RIM)
+
+    def avatar(self, player: int, d: int) -> pygame.Surface:
+        """Quân tướng của bên (帥 Đỏ / 將 Đen) đường kính `d` — avatar thẻ người chơi."""
+        return _piece_sprite(1 if player == P1 else -1, d)
+
     def status_text(self, game: Game) -> str | None:
         assert isinstance(game, Xiangqi)
         if game.is_terminal() or not game.in_check():

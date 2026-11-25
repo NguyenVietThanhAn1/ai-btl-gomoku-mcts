@@ -16,7 +16,9 @@ from gameai.gui.presets import (
     LEVEL_NAMES,
     PRESET_ORDER,
     PRESETS,
+    BoardKey,
     Preset,
+    board_key,
     experiment_source,
     find_level,
     mcts_iterations,
@@ -106,7 +108,7 @@ class PlayScene(Scene):
         self.state = state if state is not None else AppState(PRESET_ORDER[0])
         st = self.state
         self.ctrl = GameController(st.preset(), seed=st.seed, delay=st.delay)
-        self.view: GameView = make_view(self.ctrl.preset.game, BOARD_RECT)
+        self.view: GameView = self._make_view()
         self.mouse = (-1, -1)
         self.modal = Modal(MODAL_RECT, dim_rect=PANEL_AREA)
         self.history = ScrollList(HISTORY_RECT, row_h=23, on_click=self.on_history_click,
@@ -166,12 +168,31 @@ class PlayScene(Scene):
         preset = self.state.preset()
         self.ctrl.new_game(preset, self.state.seed)
         self.ctrl.delay = preset.delay if self.state.delay is None else self.state.delay
-        self.view = make_view(preset.game, BOARD_RECT)
+        self.view = self._make_view()
         self._reset_ui()
+
+    def _make_view(self) -> GameView:
+        """View của trò hiện tại; cờ tướng xoay bàn (Đen ở dưới) khi người duy nhất cầm Đen."""
+        view = make_view(self.ctrl.preset.game, BOARD_RECT)
+        if hasattr(view, "flipped"):
+            view.flipped = self.single_human == P2
+        return view
 
     @property
     def board_n(self) -> int:
+        """Cạnh bàn k-in-row (15 nếu không có `n`, vd. cờ tướng — chỉ để chọn kiểu quân)."""
         return int(self.ctrl.preset.game.params.get("n", 15))
+
+    @property
+    def board_key(self) -> BoardKey:
+        """Khóa trò trong bảng độ khó: 3 / 15 / "xiangqi"."""
+        return board_key(self.ctrl.preset.game)
+
+    def card_layout(self) -> list[tuple[int, pygame.Rect]]:
+        """(bên, thẻ): bên đi sau ở trên, đi trước ở dưới; đảo khi bàn xoay (thẻ khớp phía bàn)."""
+        if getattr(self.view, "flipped", False):
+            return [(P1, CARD_TOP), (P2, CARD_BOTTOM)]
+        return [(P2, CARD_TOP), (P1, CARD_BOTTOM)]
 
     @property
     def has_mcts(self) -> bool:
@@ -231,6 +252,9 @@ class PlayScene(Scene):
             title, color = f"{self.side(c.resigned)} đầu hàng", t.ink
         else:
             title, color = f"{self.side(out)} thắng", t.win
+        if res.startswith(f"{title} — "):  # "Đen thắng — Chiếu bí" dưới tiêu đề "Đen thắng"
+            res = res[len(title) + 3 :]
+            res = res[:1].upper() + res[1:]
         detail = ([res] if res and res != title else []) + [moves]
         return title, detail, color
 
@@ -248,10 +272,15 @@ class PlayScene(Scene):
         w = c.game.winner()
         if w is None:
             return ""
-        return "Hòa" if w == DRAW else f"{self.side(w)} thắng"
+        reason = self.view.end_reason(c.game)  # cờ tướng: "Chiếu bí", "Hòa — lặp thế 3 lần"…
+        if w == DRAW:
+            return reason or "Hòa"
+        return f"{self.side(w)} thắng" + (f" — {reason}" if reason else "")
 
     def symbol_sprite(self, player: int) -> pygame.Surface:
-        """Chấm Đen/Trắng trong lịch sử 15×15 (sprite cache theo theme)."""
+        """Chấm Đen/Trắng trong lịch sử 15×15 (sprite cache theo theme); cờ tướng: đĩa Đỏ/Đen."""
+        if hasattr(self.view, "side_dot"):
+            return self.view.side_dot(player, 14)
         t = T()
         if player == P1:
             return render.stone(14, t.stone_dark, t.stone_dark_hi, (0, 0, 0))
@@ -407,7 +436,7 @@ class PlayScene(Scene):
             b.visible = reviewing
         for b in (self.b_undo, self.b_new, self.b_resign, self.b_menu):
             b.visible = not reviewing
-        for side, rect in ((P2, CARD_TOP), (P1, CARD_BOTTOM)):  # ⓘ cạnh tên AI
+        for side, rect in self.card_layout():  # ⓘ cạnh tên AI
             btn = self.info[side]
             btn.visible = self.tips[side].visible = c.specs[side] is not None
             name_w = render.text(self.player_name(side)[0], TITLE, "semibold", T().ink).get_width()
@@ -454,9 +483,9 @@ class PlayScene(Scene):
             if self.single_human is not None:
                 return "Bạn", "Người chơi"
             return f"Người chơi {self.side(side)}", "2 người cùng máy"
-        found = find_level(spec, self.board_n)
+        found = find_level(spec, self.board_key)
         detail = side_label(spec)
-        exp_source = experiment_source(spec, self.board_n)
+        exp_source = experiment_source(spec, self.board_key)
         if found is None and exp_source is not None:  # spec thí nghiệm của Demo, không phải mức
             name = AI_NAMES.get(spec.kind, spec.name)
             source = f"cấu hình {exp_source}"
@@ -481,8 +510,8 @@ class PlayScene(Scene):
         if spec is None:
             return ("Người chơi" if self.single_human is not None else "2 người cùng máy"), False
         if self.state.experiment:
-            found = find_level(spec, self.board_n)
-            tag = found[1].source if found is not None else experiment_source(spec, self.board_n)
+            found = find_level(spec, self.board_key)
+            tag = found[1].source if found is not None else experiment_source(spec, self.board_key)
             src = f" · {tag}" if tag else ""
             if self.state.iterations is None:
                 return f"Cấu hình thí nghiệm{src}", True
@@ -523,8 +552,8 @@ class PlayScene(Scene):
         self.view.draw(surf, game, last, overlay_info, self.state.overlay)
         if ghost is not None:
             self.view.draw_ghost(surf, ghost, game.current_player())
-        self._draw_card(surf, P2, CARD_TOP)
-        self._draw_card(surf, P1, CARD_BOTTOM)
+        for side, rect in self.card_layout():
+            self._draw_card(surf, side, rect)
         self._draw_status(surf)
         panel(surf, HISTORY_CARD, t.surface1)
         panel(surf, ANALYSIS_CARD, t.surface1)
@@ -541,7 +570,9 @@ class PlayScene(Scene):
         t = T()
         surf.blit(render.rounded_rect(48, 48, 12, t.surface2), (center[0] - 24, center[1] - 24))
         cell = 1 if side == P1 else 2
-        if self.board_n > 5:
+        if hasattr(self.view, "avatar"):  # cờ tướng: quân tướng Đỏ / Đen
+            sprite = self.view.avatar(side, 38)
+        elif self.board_n > 5:
             sprite = render.stone(
                 34,
                 *(
@@ -610,23 +641,29 @@ class PlayScene(Scene):
                 anchor="midleft",
             )
 
-    def _draw_status(self, surf: pygame.Surface) -> None:
+    def status_line(self) -> tuple[str, tuple[int, int, int]]:
+        """(chữ, màu) của dòng trạng thái trên lịch sử; cờ tướng bị chiếu → chữ đỏ (`t.lose`)."""
         c, t = self.ctrl, T()
         if self.review is not None:
-            text, color = f"Xem lại · nước {self.review} / {c.ply}", t.ink
-        elif c.over:
-            text, color = self.result_text(), t.accent
+            return f"Xem lại · nước {self.review} / {c.ply}", t.ink
+        if c.over:
+            return self.result_text(), t.accent
+        who = self.side(c.game.current_player())
+        status = self.view.status_text(c.game)  # cờ tướng: "Đỏ đang bị chiếu"
+        head = status or f"Lượt {who}"
+        if c.thinking:
+            text = f"{head} · AI đang nghĩ…"
+        elif c.paused and c.is_ai_turn():
+            text = f"{head} · tạm dừng (Space)"
+        elif c.is_human_turn():
+            text = f"{head} · mời {'bạn' if self.single_human else who} đi"
         else:
-            who = self.side(c.game.current_player())
-            if c.thinking:
-                text = f"Lượt {who} · AI đang nghĩ…"
-            elif c.paused and c.is_ai_turn():
-                text = f"Lượt {who} · tạm dừng (Space)"
-            elif c.is_human_turn():
-                text = f"Lượt {who} · mời {'bạn' if self.single_human else who} đi"
-            else:
-                text = f"Lượt {who}"
-            color = t.ink
+            text = head
+        return text, (t.lose if status else t.ink)
+
+    def _draw_status(self, surf: pygame.Surface) -> None:
+        c, t = self.ctrl, T()
+        text, color = self.status_line()
         draw_text(surf, text, (PANEL_X + 4, STATUS_Y), BODY + 1, color, weight="semibold",
                   max_width=PANEL_W - 140)  # fmt: skip
         draw_text(

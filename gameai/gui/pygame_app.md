@@ -79,4 +79,4 @@ def main(argv=None) -> None
 - Kiểm tra cả ván (headless): `SDL_VIDEODRIVER=dummy python -m gameai.gui.pygame_app --preset <KEY> --autoplay`.
 
 ## Hạn chế / TODO
-- P6.2 thêm view cờ tướng + preset; controller không cần đổi.
+- Cờ tướng (P6.2) chơi qua Setup → Cờ tướng; chưa có preset `--preset` cờ tướng (đợi E7, P8.4). Controller không đổi.

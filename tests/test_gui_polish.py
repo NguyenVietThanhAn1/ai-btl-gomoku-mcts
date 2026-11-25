@@ -313,7 +313,9 @@ def test_displayed_config_numbers_come_from_spec():
         spec, label = lv.spec, side_label(lv.spec)
         if spec.kind == "mcts":
             c = spec.params.get("c", MCTS_DEFAULTS["c"])
-            assert f"{spec.params['iterations']} iter" in label and f"c={c:.3g}" in label
+            iters, limit = spec.params.get("iterations"), spec.params.get("time_limit")
+            budget = f"{iters} iter" if iters is not None else f"{limit:g} s/nước"  # cờ tướng
+            assert budget in label and f"c={c:.3g}" in label
             if spec.params.get("rollout") == "heavy_kinrow":
                 assert f"h{spec.params['temperature']:g}" in label
         else:
