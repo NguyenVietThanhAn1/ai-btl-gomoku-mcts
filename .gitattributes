@@ -1,0 +1,7 @@
+# Mọi file văn bản lưu LF trong repo và working tree (kể cả Windows có core.autocrlf=true).
+* text=auto eol=lf
+
+*.png binary
+*.ttf binary
+*.otf binary
+*.pdf binary
