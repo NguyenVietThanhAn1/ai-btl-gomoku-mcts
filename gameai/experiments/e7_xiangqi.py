@@ -1,6 +1,6 @@
 """P8.4 — E7 cờ tướng (thiết kế D-25).
 
-    python -m gameai.experiments.e7_xiangqi <phần> [--quick] [--workers 3]
+    python -m gameai.experiments.e7_xiangqi <phần> [--quick] [--workers 1]
 
 Phần: `bench`, `b` (ordering AB), `c` (= c1..c4 + luật c4), `c1`..`c4`,
 `d` (= d1, d2; cần c1 + c4 đủ ván), `d1`, `d2`, `a` (= a1, a2), `a1`, `a2`,
@@ -42,7 +42,8 @@ GAME = GameSpec("xiangqi", {"max_plies": MAX_PLIES})
 BASE_SEED = 7000
 RANDOM_OPENING = 4  # 2 nước mỗi bên
 N_PAIRS, QUICK_PAIRS = 25, 2  # 50 / 4 ván mỗi điểm
-DEFAULT_WORKERS = 3
+DEFAULT_WORKERS = 1  # full chạy 1 worker (D-25 sau quick: 3 worker giảm iter/s 25 %)
+WCHECK_WORKERS = 3
 C_TIME = 1.0
 D_TIMES = {"d1": 1.0, "d2": 2.5}
 AB_MAX_DEPTH = 12
@@ -51,7 +52,7 @@ ORDER_DEPTHS = (2, 3, 4)
 ORDER_FEN_SEED = 84  # tách bộ thế 82 (P8.2) / 83 (P8.3)
 N_MIDGAME = 10
 QUICK_DEPTH4_FENS = 3
-WORKER_DROP_LIMIT = 0.15  # iter/s c3 giảm > 15 % khi song song → full dùng 2 worker (D-25)
+WORKER_DROP_LIMIT = 0.15  # iter/s c3 giảm > 15 % khi chạy 3 worker → full dùng 1 worker (D-25)
 DIRECT_TACTICS = frozenset({"1", "2"})  # nước đi thẳng nhờ tactics, không search (D-15)
 TERMS = ("mate", "stalemate", "repetition", "max_plies", "error")
 
@@ -610,13 +611,16 @@ def part_d(ctx: Ctx, points: Sequence[str] = D_POINTS) -> int:
 
 
 def part_wcheck(ctx: Ctx) -> int:
-    """iter/s của MCTS (A) ở c3: 1 worker vs `--workers`; giảm > 15 % → khuyến nghị 2 worker."""
+    """iter/s của MCTS (A) ở c3: 1 worker vs `WCHECK_WORKERS` (file riêng `c3_w1`, `c3_w3`);
+    giảm > 15 % → khuyến nghị full 1 worker, ngược lại `WCHECK_WORKERS` (D-25)."""
     a, b = FIXED_POINTS["c3"]
-    w1 = raw_path("c3_w1", ctx.quick, ctx.raw_dir)
-    run_point(ctx, "c3_w1", a, b, workers=1, out=w1)
-    run_point(ctx, "c3", a, b)
+    wn = WCHECK_WORKERS
+    paths = {}
+    for w in (1, wn):
+        paths[f"w{w}"] = raw_path(f"c3_w{w}", ctx.quick, ctx.raw_dir)
+        run_point(ctx, f"c3_w{w}", a, b, workers=w, out=paths[f"w{w}"])
     med = {}
-    for name, path in (("w1", w1), (f"w{ctx.workers}", raw_path("c3", ctx.quick, ctx.raw_dir))):
+    for name, path in paths.items():
         rows, moves = read_rows(path), read_rows(moves_path_for(path))
         by = {}
         for m in moves:
@@ -625,8 +629,8 @@ def part_wcheck(ctx: Ctx) -> int:
             x for r in rows if (x := side_game_stats(by.get(r["game_id"], []), "A")["iter_per_s"])
         ]
         med[name] = statistics.median(ips) if ips else math.nan
-    drop = 1 - med[f"w{ctx.workers}"] / med["w1"]
-    rec = 2 if drop > WORKER_DROP_LIMIT else ctx.workers
+    drop = 1 - med[f"w{wn}"] / med["w1"]
+    rec = 1 if drop > WORKER_DROP_LIMIT else wn
     rows = [{"workers": k, "median_iter_per_s": v} for k, v in med.items()]
     rows.append({"workers": "drop", "median_iter_per_s": drop, "recommend": rec})
     _write(
@@ -635,8 +639,8 @@ def part_wcheck(ctx: Ctx) -> int:
         rows,
     )
     print(
-        f"[wcheck] iter/s trung vị 1 worker {med['w1']:.0f}, {ctx.workers} worker "
-        f"{med[f'w{ctx.workers}']:.0f} → giảm {drop:.1%} → full dùng {rec} worker",
+        f"[wcheck] iter/s trung vị 1 worker {med['w1']:.0f}, {wn} worker "
+        f"{med[f'w{wn}']:.0f} → giảm {drop:.1%} → full dùng {rec} worker",
         flush=True,
     )
     return 0

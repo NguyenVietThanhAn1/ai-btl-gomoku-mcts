@@ -14,11 +14,11 @@ Thí nghiệm E7 cờ tướng (thiết kế D-25): (a) AB depth 1/2 vs Random, 
 ```
 python -m gameai.experiments.e7_xiangqi all --quick          # 4 ván/điểm, file e7quick_*, + wcheck + ước tính
 python -m gameai.experiments.e7_xiangqi b                    # từng phần (chạy tiếp được sau khi ngắt)
-python -m gameai.experiments.e7_xiangqi c --workers 3        # c1..c4 rồi in kết luận luật c4
+python -m gameai.experiments.e7_xiangqi c                    # c1..c4 (1 worker) rồi in kết luận luật c4
 python -m gameai.experiments.e7_xiangqi d                    # cần c1 + c4 đủ ván; L0 mạnh hơn rõ → DỪNG (mã 3)
 python -m gameai.experiments.e7_xiangqi summary              # dựng lại bảng + hình từ raw
 ```
-Phần: `bench, b, c, c1..c4, d, d1, d2, a, a1, a2, wcheck, summary, all`. Cờ: `--quick`, `--workers` (mặc định 3),
+Phần: `bench, b, c, c1..c4, d, d1, d2, a, a1, a2, wcheck, summary, all`. Cờ: `--quick`, `--workers` (mặc định 1, D-25),
 `--pairs` (mặc định 25; quick 2), `--allow-code-change`, `--allow-battery` (full mặc định từ chối khi chạy pin, D-21),
 `--skip-bench`, `--raw-dir/--table-dir/--fig-dir/--log`.
 `all` = b → c → luật c4 → d → a → summary (quick thêm `wcheck` và ước tính). Mọi dòng in ra được append vào
@@ -46,8 +46,9 @@ Phần: `bench, b, c, c1..c4, d, d1, d2, a, a1, a2, wcheck, summary, all`. Cờ:
 - `l_verdict(score, n)` cho c4 (A = L0): Wilson cận dưới > 0,5 → `L0_stronger` (full: **DỪNG trước (d)**, báo An);
   cận trên < 0,5 → `L10_stronger`; còn lại `tie` (giữ L = 10).
 - `best_rollout(c1, c4)`: mặc định `L10`; `Lend` (c1) / `L0` (c4) thay nếu thắng L10 với Wilson cận dưới > 0,5; cả hai → điểm cao hơn.
-- `wcheck`: iter/s trung vị của MCTS ở c3 với 1 worker vs `--workers`; giảm > 15 % → khuyến nghị full 2 worker
-  (`e7quick_workers.csv`, cột `recommend`; ước tính dùng số này).
+- `wcheck`: iter/s trung vị của MCTS ở c3 với 1 worker vs `WCHECK_WORKERS` = 3 (file riêng `c3_w1`, `c3_w3`); giảm > 15 %
+  (`WORKER_DROP_LIMIT`) → khuyến nghị full **1 worker**, ngược lại 3 (`e7quick_workers.csv`, cột `recommend`; ước tính
+  dùng số này). Quick 2026-11-25: giảm 25 % → **full chạy 1 worker** (2 worker chưa đo, không dùng), ~5,6 h qua đêm.
 
 ## Public API (dùng trong test / script khác)
 ```python
