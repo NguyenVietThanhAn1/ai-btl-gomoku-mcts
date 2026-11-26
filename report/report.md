@@ -248,6 +248,8 @@ Mọi thí nghiệm chạy trên cùng một máy xách tay: CPU 12th Gen Intel(
 
 Mỗi điểm thí nghiệm ghi commit git của mã nguồn và cờ "mã có sửa chưa commit" vào dữ liệu thô. Các ván chạy song song bằng nhiều tiến trình (worker), mỗi ván một tác tử mới (không giữ cây/TT giữa các ván). Nguồn điện: E6 và các phép đo thời gian giao diện ghi rõ chạy khi cắm sạc (AC <!-- src: results/raw/e6_runinfo.csv | step=bench | power -->); E1-E5 không ghi nguồn điện. Các thí nghiệm dùng ngân sách iteration không phụ thuộc tốc độ máy; riêng phần "cùng thời gian" của E5 nhạy với tải, được chạy khi máy rảnh với 2 <!-- src: results/raw/e5_runinfo.csv | step=h2h-time,budget=0.5 | workers --> worker và có kiểm tra tốc độ (mục 4.4).
 
+E7 (cờ tướng) chạy sau, với 1 worker, cắm sạc (AC <!-- src: results/raw/e7_runinfo.csv | part=c1 | power -->), máy rảnh. Một worker được chọn vì bản quick cho thấy chạy 3 worker làm iteration/giây trung vị giảm 25 % (D-25). Benchmark ngắn chạy đầu mỗi khúc cho tốc độ bằng 0,76 <!-- src: results/raw/e7_runinfo.csv | part=c4,n_pairs=50 | bench_vs_e5 --> lần benchmark của E5 ở khúc chạy c4, 0,789 <!-- src: results/raw/e7_runinfo.csv | part=c1 | bench_vs_e5 --> lần ở khúc chạy các điểm còn lại và 0,805 <!-- src: results/raw/e7_runinfo.csv | part=d3 | bench_vs_e5 --> lần ở khúc chạy d3, d4: máy chạy chậm hơn lúc đo E5. Mọi tác tử theo thời gian của E7 vì vậy có iteration/giây tuyệt đối thấp hơn khi máy ở trạng thái của E5, nên iteration/giây của E7 không so với E5, E6. Giữa các điểm E7, tốc độ máy chênh nhau không quá 6 % và mọi điểm cùng điều kiện (1 worker, AC), nên so sánh giữa các điểm E7 hợp lệ. <!-- const: D-25 | 25 6 -->
+
 ### 4.2 Các tác tử và đối thủ
 
 - **Random.** Chọn đều một ô trống (`legal_moves`). Dùng làm đối thủ yếu trên 3×3.
@@ -256,6 +258,7 @@ Mỗi điểm thí nghiệm ghi commit git của mã nguồn và cờ "mã có s
 - **AB2 (15×15).** Alpha-Beta độ sâu 2 với hàm lượng giá cửa sổ, lượng giá tăng dần và ordering `move_score` (D-10). Mạnh hơn Greedy vì thấy nước đáp của đối thủ; dùng để tránh hiệu ứng trần khi MCTS thắng gần hết Greedy.
 - **mref (15×15, E5-E6).** MCTS rollout ngẫu nhiên, 1000 iteration cố định, c = 1,4, bật `check_tactics`; dãy seed bên trong tách riêng khỏi seed của tác tử đang được đánh giá (D-20). <!-- const: D-20 --> Đây là đối thủ cùng loại, mức trung bình, để phân biệt các cấu hình rollout khi Greedy và AB2 cho kết quả ở sàn hoặc trần.
 - **MCTS được đánh giá.** 3×3: rollout ngẫu nhiên, `check_tactics` tắt - đo đúng thuật toán gốc. 15×15: rollout h300 (hoặc rollout ngẫu nhiên ở E5), **`check_tactics` bật ở mọi cấu hình E3-E5** (D-14); E6 là nơi duy nhất so bật/tắt. Chọn nước cuối theo $N$ lớn nhất, trừ E4.
+- **Cờ tướng (E7).** MCTS cờ tướng (mục 3.4): c = √2, scale = 2000, `check_tactics` bật, 1 s/nước trừ khi ghi khác; ba biến thể theo rollout: **L10** (cắt sau 10 nước, cấu hình chuẩn), **L0** (chấm eval ngay ở nút mới) và **Lend** (rollout ngẫu nhiên tới hết ván, chặn bởi `max_plies`). **AB ID**: Alpha-Beta iterative deepening theo `time_limit` (độ sâu tối đa 12, TT chính xác, MVV-LVA), cùng thời gian mỗi nước với MCTS. **AB độ sâu 1 / 2**: Alpha-Beta độ sâu cố định, MVV-LVA, không TT. **Random**: chọn đều một nước hợp lệ. <!-- const: D-25 | 2000 -->
 
 ### 4.3 Thiết kế ván đấu và thống kê
 
@@ -271,11 +274,13 @@ $$\frac{\hat p + \frac{z^2}{2n} \pm z\sqrt{\frac{\hat p(1-\hat p)}{n} + \frac{z^
 
 **Khoảng độc lập và so sánh cặp.** Khoảng Wilson được tính **độc lập từng điểm**. Tuy nhiên các điểm khác nhau của cùng thí nghiệm dùng chung seed (ví dụ bốn giá trị c gặp đối thủ với cùng dãy seed), nên hai khoảng chồng nhau không có nghĩa là không khác nhau, và hai khoảng tách nhau cũng chưa phải kiểm định cặp (D-18). Khi cần kết luận "A tốt hơn B" (E5, E6), báo cáo dùng **so sánh cặp** theo ván: $d_j = r^A_j - r^B_j$ trên cùng `game_id` (cùng seed đối thủ, cùng lượt), khoảng $\bar d \pm 1{,}96\, s_d / \sqrt n$. E6 tính tỷ lệ chọn đúng trên bộ thế cờ bằng bootstrap phân tầng theo thế (D-21).
 
+**Ván cờ tướng (E7).** Alpha-Beta cờ tướng tất định và MCTS theo thời gian ít ngẫu nhiên, nên nếu mọi ván bắt đầu từ thế khởi đầu thì các ván gần như trùng nhau. Mỗi cặp ván vì vậy bắt đầu từ một khai cuộc ngẫu nhiên có seed gồm 4 ply (2 nước mỗi bên) và cùng khai cuộc được chơi hai ván đổi bên. Mọi điểm E7 dùng cùng 25 khai cuộc (seed gốc 7000), tức 50 ván/điểm; riêng c4 dùng 50 khai cuộc (100 ván), chốt trước khi chạy. Độ đo chính là điểm $(W + \tfrac12 D)/n$ của tác tử A kèm khoảng Wilson 95 % tính trên điểm như với một tỷ lệ, cùng lý do kết thúc (chiếu bí, bí nước, lặp thế, `max_plies`) tính lại bằng cách chơi lại ván từ dữ liệu thô. <!-- const: D-25 | 7000 100 95 -->
+
 ### 4.4 Ngân sách iteration và ngân sách thời gian
 
 Hầu hết thí nghiệm dùng **ngân sách iteration** (iteration ∈ {100, 250, 500, 1000, 2500, 5000}, như đề): tái lập được theo seed, không phụ thuộc tải máy, nên chạy song song 4 worker an toàn. <!-- const: D-18 --> Nhưng một iteration của heavy rollout đắt hơn một iteration ngẫu nhiên, nên so cùng iteration **thiên vị** rollout heavy. E5 vì vậy thêm **ngân sách thời gian** (0,5 s và 2 s mỗi nước, chạy 2 worker khi máy rảnh) - đây là so sánh công bằng và là cơ sở kết luận chính của E5. <!-- const: D-20 --> Vì tốc độ thay đổi theo giai đoạn ván và tải máy, E5 so tốc độ thực tế (iteration/giây theo nhóm giai đoạn ván) với một benchmark đơn luồng và gắn cờ khi lệch quá 20 %; cờ không dùng để loại dữ liệu (D-20). <!-- const: D-20 -->
 
-### 4.5 Tóm tắt thiết lập E1-E6
+### 4.5 Tóm tắt thiết lập E1-E7
 
 **Bảng 1.** Thiết lập các thí nghiệm (chi tiết và lý do trong các quyết định D-xx).
 
@@ -287,6 +292,7 @@ Hầu hết thí nghiệm dùng **ngân sách iteration** (iteration ∈ {100, 2
 | E4 | RQ4 | 3×3; 15×15 | MCTS chọn `max_n` vs `max_wn` | 3×3: mọi thế ≥ 2 nước, đối đầu 200 ván/điểm; 15×15: 10 thế × 5 seed, tham chiếu 20 000 iteration | 3×3: 10 … 1000; 15×15: 50, 250, 1000 iteration | 200 | D-19 <!-- const: D-19 --> |
 | E5 | RQ5 | 15×15 | MCTS rollout ngẫu nhiên (rand) vs h300, c = 1,4 | đối đầu, Greedy, mref; AB2 có cổng pilot | iteration 100 … 5000; thời gian 0,5 s và 2 s/nước | 50 | D-20 <!-- const: D-20 --> |
 | E6 | RQ6 | 15×15 | MCTS bật vs tắt `check_tactics` (rand, h300) | tỷ lệ chọn đúng trên bộ thế cờ thật (chặn four, thắng ngay); win rate vs Greedy, mref; chi phí | 100 … 5000 iteration | 50 | D-21 <!-- const: D-21 --> |
+| E7 | RQ7 | cờ tướng | (b) AB không ordering / MVV-LVA / MVV-LVA + TT; (c) MCTS Lend, L0, L10; (d) MCTS L10; (a) AB độ sâu 1, 2 | (b) số nút trên 11 thế, độ sâu 2-4; (c) đối đầu và vs Random; (d) AB ID cùng s/nước; (a) Random; khám phá d3, d4: AB độ sâu 1, 2 | (c), (d), d3, d4: 1 s/nước, d2: 2,5 s/nước; (a), (b): độ sâu cố định | 50 (c4: 100) | D-25 <!-- const: D-25 --> |
 
 ## 5 Kết quả
 
@@ -566,6 +572,76 @@ Thiết lập: Bảng 1, dòng E6 - (a) bộ thế cờ thật trích từ ván 
 - **Khi bật**, mọi thế của cả hai loại được xử lý đúng (dòng cuối Bảng 16).
 - **Tỷ lệ thắng (Bảng 17, Hình 8).** Với h300 trước Greedy, bật kiểm tra nâng tỷ lệ thắng từ 0,10 <!-- src: results/tables/e6_paired.csv | part=greedy,iters=1000 | mean_off --> lên 0,48 <!-- src: results/tables/e6_paired.csv | part=greedy,iters=1000 | mean_on --> ở 1000 iteration (hiệu 0,38 [0,23; 0,53] <!-- src: summary_kinrow.md#E6 -->) và từ 0,30 <!-- src: results/tables/e6_paired.csv | part=greedy,iters=5000 | mean_off --> lên 0,92 <!-- src: results/tables/e6_paired.csv | part=greedy,iters=5000 | mean_on --> ở 5000 iteration (hiệu 0,62 [0,47; 0,77] <!-- src: summary_kinrow.md#E6 -->). Với rand trước mref, hiệu 0,04 [−0,10; 0,18] <!-- src: summary_kinrow.md#E6 --> có khoảng chứa 0. Trong đối đầu h300 1000 iteration, bản tắt kiểm tra thắng bản bật 0,32 <!-- src: results/tables/e6_match.csv | part=self,tactics=off,split=all | win_rate --> số ván. <!-- const: D-21 | 1000 5000 -->
 - **Chi phí (Bảng 18, 19).** Trên thế yên tĩnh, một lần kiểm tra mất trung vị 27,36 <!-- src: summary_kinrow.md#E6 --> ms (tối đa 98,49 <!-- src: summary_kinrow.md#E6 --> ms), tức overhead trung vị 7,3 <!-- src: summary_kinrow.md#E6 --> % so với MCTS rand 1000 iteration và 4,4 <!-- src: summary_kinrow.md#E6 --> % so với h300. Trong ván, tỷ lệ nước đi thẳng không tìm kiếm là 6,1 <!-- src: summary_kinrow.md#E6 --> % (rand trước mref) đến 31,0 <!-- src: summary_kinrow.md#E6 --> % (h300 5000 iteration trước Greedy). <!-- const: D-21 | 1000 5000 -->
+
+### 5.7 Cờ tướng (E7, RQ7)
+
+Thiết lập: Bảng 1, dòng E7, và mục 4.3. Các điểm (a)-(d) có thiết kế và luật quyết định chốt trước khi chạy; d3, d4 là phần khám phá thêm sau khi thấy kết quả (d), không có luật quyết định (D-25). <!-- const: D-25 -->
+
+**Bảng 20.** Số nút và thời gian của Alpha-Beta theo cách sắp thứ tự nước, tổng trên 11 thế (thế khởi đầu và 10 thế giữa ván), độ sâu cố định; tỷ lệ so với bản không ordering cùng độ sâu. <!-- src-table: summary_xiangqi.md#Bảng E7 - ordering -->
+
+| độ sâu | cấu hình | thế | nút | giây | nút so với không ordering | giây so với không ordering | giá trị gốc khớp |
+|---|---|---|---|---|---|---|---|
+| 2 | không ordering | 11 | 4712 | 0,073 | 1,000 | 1,000 | 11/11 |
+| 2 | MVV-LVA | 11 | 1542 | 0,046 | 0,327 | 0,630 | 11/11 |
+| 2 | MVV-LVA + TT | 11 | 1542 | 0,047 | 0,327 | 0,644 | 11/11 |
+| 3 | không ordering | 11 | 85 054 | 1,168 | 1,000 | 1,000 | 11/11 |
+| 3 | MVV-LVA | 11 | 19 880 | 0,339 | 0,234 | 0,290 | 11/11 |
+| 3 | MVV-LVA + TT | 11 | 19 880 | 0,341 | 0,234 | 0,292 | 11/11 |
+| 4 | không ordering | 11 | 938 419 | 18,865 | 1,000 | 1,000 | 11/11 |
+| 4 | MVV-LVA | 11 | 97 926 | 3,722 | 0,104 | 0,197 | 11/11 |
+| 4 | MVV-LVA + TT | 11 | 90 165 | 3,249 | 0,096 | 0,172 | 11/11 |
+
+**Bảng 21.** Các trận chốt trước: W/D/L và điểm của tác tử A, điểm tách theo bên A cầm, lý do kết thúc và số ply trung bình mỗi ván. <!-- src-table: summary_xiangqi.md#Bảng E7 - các trận chốt trước -->
+
+| điểm | A | B | s/nước | ván | W/D/L của A | điểm A [Wilson 95 %] | điểm A khi cầm Đỏ / Đen | chiếu bí / bí nước / lặp thế / max_plies | ply TB |
+|---|---|---|---|---|---|---|---|---|---|
+| c1 | MCTS Lend | MCTS L10 | 1 | 50 | 0/0/50 | 0,00 [0,00; 0,07] | 0,00 / 0,00 | 33 / 17 / 0 / 0 | 62,4 |
+| c2 | MCTS Lend | Random | 1 | 50 | 49/1/0 | 0,99 [0,91; 1,00] | 0,98 / 1,00 | 49 / 0 / 0 / 1 | 116,8 |
+| c3 | MCTS L10 | Random | 1 | 50 | 50/0/0 | 1,00 [0,93; 1,00] | 1,00 / 1,00 | 40 / 10 / 0 / 0 | 49,3 |
+| c4 | MCTS L0 | MCTS L10 | 1 | 100 | 52/6/42 | 0,55 [0,45; 0,64] | 0,54 / 0,56 | 50 / 44 / 0 / 6 | 80,1 |
+| d1 | MCTS L10 | AB ID | 1 | 50 | 0/0/50 | 0,00 [0,00; 0,07] | 0,00 / 0,00 | 40 / 10 / 0 / 0 | 42,9 |
+| d2 | MCTS L10 | AB ID | 2,5 | 50 | 0/0/50 | 0,00 [0,00; 0,07] | 0,00 / 0,00 | 43 / 7 / 0 / 0 | 41,4 |
+| a1 | AB độ sâu 1 | Random | - | 50 | 50/0/0 | 1,00 [0,93; 1,00] | 1,00 / 1,00 | 26 / 24 / 0 / 0 | 54,6 |
+| a2 | AB độ sâu 2 | Random | - | 50 | 50/0/0 | 1,00 [0,93; 1,00] | 1,00 / 1,00 | 38 / 12 / 0 / 0 | 59,3 |
+
+**Bảng 22.** Khám phá (thêm sau khi thấy d1, d2; không chốt trước): MCTS L10 1 s/nước trước Alpha-Beta độ sâu cố định. <!-- src-table: summary_xiangqi.md#Bảng E7 - khám phá d3/d4 -->
+
+| điểm | A | B | s/nước | ván | W/D/L của A | điểm A [Wilson 95 %] | điểm A khi cầm Đỏ / Đen | chiếu bí / bí nước / lặp thế / max_plies | ply TB |
+|---|---|---|---|---|---|---|---|---|---|
+| d3 | MCTS L10 | AB độ sâu 1 | 1 | 50 | 44/2/4 | 0,90 [0,79; 0,96] | 0,90 / 0,90 | 37 / 11 / 2 / 0 | 52,6 |
+| d4 | MCTS L10 | AB độ sâu 2 | 1 | 50 | 2/1/47 | 0,05 [0,02; 0,15] | 0,06 / 0,04 | 31 / 18 / 1 / 0 | 66,9 |
+
+**Bảng 23.** Tìm kiếm trong các trận MCTS L10 với Alpha-Beta: thời gian mỗi nước, tốc độ và độ sâu cây MCTS, số nút mỗi nước, độ sâu hoàn tất của AB ID. <!-- src-table: summary_xiangqi.md#Bảng E7 - tìm kiếm trong trận -->
+
+| điểm | AB | s/nước MCTS | s/nước AB | iter/s MCTS (trung vị) | độ sâu cây MCTS TB | nút/nước MCTS | nút/nước AB | độ sâu AB đạt TB (min-max) |
+|---|---|---|---|---|---|---|---|---|
+| d1 | AB ID | 0,92 | 1,001 | 1228 | 3,22 | 1162 | 49 925 | 4,51 (3-7) |
+| d2 | AB ID | 2,36 | 2,501 | 1202 | 3,69 | 2898 | 112 606 | 5,09 (4-7) |
+| d3 | AB độ sâu 1 | 0,95 | 0,000 | 1607 | 3,34 | 1585 | 25 | cố định |
+| d4 | AB độ sâu 2 | 0,90 | 0,004 | 1415 | 3,30 | 1280 | 111 | cố định |
+
+**Bảng 24.** Độ phân nhánh trong ván (mọi thế có tác tử đi, chỉ các trận giữa hai tác tử có tìm kiếm) và ngân sách của MCTS L10: iteration mỗi nước và iteration chia cho số nước hợp lệ ở gốc (lượt thăm mỗi con gốc nếu chia đều). <!-- src-table: summary_xiangqi.md#Bảng E7 - độ phân nhánh -->
+
+| điểm | ván | thế | nước hợp lệ TB / trung vị | nước search của L10 | iteration/nước TB / trung vị | iteration / nước hợp lệ ở gốc TB / trung vị |
+|---|---|---|---|---|---|---|
+| c1 | 50 | 2919 | 31,3 / 35,0 | 1422 | 1254 / 1235 | 31,9 / 28,6 |
+| c4 | 100 | 7606 | 22,7 / 23,0 | 3674 | 2057 / 1674 | 246,5 / 74,9 |
+| d1 | 50 | 1945 | 28,8 / 32,0 | 884 | 1324 / 1220 | 209,4 / 69,3 |
+| d2 | 50 | 1869 | 29,4 / 33,0 | 870 | 3161 / 2974 | 443,8 / 160,3 |
+| d3 | 50 | 2429 | 24,4 / 25,0 | 1166 | 1846 / 1630 | 155,4 / 66,0 |
+| d4 | 50 | 3146 | 29,1 / 32,0 | 1399 | 1460 / 1354 | 233,9 / 67,9 |
+| all | 350 | 19 914 | 26,4 / 28,0 | - | - | - |
+
+![Hình 9. E7: điểm của tác tử A và khoảng Wilson 95 % ở mỗi điểm; chấm cam rỗng là phần khám phá d3, d4.](../results/figures/e7_scores.png) <!-- const: D-25 | 95 -->
+
+- **Ordering (Bảng 20).** Ở mọi độ sâu, ba cấu hình cho cùng giá trị gốc trên cả 11 thế. MVV-LVA còn 0,327 <!-- src: results/tables/e7_ordering.csv | depth=2,config=mvv_lva | nodes_vs_none -->, 0,234 <!-- src: results/tables/e7_ordering.csv | depth=3,config=mvv_lva | nodes_vs_none --> và 0,104 <!-- src: results/tables/e7_ordering.csv | depth=4,config=mvv_lva | nodes_vs_none --> số nút của bản không ordering ở độ sâu 2, 3, 4. Thêm TT không đổi số nút ở độ sâu 2, 3 và giảm từ 0,104 <!-- src: results/tables/e7_ordering.csv | depth=4,config=mvv_lva | nodes_vs_none --> xuống 0,096 <!-- src: results/tables/e7_ordering.csv | depth=4,config=mvv_lva+tt | nodes_vs_none --> ở độ sâu 4. Thời gian ở độ sâu 4 còn 0,197 <!-- src: results/tables/e7_ordering.csv | depth=4,config=mvv_lva | seconds_vs_none --> (MVV-LVA) và 0,172 <!-- src: results/tables/e7_ordering.csv | depth=4,config=mvv_lva+tt | seconds_vs_none --> (+ TT) so với không ordering.
+- **Rollout tới hết hay cắt (c).** Lend thua L10 cả 50 ván, điểm 0,00 [0,00; 0,07] <!-- src: results/tables/e7_matches.csv | point=c1,split=all | score,score_lo,score_hi -->, trong khi cả hai thắng Random gần hết: Lend 0,99 [0,91; 1,00] <!-- src: results/tables/e7_matches.csv | point=c2,split=all | score,score_lo,score_hi -->, L10 1,00 [0,93; 1,00] <!-- src: results/tables/e7_matches.csv | point=c3,split=all | score,score_lo,score_hi -->. Trong trận c1, Lend chạy trung vị 101,6 <!-- src: results/tables/e7_matches.csv | point=c1,split=all | a_iter_per_s_median --> iter/s, L10 1256,6 <!-- src: results/tables/e7_matches.csv | point=c1,split=all | b_iter_per_s_median --> iter/s.
+- **Kiểm lại L (c4).** L0 gặp L10 trong 100 ván: W/D/L 52/6/42 <!-- src: results/tables/e7_matches.csv | point=c4,split=all | wins/draws/losses -->, điểm 0,55 [0,45; 0,64] <!-- src: results/tables/e7_matches.csv | point=c4,split=all | score,score_lo,score_hi -->; khoảng chứa 0,5 nên theo luật chốt trước L = 10 được giữ, và MCTS tốt nhất ở (c) là L10. L0 chạy trung vị 12 627 <!-- src: results/tables/e7_matches.csv | point=c4,split=all | a_iter_per_s_median --> iter/s, L10 1588 <!-- src: results/tables/e7_matches.csv | point=c4,split=all | b_iter_per_s_median --> iter/s; cây của L0 sâu trung bình 4,73 <!-- src: results/tables/e7_matches.csv | point=c4,split=all | a_tree_depth_mean --> ply, của L10 3,63 <!-- src: results/tables/e7_matches.csv | point=c4,split=all | b_tree_depth_mean --> ply. <!-- const: D-25 | 100 0,5 -->
+- **MCTS với Alpha-Beta cùng thời gian (d).** MCTS L10 thua cả 50 ván ở 1 s/nước (W/D/L 0/0/50 <!-- src: results/tables/e7_matches.csv | point=d1,split=all | wins/draws/losses -->) và cả 50 ván ở 2,5 s/nước (0/0/50 <!-- src: results/tables/e7_matches.csv | point=d2,split=all | wins/draws/losses -->); 40 <!-- src: results/tables/e7_matches.csv | point=d1,split=all | term_mate --> ván d1 và 43 <!-- src: results/tables/e7_matches.csv | point=d2,split=all | term_mate --> ván d2 kết thúc bằng chiếu bí, còn lại bằng bí nước. AB ID đạt độ sâu hoàn tất trung bình 4,51 <!-- src: results/tables/e7_matches.csv | point=d1,split=all | b_depth_reached_mean --> ở 1 s và 5,09 <!-- src: results/tables/e7_matches.csv | point=d2,split=all | b_depth_reached_mean --> ở 2,5 s. Ở 1 s, mỗi nước AB thăm trung bình 49 925 <!-- src: results/tables/e7_matches.csv | point=d1,split=all | b_nodes_per_move --> nút, MCTS tạo 1162 <!-- src: results/tables/e7_matches.csv | point=d1,split=all | a_nodes_per_move --> nút và cây MCTS sâu trung bình 3,22 <!-- src: results/tables/e7_matches.csv | point=d1,split=all | a_tree_depth_mean --> ply (Bảng 23). <!-- const: D-25 | 2,5 -->
+- **Độ phân nhánh và ngân sách (Bảng 24).** Ở trận d1, thế có tác tử đi có trung bình 28,8 <!-- src: results/tables/e7_branching.csv | point=d1 | legal_mean --> nước hợp lệ (trung vị 32,0 <!-- src: results/tables/e7_branching.csv | point=d1 | legal_median -->). MCTS L10 chạy trung bình 1324 <!-- src: results/tables/e7_branching.csv | point=d1 | iter_per_move_mean --> iteration mỗi nước (trung vị 1220 <!-- src: results/tables/e7_branching.csv | point=d1 | iter_per_move_median -->); iteration chia cho số nước hợp lệ ở gốc có trung vị 69,3 <!-- src: results/tables/e7_branching.csv | point=d1 | iter_per_root_move_median --> (trung bình 209,4 <!-- src: results/tables/e7_branching.csv | point=d1 | iter_per_root_move_mean -->, bị kéo lên bởi các thế có ít nước hợp lệ). Đây là số lượt thăm mỗi con gốc nếu chia đều; UCT không chia đều mà dồn lượt thăm vào vài con.
+- **Khám phá d3, d4 (Bảng 22).** MCTS L10 1 s/nước được 0,90 [0,79; 0,96] <!-- src: results/tables/e7_matches.csv | point=d3,split=all | score,score_lo,score_hi --> điểm trước AB độ sâu 1 (W/D/L 44/2/4 <!-- src: results/tables/e7_matches.csv | point=d3,split=all | wins/draws/losses -->) và 0,05 [0,02; 0,15] <!-- src: results/tables/e7_matches.csv | point=d4,split=all | score,score_lo,score_hi --> trước AB độ sâu 2 (2/1/47 <!-- src: results/tables/e7_matches.csv | point=d4,split=all | wins/draws/losses -->). AB độ sâu 2 dùng trung bình 0,004 <!-- src: results/tables/e7_matches.csv | point=d4,split=all | b_s_per_move_mean --> s mỗi nước.
+- **Alpha-Beta với Random (a).** AB độ sâu 1 và độ sâu 2 thắng cả 50 ván (Bảng 21).
+- **Kết thúc ván.** Mọi ván E7 kết thúc bình thường, không có ván lỗi. Nhãn chiếu bí và bí nước được kiểm độc lập trên 10 ván lấy ngẫu nhiên, bằng một bộ sinh nước viết riêng không dùng mã của trò chơi: 10/10 ván khớp (`e7_term_check.csv`).
 
 ## 6 Thảo luận
 
