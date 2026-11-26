@@ -260,6 +260,23 @@
 - **Bảng 3.4:** chỉ dùng stats MCTS sẵn có (`iterations`, `max_depth`, `rollout_plies`, `nodes`); không sửa `agents/`.
 - **Thứ tự full:** (b) → c1–c4 → áp luật c4 → d1, d2 → (a). Mục tiêu 50 ván/điểm (25 khai cuộc × 2); ước tính trước quick ~2,8–3,4 h. Nếu > 8 h: cắt d2 → (a) → c2 xuống 20 ván, ghi lý do ở đây.
 - **Sau quick (2026-11-25, commit `a52bf76`, `all --quick --workers 3`; không phải số liệu báo cáo):** AC 100 %, bench 0,888× `e5_bench`, wall ~14 phút. (b) giá trị gốc khớp 11/11 (depth 2, 3) và 3/3 (depth 4), 0 lệch; nút so với `none`: mvv_lva 0,33 / 0,23 / 0,11 (depth 2 / 3 / 4), +TT 0,33 / 0,23 / 0,10. 4 ván/điểm: c1 Lend vs L10 0/0/4; c2 Lend vs Random 4/0/0; c3 L10 vs Random 4/0/0; c4 L0 vs L10 2/1/1 (điểm 0,625 [0,22; 0,91] → luật: ngang, L10); d1 0/0/4 và d2 0/0/4 (AB thắng hết; `depth_reached` AB TB 4,6 ở 1 s, 5,6 ở 2,5 s); a1, a2 4/0/0. iter/s trung vị: Lend ~92, L10 ~1 100–1 400, L0 ~12 000. **Worker:** c3 iter/s trung vị 1 worker 1 485 vs 3 worker 1 114 → **giảm 25 % > 15 % → full dùng `--workers 2`** (luật chốt trước). **An đổi (2026-11-25, duyệt quick): full dùng `--workers 1`** — 3 worker giảm 25 %, 2 worker chưa đo nên không dùng; 1 worker ≈ 168 × 2 / 1 phút ≈ **5,6 h**, chạy qua đêm (An tự chạy trong PowerShell). Code: `DEFAULT_WORKERS = 1`; `wcheck` so 1 vs 3 worker (file riêng `c3_w1`/`c3_w3`), giảm > 15 % → khuyến nghị 1 worker. Ước tính full với 2 worker (Σ thời gian nước/ván × 50 / 2): b 0,5 phút; c1 21; c2 24; c3 10; c4 37; d1 16; d2 59; a ~0 → **~168 phút (~2,8 h)** + overhead bench/khởi động; < 8 h → không cắt, giữ 50 ván/điểm.
+- **c4 100 ván (chốt trước full):** c4 tăng lên 100 ván (`--pairs 50`), An chốt 2026-11-25 ~23h TRƯỚC khi chạy full; luật Wilson áp trên 100 ván. Các điểm khác giữ 50 ván.
+- **Kết quả full (commit `814a612`, cây sạch, AC 100 %, 1 worker; nguồn `results/tables/e7_matches.csv`, `e7_ordering.csv`, `results/e7_full.log`, `e7_runinfo.csv`).** Hai khúc: (1) `c4 --workers 1 --pairs 50` 2026-11-25 22:57 → 11-26 01:00 (7 363 s), bench rand 2 706 / h300 1 708 iter/s → **0,76×** `e5_bench`; (2) `all --workers 1` 01:00 → 04:40, bench rand 2 997 / h300 1 970 → **0,789×**; khúc 2 không chơi thêm ván c4 (resume, 1,3 s; dòng `[luật c4]` in hai lần do `c` và `d` cùng gọi). Mọi ván `termination = normal` (term_error = 0).
+
+  | Điểm | W/D/L | Điểm A [Wilson 95 %] | Chiếu bí / bí nước / lặp / max_plies | Ply TB | Ghi chú |
+  |---|---|---|---|---|---|
+  | c1 Lend vs L10 | 0/0/50 | 0,00 [0,00; 0,07] | 33 / 17 / 0 / 0 | 62,4 | iter/s trung vị Lend 102, L10 1 257 |
+  | c2 Lend vs Random | 49/1/0 | 0,99 [0,91; 1,00] | 49 / 0 / 0 / 1 | 116,8 | |
+  | c3 L10 vs Random | 50/0/0 | 1,00 [0,93; 1,00] | 40 / 10 / 0 / 0 | 49,3 | |
+  | c4 L0 vs L10 (100 ván) | 52/6/42 | 0,55 [0,45; 0,64] | 50 / 44 / 0 / 6 | 80,1 | L0 cầm Đỏ 0,54, cầm Đen 0,56; iter/s L0 12 627, L10 1 588 |
+  | d1 L10 vs AB 1 s | 0/0/50 | 0,00 [0,00; 0,07] | 40 / 10 / 0 / 0 | 42,9 | `depth_reached` AB TB 4,51 (3–7); s/nước MCTS 0,92, AB 1,00 |
+  | d2 L10 vs AB 2,5 s | 0/0/50 | 0,00 [0,00; 0,07] | 43 / 7 / 0 / 0 | 41,4 | `depth_reached` AB TB 5,09 (4–7); s/nước MCTS 2,36, AB 2,50 |
+  | a1 AB d1 vs Random | 50/0/0 | 1,00 [0,93; 1,00] | 26 / 24 / 0 / 0 | 54,6 | |
+  | a2 AB d2 vs Random | 50/0/0 | 1,00 [0,93; 1,00] | 38 / 12 / 0 / 0 | 59,3 | |
+
+  (b): giá trị gốc khớp 33/33 (0 lệch); nút so với `none` (depth 2 / 3 / 4): mvv_lva 0,327 / 0,234 / 0,104, +TT 0,327 / 0,234 / 0,096; thời gian depth 4: 0,197 / 0,172.
+  - **Luật c4:** 0,55 [0,45; 0,64] chứa 0,5 → **ngang → giữ `XQ_MCTS_L = 10`** (khớp lmatch tactics tắt 0,51, D-24); preset GUI D-37 không đổi. **"Tốt nhất ở (c)" = L10** (c1 Lend 0/50 không thay) → d1, d2 chạy L10.
+  - **Kiểm bí nước / chiếu bí (2026-11-26):** 5 ván `stalemate` + 5 ván `mate` lấy ngẫu nhiên (seed 20261126) từ c4, a1, d1 (pool 78 / 116), replay tới thế cuối, kiểm bằng bộ sinh nước viết riêng từ FEN (không dùng `xiangqi.py`; tự kiểm perft thế đầu 44 / 1 920) + `legal_moves()`, `in_check()`, `winner()`: **10/10 khớp** (0 nước hợp lệ, chiếu ⇔ nhãn `mate`, bên tới lượt thua = winner CSV).
 - **File:** raw `results/raw/e7_<điểm>.csv` (+ `_moves`), `e7_ordering.csv`, `e7_runinfo.csv`; bảng `results/tables/e7_ordering.csv`, `e7_matches.csv`; hình `results/figures/e7_scores.png` (điểm + Wilson, đường 0,5); log full `results/e7_full.log`; quick tiền tố `e7quick_` (gitignore).
 
 ### D-26 (2026-11-17) — Đổi thứ tự: làm nốt k-in-row trước cờ tướng; tách P6

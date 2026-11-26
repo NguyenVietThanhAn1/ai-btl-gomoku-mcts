@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🟡 code + test xong, chờ quick/full  ·  **Task:** P8.4 (D-25)  ·  **Cập nhật:** 2026-11-25
+**Trạng thái:** 🟡 full xong (2026-11-26, kết quả D-25)  ·  **Task:** P8.4 (D-25)  ·  **Cập nhật:** 2026-11-26
 
 ## Mục đích
 Thí nghiệm E7 cờ tướng (thiết kế D-25): (a) AB depth 1/2 vs Random, (b) move ordering của AB (số nút, tất định),

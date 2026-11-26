@@ -1,0 +1,138 @@
+
+===== 2026-11-25T22:57:44 e7_xiangqi c4 --workers 1 --pairs 50 | power AC 100% | git 814a6124437de0e4f8aeb49db0686e9a898bff5d/False
+[c4] mcts_L0 vs mcts_L10: 100 ván, 1 worker → C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\raw\e7_c4.csv
+[c4] điểm A 0.550 [0.45; 0.64] (100 ván), 7356 s
+[bench] rand: trung vị 2706 iter/s
+[bench] h300: trung vị 1708 iter/s
+[bench] rand/h300 = 1.58
+
+===== 2026-11-26T01:00:28 e7_xiangqi all --workers 1 | power AC 100% | git 814a6124437de0e4f8aeb49db0686e9a898bff5d/False
+  [b] d2 pos 0 none: 800 nút, 0.01 s, v=-58
+  [b] d2 pos 0 mvv_lva: 129 nút, 0.005 s, v=-58
+  [b] d2 pos 0 mvv_lva+tt: 129 nút, 0.0046 s, v=-58
+  [b] d2 pos 1 none: 598 nút, 0.0092 s, v=55
+  [b] d2 pos 1 mvv_lva: 218 nút, 0.005 s, v=55
+  [b] d2 pos 1 mvv_lva+tt: 218 nút, 0.005 s, v=55
+  [b] d2 pos 2 none: 502 nút, 0.0079 s, v=235
+  [b] d2 pos 2 mvv_lva: 152 nút, 0.0043 s, v=235
+  [b] d2 pos 2 mvv_lva+tt: 152 nút, 0.0043 s, v=235
+  [b] d2 pos 3 none: 200 nút, 0.0038 s, v=387
+  [b] d2 pos 3 mvv_lva: 84 nút, 0.0031 s, v=387
+  [b] d2 pos 3 mvv_lva+tt: 84 nút, 0.0031 s, v=387
+  [b] d2 pos 4 none: 195 nút, 0.0038 s, v=976
+  [b] d2 pos 4 mvv_lva: 100 nút, 0.0032 s, v=976
+  [b] d2 pos 4 mvv_lva+tt: 100 nút, 0.0037 s, v=976
+  [b] d2 pos 5 none: 504 nút, 0.0069 s, v=456
+  [b] d2 pos 5 mvv_lva: 168 nút, 0.0045 s, v=456
+  [b] d2 pos 5 mvv_lva+tt: 168 nút, 0.0042 s, v=456
+  [b] d2 pos 6 none: 290 nút, 0.0049 s, v=282
+  [b] d2 pos 6 mvv_lva: 100 nút, 0.004 s, v=282
+  [b] d2 pos 6 mvv_lva+tt: 100 nút, 0.0038 s, v=282
+  [b] d2 pos 7 none: 561 nút, 0.0081 s, v=-78
+  [b] d2 pos 7 mvv_lva: 215 nút, 0.0054 s, v=-78
+  [b] d2 pos 7 mvv_lva+tt: 215 nút, 0.0052 s, v=-78
+  [b] d2 pos 8 none: 165 nút, 0.0043 s, v=-115
+  [b] d2 pos 8 mvv_lva: 122 nút, 0.0044 s, v=-115
+  [b] d2 pos 8 mvv_lva+tt: 122 nút, 0.0044 s, v=-115
+  [b] d2 pos 9 none: 256 nút, 0.0047 s, v=-119
+  [b] d2 pos 9 mvv_lva: 101 nút, 0.004 s, v=-119
+  [b] d2 pos 9 mvv_lva+tt: 101 nút, 0.0038 s, v=-119
+  [b] d2 pos 10 none: 641 nút, 0.0088 s, v=-479
+  [b] d2 pos 10 mvv_lva: 153 nút, 0.0047 s, v=-479
+  [b] d2 pos 10 mvv_lva+tt: 153 nút, 0.0046 s, v=-479
+  [b] d3 pos 0 none: 20779 nút, 0.2425 s, v=362
+  [b] d3 pos 0 mvv_lva: 1789 nút, 0.0264 s, v=362
+  [b] d3 pos 0 mvv_lva+tt: 1789 nút, 0.0261 s, v=362
+  [b] d3 pos 1 none: 6303 nút, 0.0787 s, v=220
+  [b] d3 pos 1 mvv_lva: 2593 nút, 0.043 s, v=220
+  [b] d3 pos 1 mvv_lva+tt: 2593 nút, 0.0449 s, v=220
+  [b] d3 pos 2 none: 3805 nút, 0.0479 s, v=457
+  [b] d3 pos 2 mvv_lva: 2250 nút, 0.033 s, v=457
+  [b] d3 pos 2 mvv_lva+tt: 2250 nút, 0.0308 s, v=457
+  [b] d3 pos 3 none: 2593 nút, 0.0372 s, v=771
+  [b] d3 pos 3 mvv_lva: 1748 nút, 0.0239 s, v=771
+  [b] d3 pos 3 mvv_lva+tt: 1748 nút, 0.0236 s, v=771
+  [b] d3 pos 4 none: 1885 nút, 0.0274 s, v=1172
+  [b] d3 pos 4 mvv_lva: 1441 nút, 0.0201 s, v=1172
+  [b] d3 pos 4 mvv_lva+tt: 1441 nút, 0.0206 s, v=1172
+  [b] d3 pos 5 none: 13373 nút, 0.1558 s, v=576
+  [b] d3 pos 5 mvv_lva: 1635 nút, 0.0302 s, v=576
+  [b] d3 pos 5 mvv_lva+tt: 1635 nút, 0.0297 s, v=576
+  [b] d3 pos 6 none: 3680 nút, 0.052 s, v=882
+  [b] d3 pos 6 mvv_lva: 1191 nút, 0.0218 s, v=882
+  [b] d3 pos 6 mvv_lva+tt: 1191 nút, 0.0212 s, v=882
+  [b] d3 pos 7 none: 7530 nút, 0.1056 s, v=404
+  [b] d3 pos 7 mvv_lva: 2024 nút, 0.0407 s, v=404
+  [b] d3 pos 7 mvv_lva+tt: 2024 nút, 0.043 s, v=404
+  [b] d3 pos 8 none: 3301 nút, 0.0506 s, v=95
+  [b] d3 pos 8 mvv_lva: 2040 nút, 0.0363 s, v=95
+  [b] d3 pos 8 mvv_lva+tt: 2040 nút, 0.0371 s, v=95
+  [b] d3 pos 9 none: 7085 nút, 0.15 s, v=364
+  [b] d3 pos 9 mvv_lva: 1203 nút, 0.0252 s, v=364
+  [b] d3 pos 9 mvv_lva+tt: 1203 nút, 0.0278 s, v=364
+  [b] d3 pos 10 none: 14720 nút, 0.2195 s, v=-97
+  [b] d3 pos 10 mvv_lva: 1966 nút, 0.0386 s, v=-97
+  [b] d3 pos 10 mvv_lva+tt: 1966 nút, 0.0355 s, v=-97
+  [b] d4 pos 0 none: 141048 nút, 2.7602 s, v=-52
+  [b] d4 pos 0 mvv_lva: 14629 nút, 0.607 s, v=-52
+  [b] d4 pos 0 mvv_lva+tt: 13739 nút, 0.3879 s, v=-52
+  [b] d4 pos 1 none: 164213 nút, 3.092 s, v=37
+  [b] d4 pos 1 mvv_lva: 14997 nút, 0.5872 s, v=37
+  [b] d4 pos 1 mvv_lva+tt: 14210 nút, 0.5343 s, v=37
+  [b] d4 pos 2 none: 25300 nút, 0.6345 s, v=343
+  [b] d4 pos 2 mvv_lva: 6499 nút, 0.2743 s, v=343
+  [b] d4 pos 2 mvv_lva+tt: 5776 nút, 0.1834 s, v=343
+  [b] d4 pos 3 none: 17372 nút, 0.4467 s, v=298
+  [b] d4 pos 3 mvv_lva: 4571 nút, 0.1783 s, v=298
+  [b] d4 pos 3 mvv_lva+tt: 3942 nút, 0.1476 s, v=298
+  [b] d4 pos 4 none: 16214 nút, 0.5519 s, v=896
+  [b] d4 pos 4 mvv_lva: 4020 nút, 0.178 s, v=896
+  [b] d4 pos 4 mvv_lva+tt: 3658 nút, 0.1858 s, v=896
+  [b] d4 pos 5 none: 119147 nút, 2.2368 s, v=252
+  [b] d4 pos 5 mvv_lva: 17159 nút, 0.4316 s, v=252
+  [b] d4 pos 5 mvv_lva+tt: 16519 nút, 0.4756 s, v=252
+  [b] d4 pos 6 none: 40827 nút, 1.0013 s, v=679
+  [b] d4 pos 6 mvv_lva: 3666 nút, 0.1813 s, v=679
+  [b] d4 pos 6 mvv_lva+tt: 3365 nút, 0.1249 s, v=679
+  [b] d4 pos 7 none: 186052 nút, 3.3303 s, v=-76
+  [b] d4 pos 7 mvv_lva: 16229 nút, 0.5194 s, v=-76
+  [b] d4 pos 7 mvv_lva+tt: 15760 nút, 0.5373 s, v=-76
+  [b] d4 pos 8 none: 27054 nút, 0.7414 s, v=-140
+  [b] d4 pos 8 mvv_lva: 4653 nút, 0.2913 s, v=-140
+  [b] d4 pos 8 mvv_lva+tt: 3961 nút, 0.2209 s, v=-140
+  [b] d4 pos 9 none: 104532 nút, 2.1255 s, v=124
+  [b] d4 pos 9 mvv_lva: 4891 nút, 0.181 s, v=124
+  [b] d4 pos 9 mvv_lva+tt: 3687 nút, 0.1129 s, v=124
+  [b] d4 pos 10 none: 96660 nút, 1.9446 s, v=-300
+  [b] d4 pos 10 mvv_lva: 6612 nút, 0.2942 s, v=-300
+  [b] d4 pos 10 mvv_lva+tt: 5548 nút, 0.3376 s, v=-300
+[b] xong, lệch giá trị gốc: 0
+[bench] rand: trung vị 2997 iter/s
+[bench] h300: trung vị 1970 iter/s
+[bench] rand/h300 = 1.52
+[c1] mcts_Lend vs mcts_L10: 50 ván, 1 worker → C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\raw\e7_c1.csv
+[c1] điểm A 0.000 [0.00; 0.07] (50 ván), 2828 s
+[c2] mcts_Lend vs random: 50 ván, 1 worker → C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\raw\e7_c2.csv
+[c2] điểm A 0.990 [0.91; 1.00] (50 ván), 2799 s
+[c3] mcts_L10 vs random: 50 ván, 1 worker → C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\raw\e7_c3.csv
+[c3] điểm A 1.000 [0.93; 1.00] (50 ván), 1095 s
+[c4] mcts_L0 vs mcts_L10: 50 ván, 1 worker → C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\raw\e7_c4.csv
+[c4] điểm A 0.550 [0.45; 0.64] (100 ván), 1 s
+[luật c4] L0 vs L10 điểm 0.550 [0.45; 0.64] → tie; MCTS tốt nhất ở (c): L10
+[luật c4] L0 vs L10 điểm 0.550 [0.45; 0.64] → tie; MCTS tốt nhất ở (c): L10
+[d1] mcts_L10 vs ab_t1: 50 ván, 1 worker → C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\raw\e7_d1.csv
+[d1] điểm A 0.000 [0.00; 0.07] (50 ván), 1871 s
+[d2] mcts_L10_t2.5 vs ab_t2.5: 50 ván, 1 worker → C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\raw\e7_d2.csv
+[d2] điểm A 0.000 [0.00; 0.07] (50 ván), 4545 s
+[a1] ab_d1 vs random: 50 ván, 1 worker → C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\raw\e7_a1.csv
+[a1] điểm A 1.000 [0.93; 1.00] (50 ván), 2 s
+[a2] ab_d2 vs random: 50 ván, 1 worker → C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\raw\e7_a2.csv
+[a2] điểm A 1.000 [0.93; 1.00] (50 ván), 7 s
+[summary] c1: mcts_Lend vs mcts_L10 0/0/50 điểm 0.0 [0.0; 0.07]
+[summary] c2: mcts_Lend vs random 49/1/0 điểm 0.99 [0.91; 1.0]
+[summary] c3: mcts_L10 vs random 50/0/0 điểm 1.0 [0.93; 1.0]
+[summary] c4: mcts_L0 vs mcts_L10 52/6/42 điểm 0.55 [0.45; 0.64]
+[summary] d1: mcts_L10 vs ab_t1 0/0/50 điểm 0.0 [0.0; 0.07]
+[summary] d2: mcts_L10_t2.5 vs ab_t2.5 0/0/50 điểm 0.0 [0.0; 0.07]
+[summary] a1: ab_d1 vs random 50/0/0 điểm 1.0 [0.93; 1.0]
+[summary] a2: ab_d2 vs random 50/0/0 điểm 1.0 [0.93; 1.0]
