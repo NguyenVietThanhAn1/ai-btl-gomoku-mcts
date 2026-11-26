@@ -1,5 +1,5 @@
 ---
-title: "Tìm kiếm đối kháng cho k-in-a-row: Minimax, Alpha-Beta và MCTS-UCT"
+title: "Tìm kiếm đối kháng cho k-in-a-row và cờ tướng: Minimax, Alpha-Beta và MCTS-UCT"
 subtitle: "Báo cáo bài tập lớn Trí tuệ nhân tạo - Bài 1"
 lang: vi
 ---
@@ -9,23 +9,26 @@ Quy ước nguồn số liệu (P7.2, D-30) - kiểm bằng `python -m gameai.ex
   src: file CSV | lọc hàng | cột   → số đứng ngay trước comment phải khớp CSV
   src: summary_kinrow.md#<mục>     → số có nguyên văn trong mục đó của summary
   src-table: summary_kinrow.md#<tiêu đề bảng> → bảng ngay sau giống byte bảng trong summary
+             (E7: summary_xiangqi.md, D-39)
   const: D-xx                       → hằng số thiết kế ghi trong docs/DECISIONS.md
   example: <file .md>               → ví dụ tính tay chép từ tài liệu module, không phải số đo
 -->
 
 ## Tóm tắt
 
-Báo cáo so sánh Minimax, Alpha-Beta và MCTS-UCT trên k-in-a-row (Tic-Tac-Toe 3×3 và Gomoku 15×15) qua sáu thí nghiệm tái lập được. Alpha-Beta giữ đúng giá trị Minimax ở mọi thế đã so sánh; kết hợp sắp thứ tự nước và bảng chuyển vị giảm 99,76 <!-- src: results/tables/e1_summary.csv | board=3x3,variant=ab_order_tt | nodes_saving_vs_minimax_pooled_pct --> % số nút trên 3×3. Trên 3×3, MCTS-UCT 5000 iteration không thua trong mọi trường hợp đã kiểm, cả đấu ván lẫn vét cạn nước đáp của đối thủ. <!-- const: D-16 | 5000 --> Không giá trị c nào trội ở mọi ngân sách: trên 15×15, c nhỏ thắng nhiều hơn khi ít iteration (c = 0,5 thắng Greedy 0,62 <!-- src: results/tables/e3_greedy.csv | c=0.5,iterations=1000,split=all | win_rate --> ở 1000 iteration), thứ tự đảo lại khi tăng iteration. <!-- const: D-18 | 0,5 1000 --> Chọn nước theo N hay W/N hiếm khi khác nhau (1,3-4,4 <!-- src: summary_kinrow.md#E4 --> % số thế 3×3) và đối đầu không phân biệt được; N được ưu tiên vì W/N của con ít lượt thăm nhiễu. Cùng thời gian mỗi nước, rollout heuristic thắng rollout ngẫu nhiên trong đối đầu (0,90 <!-- src: results/tables/e5_h2h.csv | budget_type=time,budget=0.5,split=all | win_rate --> ở 0,5 s/nước). <!-- const: D-20 | 0,5 --> Bước kiểm tra thắng ngay / chặn ngay nâng tỷ lệ thắng của MCTS trước Greedy thêm 0,62 <!-- src: results/tables/e6_paired.csv | part=greedy,iters=5000 | diff --> ở 5000 iteration (so cặp); cơ chế điểm mù khi thiếu bước này đã được kiểm chứng. <!-- const: D-21 | 5000 -->
+Báo cáo so sánh Minimax, Alpha-Beta và MCTS-UCT trên k-in-a-row (Tic-Tac-Toe 3×3, Gomoku 15×15) và cờ tướng qua bảy thí nghiệm tái lập được. Alpha-Beta giữ đúng giá trị Minimax; sắp thứ tự nước và bảng chuyển vị giảm 99,76 <!-- src: results/tables/e1_summary.csv | board=3x3,variant=ab_order_tt | nodes_saving_vs_minimax_pooled_pct --> % số nút trên 3×3. Trên 3×3, MCTS-UCT 5000 iteration không thua trong mọi ván và mọi nhánh vét cạn đã kiểm. <!-- const: D-16 | 5000 --> Không giá trị c nào trội ở mọi ngân sách: trên 15×15, c = 0,5 thắng Greedy 0,62 <!-- src: results/tables/e3_greedy.csv | c=0.5,iterations=1000,split=all | win_rate --> ở 1000 iteration, thứ tự đảo lại khi tăng iteration. <!-- const: D-18 | 0,5 1000 --> Chọn nước theo N hay W/N hiếm khi khác nhau (1,3-4,4 <!-- src: summary_kinrow.md#E4 --> % số thế 3×3); N được ưu tiên vì W/N của con ít lượt thăm nhiễu. Cùng thời gian mỗi nước, rollout heuristic thắng rollout ngẫu nhiên 0,90 <!-- src: results/tables/e5_h2h.csv | budget_type=time,budget=0.5,split=all | win_rate --> ở 0,5 s/nước. <!-- const: D-20 | 0,5 --> Kiểm tra thắng ngay / chặn ngay nâng tỷ lệ thắng của MCTS trước Greedy thêm 0,62 <!-- src: results/tables/e6_paired.csv | part=greedy,iters=5000 | diff --> ở 5000 iteration. <!-- const: D-21 | 5000 --> Trên cờ tướng, MCTS cắt rollout và lượng giá thua Alpha-Beta cùng thời gian cả 50 <!-- src: results/tables/e7_matches.csv | point=d1,split=all | losses --> ván ở 1 s và 50 <!-- src: results/tables/e7_matches.csv | point=d2,split=all | losses --> ván ở 2,5 s/nước; <!-- const: D-25 | 2,5 --> thử nghiệm khám phá đặt MCTS giữa Alpha-Beta độ sâu 1 (MCTS được 0,90 <!-- src: results/tables/e7_matches.csv | point=d3,split=all | score --> điểm) và độ sâu 2 (0,05 <!-- src: results/tables/e7_matches.csv | point=d4,split=all | score -->).
 
 ## 1 Giới thiệu
 
 Trò chơi k-in-a-row là họ trò chơi hai người trên bàn ô vuông: hai bên lần lượt đặt quân vào ô trống, ai có k quân liên tiếp theo hàng ngang, dọc hoặc chéo trước thì thắng. Tic-Tac-Toe là trường hợp bàn 3×3 với k = 3; Gomoku (cờ caro) là trường hợp bàn 15×15 với k = 5. Đây là bài toán điển hình của tìm kiếm đối kháng: thông tin đầy đủ, tất định, tổng bằng không, nhưng không gian trạng thái của bàn lớn vượt xa khả năng duyệt hết.
 
+Đề bài còn yêu cầu mở rộng sang cờ tướng. Cờ tướng cũng là trò chơi hai người thông tin đầy đủ, tất định, tổng bằng không, nhưng khác k-in-a-row ở ba điểm: quân di chuyển và ăn quân thay vì chỉ đặt thêm, ván kết thúc bằng chiếu bí hoặc bí nước, và giá trị một thế cờ giữa ván phụ thuộc vào trao đổi quân trong vài nước tới. Cùng các thuật toán và cùng giao diện `Game` được dùng lại nguyên vẹn cho cờ tướng.
+
 Báo cáo so sánh hai họ thuật toán cho bài toán này. Họ thứ nhất là Minimax và cải tiến cắt tỉa Alpha-Beta [4, 5], cần một hàm lượng giá heuristic khi giới hạn độ sâu. Họ thứ hai là Monte Carlo Tree Search với chính sách chọn UCT [1, 2, 3], ước lượng giá trị bằng các ván chơi thử thay vì hàm lượng giá. Ngoài ra báo cáo xét hai cải tiến của MCTS: rollout có tri thức (heuristic) thay cho rollout ngẫu nhiên, gần với ý tưởng value network của AlphaGo [7, 8], và bước kiểm tra "thắng ngay / chặn ngay" trước khi tìm kiếm.
 
 ### 1.1 Câu hỏi nghiên cứu
 
-Mỗi câu hỏi ứng với một yêu cầu của đề (ý 1-5) hoặc một thí nghiệm bổ sung (E6); mục 5 trả lời bằng số liệu, mục 6 thảo luận.
+Mỗi câu hỏi ứng với một yêu cầu của đề (ý 1-6) hoặc một thí nghiệm bổ sung (E6); mục 5 trả lời bằng số liệu, mục 6 thảo luận.
 
 - **RQ1** (đề ý 1). Alpha-Beta tiết kiệm bao nhiêu nút so với Minimax, có giữ đúng giá trị và nước đi không; sắp thứ tự nước và bảng chuyển vị (TT) đóng góp thêm bao nhiêu? → thí nghiệm **E1**.
 - **RQ2** (đề ý 2). MCTS-UCT trên Tic-Tac-Toe 3×3 có thật sự không bao giờ thua, và cần bao nhiêu iteration? → **E2** (đấu ván và kiểm chứng vét cạn mọi nước đáp của đối thủ).
@@ -33,12 +36,15 @@ Mỗi câu hỏi ứng với một yêu cầu của đề (ý 1-5) hoặc một 
 - **RQ4** (đề ý 4). Vì sao chọn nước cuối theo số lần thăm N lớn nhất thay vì tỷ lệ W/N lớn nhất? → **E4** (thống kê W, N, W/N ở gốc và đối đầu hai tiêu chí).
 - **RQ5** (đề ý 5). Thay rollout ngẫu nhiên bằng rollout heuristic cải thiện bao nhiêu, khi so cùng số iteration và cùng thời gian; liên hệ với value network? → **E5**.
 - **RQ6** (bổ sung). Bước kiểm tra thắng ngay / chặn ngay (`check_tactics`) đóng vai trò gì trong kết quả MCTS 15×15? → **E6**.
+- **RQ7** (đề ý 6, mở rộng cờ tướng). Hai họ thuật toán hoạt động thế nào trên cờ tướng? → **E7**, gồm hai phần tách rõ (D-25): <!-- const: D-25 -->
+  - *Phần chốt trước* (thiết kế và luật quyết định ghi trước khi chạy): (a) Alpha-Beta độ sâu 1 và 2 trước Random; (b) sắp thứ tự nước của Alpha-Beta giảm bao nhiêu nút; (c) MCTS với rollout ngẫu nhiên tới hết ván so với rollout cắt sau L nước rồi lượng giá, và kiểm lại lựa chọn L; (d) MCTS tốt nhất ở (c) đấu Alpha-Beta cùng thời gian mỗi nước.
+  - *Phần khám phá* (d3, d4): thêm sau khi thấy kết quả (d), không có luật quyết định, dùng để định vị sức MCTS giữa Alpha-Beta độ sâu 1 và độ sâu 2.
 
 ### 1.2 Đóng góp và cấu trúc báo cáo
 
-Chương trình được viết bằng Python thuần với một giao diện `Game` chung cho mọi thuật toán, gồm Minimax, Alpha-Beta (ordering, TT, lượng giá tăng dần), MCTS-UCT (rollout ngẫu nhiên và heavy, cắt rollout + lượng giá, kiểm tra chiến thuật), bộ chạy thí nghiệm song song có seed tái lập, và giao diện đồ họa để chơi (Phụ lục B). Mọi bảng và hình trong mục 5 được sinh bằng script từ dữ liệu thô trong `results/raw`; mọi con số trong báo cáo truy được về một file trong `results/`.
+Chương trình được viết bằng Python thuần với một giao diện `Game` chung cho mọi thuật toán, gồm Minimax, Alpha-Beta (ordering, TT, lượng giá tăng dần), MCTS-UCT (rollout ngẫu nhiên và heavy, cắt rollout + lượng giá, kiểm tra chiến thuật), bộ chạy thí nghiệm song song có seed tái lập, và giao diện đồ họa để chơi (Phụ lục B). Phần cờ tướng gồm bộ luật đầy đủ được kiểm bằng perft, hàm lượng giá vật chất + vị trí, và cấu hình Alpha-Beta, MCTS cho cờ tướng dùng lại nguyên các tác tử trên (chỉ đổi tham số); giao diện chơi được cờ tướng. Mọi bảng và hình trong mục 5 được sinh bằng script từ dữ liệu thô trong `results/raw`; mọi con số trong báo cáo truy được về một file trong `results/`.
 
-Mục 2 phát biểu bài toán hình thức. Mục 3 trình bày phương pháp. Mục 4 mô tả thiết lập thực nghiệm. Mục 5 trình bày kết quả E1-E6, mục 6 thảo luận từng câu hỏi nghiên cứu và hạn chế. Phụ lục A mô tả chương trình, Phụ lục B mô tả giao diện.
+Mục 2 phát biểu bài toán hình thức. Mục 3 trình bày phương pháp. Mục 4 mô tả thiết lập thực nghiệm. Mục 5 trình bày kết quả E1-E7, mục 6 thảo luận từng câu hỏi nghiên cứu và hạn chế. Phụ lục A mô tả chương trình, Phụ lục B mô tả giao diện.
 
 ## 2 Phát biểu bài toán
 
@@ -57,10 +63,11 @@ Mục tiêu của một tác tử là chọn $a \in A(s)$ tối đa hóa lợi �
 
 Kiểm tra kết thúc chỉ cần xét các đường đi qua ô vừa đặt: đếm số quân cùng màu liên tiếp theo hai chiều của bốn hướng, chi phí $O(k)$ thay vì quét cả bàn.
 
-### 2.2 Hai thể hiện được nghiên cứu
+### 2.2 Ba thể hiện được nghiên cứu
 
 - **3×3, k = 3 (Tic-Tac-Toe).** Không gian trạng thái nhỏ, giải được hoàn toàn bằng Minimax; giá trị trò chơi từ bàn trống là hòa. Đây là môi trường kiểm chứng: Minimax cho nước tối ưu tuyệt đối, nên "MCTS không bao giờ thua" kiểm được chính xác (E2, E4).
 - **15×15, k = 5 (Gomoku luật tự do).** Hệ số phân nhánh ban đầu bằng số ô của bàn, một ván dài tối đa $15 \times 15 = 225$ nước. Allis [9] đã chứng minh người đi trước thắng với luật này bằng proof-number search, nhưng lời giải đó không dùng được như một đối thủ trong thí nghiệm; trong báo cáo, 15×15 là môi trường mà mọi thuật toán phải dùng heuristic hoặc giới hạn tìm kiếm, và chất lượng được đo bằng tỷ lệ thắng trước các đối thủ cố định.
+- **Cờ tướng.** Bàn 9 cột × 10 hàng giao điểm (90 vị trí), hai bên Đỏ (đi trước) và Đen, mỗi bên 16 quân thuộc 7 loại (tướng, sĩ, tượng, mã, xe, pháo, tốt). Trạng thái gồm vị trí các quân, người đến lượt và lịch sử thế cờ (cần cho luật lặp thế). Hành động là mọi nước hợp lệ: nước đúng cách đi của quân (mã bị cản chân, tượng bị cản mắt và không qua sông, sĩ và tướng ở trong cung, pháo ăn qua đúng một quân ngòi, tốt chỉ đi ngang sau khi qua sông), sau nước đó tướng của mình không bị chiếu và hai tướng không đối mặt trên cùng cột không có quân chắn. Kết thúc và lợi ích: bên đến lượt **không còn nước hợp lệ thì thua**, dù đang bị chiếu (chiếu bí) hay không (bí nước; khác cờ vua, nơi bí nước là hòa); một thế lặp lại lần thứ ba là hòa; ván đạt giới hạn `max_plies` là hòa (mặc định 300 ply, E7 dùng 200). <!-- const: D-22 D-25 | 300 200 --> Cài đặt không có luật chiếu dai / đuổi dai và luật hòa sau nhiều nước không ăn quân (mục 6.8). Độ phân nhánh: thế khởi đầu có 44 <!-- src: results/tables/p81_perft.csv | position=start,depth=1 | nodes --> nước hợp lệ; trên 19 914 <!-- src: results/tables/e7_branching.csv | point=all | n_positions --> thế trong các ván E7 giữa hai tác tử có tìm kiếm, số nước hợp lệ trung bình là 26,4 <!-- src: results/tables/e7_branching.csv | point=all | legal_mean --> (trung vị 28,0 <!-- src: results/tables/e7_branching.csv | point=all | legal_median -->). Mọi tác tử cờ tướng xét toàn bộ nước hợp lệ, không có tập ứng viên như mục 3.0 (D-22).
 
 ## 3 Phương pháp
 
