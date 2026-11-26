@@ -136,3 +136,13 @@
 [summary] d2: mcts_L10_t2.5 vs ab_t2.5 0/0/50 điểm 0.0 [0.0; 0.07]
 [summary] a1: ab_d1 vs random 50/0/0 điểm 1.0 [0.93; 1.0]
 [summary] a2: ab_d2 vs random 50/0/0 điểm 1.0 [0.93; 1.0]
+
+===== 2026-11-26T13:59:48 e7_xiangqi summary | power AC 100% | git dd54fbeb621833de709fb1c3830f76a3756038c3/True
+[summary] c1: mcts_Lend vs mcts_L10 0/0/50 điểm 0.0 [0.0; 0.07]
+[summary] c2: mcts_Lend vs random 49/1/0 điểm 0.99 [0.91; 1.0]
+[summary] c3: mcts_L10 vs random 50/0/0 điểm 1.0 [0.93; 1.0]
+[summary] c4: mcts_L0 vs mcts_L10 52/6/42 điểm 0.55 [0.45; 0.64]
+[summary] d1: mcts_L10 vs ab_t1 0/0/50 điểm 0.0 [0.0; 0.07]
+[summary] d2: mcts_L10_t2.5 vs ab_t2.5 0/0/50 điểm 0.0 [0.0; 0.07]
+[summary] a1: ab_d1 vs random 50/0/0 điểm 1.0 [0.93; 1.0]
+[summary] a2: ab_d2 vs random 50/0/0 điểm 1.0 [0.93; 1.0]

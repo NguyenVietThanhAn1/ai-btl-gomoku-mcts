@@ -11,7 +11,7 @@
 ### An
 
 - **Task hiện tại:** P8.4 (thí nghiệm cờ tướng E7, D-25) — plan duyệt 2026-11-25 (+5 chỉnh), code + test xong (commit `a52bf76`), quick duyệt; **full xong** (2026-11-26, commit `814a612`, 1 worker, AC; c4 100 ván) — luật c4 ngang → giữ L=10. P6.2 ✅ (2026-11-25, GUI cờ tướng, D-37). P8.3 ✅ (`XQ_MCTS_L=10`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: `P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng).
-- **Việc đang dở:** E7 full xong, kết quả + kiểm bí nước (10/10 khớp) ghi D-25. Còn: đưa E7 vào báo cáo (nối `plots --check`).
+- **Việc đang dở:** E7 full xong, kết quả + kiểm bí nước (10/10 khớp) ghi D-25. d3/d4 khám phá (MCTS L10 vs AB d1/d2) code xong, quick ước ~45 phút — **An chạy full tối 2026-11-26:** `python -m gameai.experiments.e7_xiangqi dx` rồi `summary`. Sau đó: ghi kết quả d3/d4 vào D-25, đưa E7 vào báo cáo (nối `plots --check`).
 - **Bước tiếp theo:** P8.4 (E7, D-25; kiểm lại L bằng E7(c) với tactics bật, D-24) → nếu spec E7 trùng `==` mức cờ tướng GUI thì đổi nguồn "riêng" → "E7" (`presets.md` TODO, D-37) → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
@@ -86,6 +86,7 @@
 - Luật c4: 0,55 [0,45; 0,64] → ngang → giữ `XQ_MCTS_L = 10`; tốt nhất ở (c) = L10. Bảng số từng điểm ghi D-25.
 - Kiểm bí nước: 5 stalemate + 5 mate (c4/a1/d1) replay, kiểm bằng bộ sinh nước độc lập từ FEN (perft 44/1 920) → 10/10 khớp.
 - Commit "P8.4: E7 full results" (raw + bảng + hình + log).
+- d3/d4 khám phá (thêm sau khi thấy d1/d2 = 0/50, không chốt trước): MCTS L10 1 s vs AB depth 1 / 2 (như a1/a2), phần `dx` ngoài `all`, cột `exploratory`; quick 4 ván: d3 4/0/0, d4 0/0/4; full ≈ 45 phút 1 worker (An chạy tối nay). Commit "P8.4: d3/d4 exploratory".
 
 #### 2026-11-25 — P8.4 E7: plan duyệt, code + quick (dừng chờ duyệt full)
 - D-38 (An làm một mình), D-25 (thiết kế E7 + 5 chỉnh của An). `experiments/e7_xiangqi.py` + `.md`, `tests/test_e7_xiangqi.py`; `common.run_match` thêm `extra_move_stats` (mặc định rỗng; E7 ghi `depth_reached` của AB vì AB không có `max_depth`). precheck 5/5 PASS, commit `a52bf76` (chưa push).

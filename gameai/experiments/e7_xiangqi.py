@@ -4,6 +4,7 @@
 
 Phần: `bench`, `b` (ordering AB), `c` (= c1..c4 + luật c4), `c1`..`c4`,
 `d` (= d1, d2; cần c1 + c4 đủ ván), `d1`, `d2`, `a` (= a1, a2), `a1`, `a2`,
+`dx` (= d3, d4: khám phá MCTS L10 vs AB depth cố định 1 / 2, thêm sau full; ngoài `all`),
 `wcheck` (iter/s c3: 1 worker vs `--workers`), `summary`,
 `all` (b → c → luật c4 → d → a → summary; quick thêm wcheck + ước tính).
 Mỗi phần chạy tiếp được sau khi ngắt (`common.run_match`; ordering bỏ dòng đã có).
@@ -79,9 +80,14 @@ FIXED_POINTS: dict[str, tuple[AgentSpec, AgentSpec]] = {
     "c4": (mcts(0), mcts(10)),
     "a1": (ab_spec(1, label="ab_d1"), RANDOM),
     "a2": (ab_spec(2, label="ab_d2"), RANDOM),
+    # Khám phá (D-25): thêm sau khi thấy d1/d2 = 0/50, không chốt trước. MCTS L10 cố định (không qua
+    # luật "tốt nhất ở (c)"), AB cùng cấu hình a1/a2.
+    "d3": (mcts(10), ab_spec(1, label="ab_d1")),
+    "d4": (mcts(10), ab_spec(2, label="ab_d2")),
 }
 C_POINTS = ("c1", "c2", "c3", "c4")
 A_POINTS = ("a1", "a2")
+X_POINTS = ("d3", "d4")  # khám phá, không chốt trước
 D_POINTS = tuple(D_TIMES)
 
 
@@ -216,6 +222,7 @@ MATCH_COLUMNS = [
     "workers",
     "git_commits",
     "git_dirty",
+    "exploratory",
 ]
 
 
@@ -253,6 +260,7 @@ def summarize_point(
             "workers": ";".join(sorted({r["workers"] for r in rs})),
             "git_commits": ";".join(sorted({r["git_commit"][:7] for r in rs})),
             "git_dirty": ";".join(sorted({r["git_dirty"] for r in rs})),
+            "exploratory": int(point in X_POINTS),
         }
         for t in TERMS:
             row[f"term_{t}"] = sum(info[r["game_id"]][0] == t for r in rs)
@@ -648,7 +656,7 @@ def part_wcheck(ctx: Ctx) -> int:
 
 def part_summary(ctx: Ctx) -> int:
     out = []
-    for p in (*C_POINTS, *D_POINTS, *A_POINTS):
+    for p in (*C_POINTS, *D_POINTS, *X_POINTS, *A_POINTS):
         rows, moves = load_point(p, ctx.quick, ctx.raw_dir)
         if rows:
             out += summarize_point(p, rows, moves)
@@ -683,13 +691,15 @@ POINT_NAMES = {
     "c4": "c4 L0 vs L10",
     "d1": "d1 MCTS vs AB (1 s)",
     "d2": "d2 MCTS vs AB (2,5 s)",
+    "d3": "d3 MCTS vs AB d1 (khám phá)",
+    "d4": "d4 MCTS vs AB d2 (khám phá)",
     "a1": "a1 AB d1 vs Random",
     "a2": "a2 AB d2 vs Random",
 }
 
 
 def plot_scores(rows: list[dict[str, Any]], path: Path) -> None:
-    """Điểm A + khoảng Wilson 95 % mỗi điểm (dòng `all`), đường 0,5."""
+    """Điểm A + khoảng Wilson 95 % mỗi điểm (dòng `all`), đường 0,5; điểm khám phá màu cam rỗng."""
     import matplotlib
 
     matplotlib.use("Agg")
@@ -700,12 +710,14 @@ def plot_scores(rows: list[dict[str, Any]], path: Path) -> None:
     fig, ax = plt.subplots(figsize=(7, 0.45 * len(rows) + 1.2))
     ys = list(range(len(rows)))[::-1]
     for y, r in zip(ys, rows, strict=True):
+        color = "#d9822b" if r["point"] in X_POINTS else "#1f5fa8"
         ax.errorbar(
             r["score"],
             y,
             xerr=[[r["score"] - r["score_lo"]], [r["score_hi"] - r["score"]]],
             fmt="o",
-            color="#1f5fa8",
+            color=color,
+            mfc="white" if r["point"] in X_POINTS else color,
             capsize=3,
         )
     ax.axvline(0.5, color="#888", lw=1, ls="--")
@@ -731,7 +743,7 @@ def write_estimate(ctx: Ctx) -> None:
         if rec and rec[0]["recommend"]:
             w_full = int(rec[0]["recommend"])
     rows = []
-    for p in (*C_POINTS, *D_POINTS, *A_POINTS):
+    for p in (*C_POINTS, *D_POINTS, *X_POINTS, *A_POINTS):
         rs, _ = load_point(p, True, ctx.raw_dir)
         if not rs:
             continue
@@ -786,7 +798,21 @@ class _Tee:
         self.fh.flush()
 
 
-PARTS = ("bench", "b", "c", *C_POINTS, "d", *D_POINTS, "a", *A_POINTS, "wcheck", "summary", "all")
+PARTS = (
+    "bench",
+    "b",
+    "c",
+    *C_POINTS,
+    "d",
+    *D_POINTS,
+    "dx",
+    *X_POINTS,
+    "a",
+    *A_POINTS,
+    "wcheck",
+    "summary",
+    "all",
+)
 
 
 def run_part(ctx: Ctx, part: str) -> int:
@@ -810,6 +836,12 @@ def run_part(ctx: Ctx, part: str) -> int:
         return part_d(ctx)
     if part in D_POINTS:
         return part_d(ctx, (part,))
+    if part == "dx":  # khám phá; quick in thêm ước tính full
+        for p in X_POINTS:
+            run_point(ctx, p, *FIXED_POINTS[p])
+        if ctx.quick:
+            write_estimate(ctx)
+        return 0
     if part == "a":
         for p in A_POINTS:
             run_point(ctx, p, *FIXED_POINTS[p])
@@ -818,7 +850,7 @@ def run_part(ctx: Ctx, part: str) -> int:
         return part_wcheck(ctx)
     if part == "summary":
         return part_summary(ctx)
-    # all: b → c → luật c4 → d → a (quick: + wcheck) → summary
+    # all: b → c → luật c4 → d → a (quick: + wcheck) → summary; không gồm dx (khám phá)
     for p in ("b", "c", "d", "a"):
         rc = run_part(ctx, p)
         if rc:

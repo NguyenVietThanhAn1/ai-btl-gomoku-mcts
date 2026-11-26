@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🟡 full xong (2026-11-26, kết quả D-25)  ·  **Task:** P8.4 (D-25)  ·  **Cập nhật:** 2026-11-26
+**Trạng thái:** 🟡 full xong (2026-11-26, kết quả D-25); d3/d4 khám phá chờ full  ·  **Task:** P8.4 (D-25)  ·  **Cập nhật:** 2026-11-26
 
 ## Mục đích
 Thí nghiệm E7 cờ tướng (thiết kế D-25): (a) AB depth 1/2 vs Random, (b) move ordering của AB (số nút, tất định),
@@ -16,9 +16,10 @@ python -m gameai.experiments.e7_xiangqi all --quick          # 4 ván/điểm, f
 python -m gameai.experiments.e7_xiangqi b                    # từng phần (chạy tiếp được sau khi ngắt)
 python -m gameai.experiments.e7_xiangqi c                    # c1..c4 (1 worker) rồi in kết luận luật c4
 python -m gameai.experiments.e7_xiangqi d                    # cần c1 + c4 đủ ván; L0 mạnh hơn rõ → DỪNG (mã 3)
+python -m gameai.experiments.e7_xiangqi dx                   # d3, d4 khám phá (ngoài `all`); --quick in ước tính
 python -m gameai.experiments.e7_xiangqi summary              # dựng lại bảng + hình từ raw
 ```
-Phần: `bench, b, c, c1..c4, d, d1, d2, a, a1, a2, wcheck, summary, all`. Cờ: `--quick`, `--workers` (mặc định 1, D-25),
+Phần: `bench, b, c, c1..c4, d, d1, d2, dx, d3, d4, a, a1, a2, wcheck, summary, all`. Cờ: `--quick`, `--workers` (mặc định 1, D-25),
 `--pairs` (mặc định 25; quick 2), `--allow-code-change`, `--allow-battery` (full mặc định từ chối khi chạy pin, D-21),
 `--skip-bench`, `--raw-dir/--table-dir/--fig-dir/--log`.
 `all` = b → c → luật c4 → d → a → summary (quick thêm `wcheck` và ước tính). Mọi dòng in ra được append vào
@@ -33,6 +34,7 @@ Phần: `bench, b, c, c1..c4, d, d1, d2, a, a1, a2, wcheck, summary, all`. Cờ:
 | c4 | MCTS `L0` (chấm eval ngay ở lá) | MCTS `L10` |
 | d1 / d2 | MCTS tốt nhất ở (c), 1 s / 2,5 s | AB `ab_t1` / `ab_t2.5` |
 | a1 / a2 | AB depth 1 / 2 cố định | Random |
+| d3 / d4 *(khám phá)* | MCTS `L10`, 1 s | AB depth 1 / 2 cố định (như a1 / a2) |
 
 - MCTS: `xq_mcts_spec(time_limit=1 s, rollout_limit=L, tactics=True)` (c = √2, σ(`xq_evaluate`/2000)). Nhãn `mcts_L<L>`
   (+ `_t<t>` nếu t ≠ 1 s).
@@ -40,6 +42,9 @@ Phần: `bench, b, c, c1..c4, d, d1, d2, a, a1, a2, wcheck, summary, all`. Cờ:
   (iterative deepening, trả nước của độ sâu hoàn tất gần nhất).
 - Ván: `GameSpec("xiangqi", {"max_plies": 200})`, khai cuộc ngẫu nhiên 4 ply (`random_opening=4`), `base_seed = 7000`,
   mỗi khai cuộc 2 ván đổi bên (`common.run_match`), 25 khai cuộc = 50 ván/điểm.
+- **d3 / d4 — khám phá, thêm sau khi thấy d1/d2 = 0/50, không chốt trước (D-25):** MCTS L10 cố định (không qua
+  `best_rollout`), AB `ab_spec(1|2)` như a1/a2 (không TT, không `time_limit`); `X_POINTS`, phần `dx`, **không** nằm trong
+  `all`/`d`; không có luật quyết định. Bảng: cột `exploratory = 1`; hình: chấm cam rỗng.
 - File moves ghi thêm cột `depth_reached` (`extra_move_stats`, chỉ AB có `time_limit` mới có giá trị).
 
 ## Luật chốt trước (D-25)
@@ -53,7 +58,7 @@ Phần: `bench, b, c, c1..c4, d, d1, d2, a, a1, a2, wcheck, summary, all`. Cờ:
 ## Public API (dùng trong test / script khác)
 ```python
 mcts(rollout: int | None, t=1.0) -> AgentSpec; ab_time(t) -> AgentSpec; d_specs(best) -> {point: (A, B)}
-FIXED_POINTS: dict[str, tuple[AgentSpec, AgentSpec]]   # c1..c4, a1, a2
+FIXED_POINTS: dict[str, tuple[AgentSpec, AgentSpec]]   # c1..c4, a1, a2, d3, d4 (X_POINTS = khám phá)
 classify_game(row) -> (term, ply)     # term ∈ mate | stalemate | repetition | max_plies | error (replay từ CSV)
 side_game_stats(moves, side) -> dict  # 1 ván, 1 bên: iter/s (nước có search), độ sâu cây, ply rollout/iter, depth_reached
 summarize_point(point, rows, moves) -> 3 dòng (all, A=Đỏ, A=Đen) theo MATCH_COLUMNS
@@ -67,9 +72,9 @@ run_ordering(quick, raw_dir, fens=None, depths=(2,3,4)) -> rows; ordering_table(
   phần: workers, power, pin %, bench/`e5_bench`, giờ, commit, dirty). Quick: tiền tố `e7quick_` (gitignore).
 - Bảng: `results/tables/e7_matches.csv` (`MATCH_COLUMNS`: W/D/L, điểm + Wilson 95 %, `distinct_games`, `term_*`, ply TB/
   trung vị, mỗi bên `s_per_move_mean/max`, `iter_per_s_mean/median/cv`, `tree_depth_mean`, `rollout_plies_per_iter`,
-  `nodes_per_move`, `depth_reached_mean/min/max`, workers, commit); `e7_ordering.csv` (theo depth × cấu hình: tổng nút,
+  `nodes_per_move`, `depth_reached_mean/min/max`, workers, commit, `exploratory` (1 = d3/d4)); `e7_ordering.csv` (theo depth × cấu hình: tổng nút,
   giây, nút/s, tỉ lệ so với `none`, số thế khớp/lệch giá trị). Quick thêm `e7quick_workers.csv`, `e7quick_estimate.csv`.
-- Hình: `results/figures/e7_scores.png` — điểm A + Wilson 95 % mỗi điểm, đường 0,5.
+- Hình: `results/figures/e7_scores.png` — điểm A + Wilson 95 % mỗi điểm, đường 0,5; điểm khám phá chấm cam rỗng.
 
 ## Định nghĩa số đo
 - **Điểm** = (W + 0,5·D)/n theo góc nhìn A; **Wilson 95 % trên điểm** (`p83_mcts_check.wilson_score`, như lmatch).
@@ -107,7 +112,7 @@ run_ordering(quick, raw_dir, fens=None, depths=(2,3,4)) -> rows; ordering_table(
 ## Test
 `tests/test_e7_xiangqi.py`: lý do kết thúc (chiếu bí, bí nước, lặp thế, `max_plies`, lỗi, replay lệch winner → lỗi);
 `l_verdict` ba nhánh; `best_rollout`; spec theo D-23/D-25 (AB `tt_mode` exact, không `top_k`; MCTS tactics bật,
-`Lend` = `rollout_limit None`); `side_game_stats` (bỏ nước tactic / AB 0 iteration); ordering 1 thế depth 2 cùng giá trị +
+`Lend` = `rollout_limit None`); `side_game_stats` (bỏ nước tactic / AB 0 iteration); spec d3/d4 (L10 vs AB như a1/a2, ngoài (d)); ordering 1 thế depth 2 cùng giá trị +
 chạy lại không thêm dòng; `run_point` + resume không chơi lại + cột `depth_reached` + `summarize_point`; `part_d` chưa có
 c → mã 2, L0 mạnh hơn → mã 3 không chạy (d), ngang → chạy d1, d2. Chạy: `python -m pytest tests/test_e7_xiangqi.py -q`.
 

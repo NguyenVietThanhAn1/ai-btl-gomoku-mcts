@@ -71,6 +71,16 @@ def test_specs_follow_d23_and_d25():
     assert e7.d_specs("L10")["d2"][0].params["time_limit"] == 2.5
 
 
+def test_exploratory_d3_d4_specs():
+    # d3/d4 (khám phá): MCTS L10 1 s tactics bật vs AB cùng cấu hình a1/a2; không nằm trong (d)/all
+    for point, depth in (("d3", 1), ("d4", 2)):
+        a, b = e7.FIXED_POINTS[point]
+        assert a == e7.mcts(10) and a.params["time_limit"] == 1.0 and a.params["check_tactics"]
+        assert b == e7.FIXED_POINTS[f"a{depth}"][0] and b.params["depth"] == depth
+        assert "time_limit" not in b.params or b.params["time_limit"] is None
+    assert set(e7.X_POINTS).isdisjoint(e7.D_POINTS) and "dx" in e7.PARTS
+
+
 def test_side_game_stats_skips_direct_and_ab_moves():
     def mv(side, it, at, tactic="0", depth="", dr=""):
         return {"side": side, "time": "1.0", "iterations": it, "agent_time": at, "tactic": tactic,
