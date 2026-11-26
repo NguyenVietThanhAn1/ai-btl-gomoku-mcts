@@ -654,24 +654,126 @@ def part_wcheck(ctx: Ctx) -> int:
     return 0
 
 
-def part_summary(ctx: Ctx) -> int:
-    out = []
+# ---------------------------------------------------------------- độ phân nhánh (D-39)
+# Chỉ ván giữa hai tác tử có tìm kiếm: nước Random làm thế cờ lệch (An, D-39).
+BRANCH_POINTS = ("c1", "c4", "d1", "d2", "d3", "d4")
+BRANCH_COLUMNS = [
+    "point",
+    "n_games",
+    "n_positions",
+    "legal_mean",
+    "legal_median",
+    "l10_search_moves",
+    "iter_per_move_mean",
+    "iter_per_move_median",
+    "iter_per_root_move_mean",
+    "iter_per_root_move_median",
+]
+
+
+def branching_stats(rows: list[dict[str, str]], moves: list[dict[str, str]]) -> dict[str, list]:
+    """Replay từng ván (khai cuộc + nước): số nước hợp lệ ở mỗi thế có tác tử đi (bỏ khai cuộc);
+    với nước của MCTS L10 có search (bỏ tactic 1/2, D-15): iterations và iterations / số nước hợp
+    lệ ở gốc (mức trung bình nếu chia đều; UCT không chia đều). Lend/L0 (c1, c4) không tính."""
+    by_game: dict[str, list[dict[str, str]]] = {}
+    for m in moves:
+        by_game.setdefault(m["game_id"], []).append(m)
+    legal: list[int] = []
+    its: list[float] = []
+    per_root: list[float] = []
+    for r in rows:
+        gs = json.loads(r["game_spec"])
+        game = make_game(GameSpec(gs["kind"], gs["params"]))
+        for mv in (int(x) for x in r["opening"].split(";") if x != ""):
+            game.play(mv)
+        l10_side = {s for s in ("A", "B") if r[f"label_{s.lower()}"].startswith("mcts_L10")}
+        for m in sorted(by_game.get(r["game_id"], []), key=lambda m: int(m["ply"])):
+            n = len(game.legal_moves())
+            legal.append(n)
+            if (
+                m["side"] in l10_side
+                and m["tactic"] not in DIRECT_TACTICS
+                and m["iterations"] not in ("", "0")
+            ):
+                its.append(float(m["iterations"]))
+                per_root.append(float(m["iterations"]) / n)
+            game.play(int(m["move"]))
+    return {"legal": legal, "iters": its, "per_root": per_root, "n_games": [len(rows)]}
+
+
+def _branch_row(point: str, st: dict[str, list], iters: bool = True) -> dict[str, Any]:
+    row: dict[str, Any] = {
+        "point": point,
+        "n_games": sum(st["n_games"]),
+        "n_positions": len(st["legal"]),
+        "legal_mean": statistics.fmean(st["legal"]),
+        "legal_median": float(statistics.median(st["legal"])),
+    }
+    if iters and st["iters"]:
+        row |= {
+            "l10_search_moves": len(st["iters"]),
+            "iter_per_move_mean": statistics.fmean(st["iters"]),
+            "iter_per_move_median": float(statistics.median(st["iters"])),
+            "iter_per_root_move_mean": statistics.fmean(st["per_root"]),
+            "iter_per_root_move_median": float(statistics.median(st["per_root"])),
+        }
+    return row
+
+
+def branching_table(raw_dir: Path = RAW_DIR, quick: bool = False) -> list[dict[str, Any]]:
+    """Mỗi điểm `BRANCH_POINTS` một dòng + dòng `all` gộp mọi thế (không phải TB các điểm); dòng
+    `all` chỉ có cột nước hợp lệ (iteration ở d2 dùng 2,5 s/nước, không gộp với 1 s)."""
+    out, pooled = [], {"legal": [], "iters": [], "per_root": [], "n_games": []}
+    for p in BRANCH_POINTS:
+        rows, moves = load_point(p, quick, raw_dir)
+        if not rows:
+            continue
+        st = branching_stats(rows, moves)
+        out.append(_branch_row(p, st))
+        for k in pooled:
+            pooled[k] += st[k]
+    if out:
+        out.append(_branch_row("all", pooled, iters=False))
+    return out
+
+
+def build_tables(
+    raw_dir: Path = RAW_DIR,
+    table_dir: Path = TABLE_DIR,
+    fig_dir: Path = FIG_DIR,
+    quick: bool = False,
+) -> tuple[list[dict[str, Any]], list[Path], list[Path]]:
+    """Sinh bảng + hình E7 từ raw (tất định): `matches`, `ordering`, `branching`, `scores.png`.
+    Trả (dòng matches, bảng đã ghi, hình đã ghi). `plots.regenerate` gọi hàm này (D-39)."""
+    pre = prefix(quick)
+    out: list[dict[str, Any]] = []
     for p in (*C_POINTS, *D_POINTS, *X_POINTS, *A_POINTS):
-        rows, moves = load_point(p, ctx.quick, ctx.raw_dir)
+        rows, moves = load_point(p, quick, raw_dir)
         if rows:
             out += summarize_point(p, rows, moves)
-    _write(ctx.table_dir / f"{prefix(ctx.quick)}matches.csv", MATCH_COLUMNS, out)
-    order = ctx.raw_dir / f"{prefix(ctx.quick)}ordering.csv"
+    tables, figs = [], []
+    if out:
+        _write(table_dir / f"{pre}matches.csv", MATCH_COLUMNS, out)
+        tables.append(table_dir / f"{pre}matches.csv")
+    order = raw_dir / f"{pre}ordering.csv"
     if order.exists():
         _write(
-            ctx.table_dir / f"{prefix(ctx.quick)}ordering.csv",
-            ORDER_TABLE_COLUMNS,
-            ordering_table(read_rows(order)),
+            table_dir / f"{pre}ordering.csv", ORDER_TABLE_COLUMNS, ordering_table(read_rows(order))
         )
+        tables.append(table_dir / f"{pre}ordering.csv")
+    br = branching_table(raw_dir, quick)
+    if br:
+        _write(table_dir / f"{pre}branching.csv", BRANCH_COLUMNS, br)
+        tables.append(table_dir / f"{pre}branching.csv")
     if out:
-        plot_scores(
-            [r for r in out if r["split"] == "all"], ctx.fig_dir / f"{prefix(ctx.quick)}scores.png"
-        )
+        fig = fig_dir / f"{pre}scores.png"
+        plot_scores([r for r in out if r["split"] == "all"], fig)
+        figs.append(fig)
+    return out, tables, figs
+
+
+def part_summary(ctx: Ctx) -> int:
+    out, _, _ = build_tables(ctx.raw_dir, ctx.table_dir, ctx.fig_dir, ctx.quick)
     for r in out:
         if r["split"] == "all":
             print(

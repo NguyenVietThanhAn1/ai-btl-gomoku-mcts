@@ -24,6 +24,7 @@ from gameai.experiments import e4_final_move as e4
 from gameai.experiments import e5_rollout as e5
 from gameai.experiments import e6_mechanism as e6m
 from gameai.experiments import e6_tactics as e6
+from gameai.experiments import e7_xiangqi as e7
 from gameai.experiments.common import (
     moves_path_for,
     read_rows,
@@ -167,7 +168,7 @@ def pinned_reuse(*args: Any, **kwargs: Any) -> tuple[bool, str]:
 
 
 def regenerate(raw_dir: Path, table_dir: Path, fig_dir: Path) -> tuple[list[Path], list[Path]]:
-    """Sinh bảng + hình E2-E6 vào `table_dir`/`fig_dir`. Trả (bảng, hình)."""
+    """Sinh bảng + hình E2-E7 vào `table_dir`/`fig_dir`. Trả (bảng, hình)."""
     table_dir.mkdir(parents=True, exist_ok=True)
     fig_dir.mkdir(parents=True, exist_ok=True)
     tables = e2_tables(raw_dir, table_dir) + e3_tables(raw_dir, table_dir)
@@ -185,7 +186,8 @@ def regenerate(raw_dir: Path, table_dir: Path, fig_dir: Path) -> tuple[list[Path
     m = e6m.make_figure(table_dir, fig_dir)
     if m:
         figs.append(m)
-    return sorted(set(tables)), figs
+    _, t7, f7 = e7.build_tables(raw_dir, table_dir, fig_dir)  # E7 cờ tướng (D-39)
+    return sorted(set(tables + t7)), figs + f7
 
 
 def committed_bytes(path: Path) -> bytes | None:
@@ -736,6 +738,159 @@ def write_summary_md(table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_DIR) -> Pa
     return path
 
 
+# ---------------------------------------------------------------- summary_xiangqi.md (E7, D-39)
+
+XQ_SUMMARY_NAME = "summary_xiangqi.md"
+E7_AGENT = {
+    "mcts_Lend": "MCTS Lend",
+    "mcts_L10": "MCTS L10",
+    "mcts_L0": "MCTS L0",
+    "mcts_L10_t2.5": "MCTS L10",
+    "ab_t1": "AB ID",
+    "ab_t2.5": "AB ID",
+    "ab_d1": "AB độ sâu 1",
+    "ab_d2": "AB độ sâu 2",
+    "random": "Random",
+}
+E7_ORDER_NAME = {"none": "không ordering", "mvv_lva": "MVV-LVA", "mvv_lva+tt": "MVV-LVA + TT"}
+E7_CONFIRMED = ("c1", "c2", "c3", "c4", "d1", "d2", "a1", "a2")
+E7_SECONDS = {"d2": "2,5", "a1": "-", "a2": "-"}  # còn lại 1 s/nước (D-25)
+E7_MATCH_HEAD = ["điểm", "A", "B", "s/nước", "ván", "W/D/L của A", "điểm A [Wilson 95 %]",
+                 "điểm A khi cầm Đỏ / Đen", "chiếu bí / bí nước / lặp thế / max_plies",
+                 "ply TB"]  # fmt: skip
+
+
+def _e7_match_rows(m: list[dict[str, str]], points: tuple[str, ...]) -> list[list[str]]:
+    out = []
+    for p in points:
+        a, red, black = (_one(m, point=p, split=s) for s in ("all", "A=Đỏ", "A=Đen"))
+        out.append([
+            p, E7_AGENT[a["label_a"]], E7_AGENT[a["label_b"]], E7_SECONDS.get(p, "1"), a["n"],
+            f"{a['wins']}/{a['draws']}/{a['losses']}",
+            f"{vn(a['score'])} {ci(a['score_lo'], a['score_hi'])}",
+            f"{vn(red['score'])} / {vn(black['score'])}",
+            " / ".join(a[f"term_{t}"] for t in ("mate", "stalemate", "repetition", "max_plies")),
+            vn(a["ply_mean"], 1),
+        ])  # fmt: skip
+    return out
+
+
+def _e7_search_rows(m: list[dict[str, str]]) -> list[list[str]]:
+    out = []
+    for p in ("d1", "d2", "d3", "d4"):
+        a = _one(m, point=p, split="all")
+        dr = "cố định"
+        if a["b_depth_reached_mean"]:
+            lo, hi = a["b_depth_reached_min"], a["b_depth_reached_max"]
+            dr = f"{vn(a['b_depth_reached_mean'])} ({lo}-{hi})"
+        out.append([
+            p, E7_AGENT[a["label_b"]], vn(a["a_s_per_move_mean"]), vn(a["b_s_per_move_mean"], 3),
+            vn(a["a_iter_per_s_median"], 0), vn(a["a_tree_depth_mean"]),
+            vn(a["a_nodes_per_move"], 0), vn(a["b_nodes_per_move"], 0), dr,
+        ])  # fmt: skip
+    return out
+
+
+def _e7_branch_rows(b: list[dict[str, str]]) -> list[list[str]]:
+    def pair(r: dict[str, str], k: str, d: int) -> str:
+        return f"{vn(r[k + '_mean'], d)} / {vn(r[k + '_median'], d)}" if r[k + "_mean"] else "-"
+
+    return [
+        [r["point"], r["n_games"], vn(r["n_positions"], 0), pair(r, "legal", 1),
+         r["l10_search_moves"] or "-", pair(r, "iter_per_move", 0),
+         pair(r, "iter_per_root_move", 1)]
+        for r in b
+    ]  # fmt: skip
+
+
+def section_e7(td: Path) -> list[str]:
+    o, m, b = (_t(td, f"e7_{n}.csv") for n in ("ordering", "matches", "branching"))
+    order_rows = [
+        [r["depth"], E7_ORDER_NAME[r["config"]], r["n_pos"], vn(r["nodes_sum"], 0),
+         vn(r["seconds_sum"], 3), vn(r["nodes_vs_none"], 3), vn(r["seconds_vs_none"], 3),
+         f"{r['value_match']}/{r['n_pos']}"]
+        for r in o
+    ]  # fmt: skip
+    return [
+        "Ván: 25 khai cuộc ngẫu nhiên 4 ply × 2 ván đổi bên (c4: 50 × 2), `max_plies` 200; điểm = "
+        "(W + D/2)/n theo góc nhìn A; Wilson 95 % trên điểm (D-25).",
+        *_table(
+            "Bảng E7 - ordering của Alpha-Beta (11 thế, độ sâu cố định, `e7_ordering.csv`)",
+            [
+                "độ sâu",
+                "cấu hình",
+                "thế",
+                "nút",
+                "giây",
+                "nút so với không ordering",
+                "giây so với không ordering",
+                "giá trị gốc khớp",
+            ],
+            order_rows,
+        ),  # fmt: skip
+        *_table(
+            "Bảng E7 - các trận chốt trước (`e7_matches.csv`)",
+            E7_MATCH_HEAD,
+            _e7_match_rows(m, E7_CONFIRMED),
+        ),  # fmt: skip
+        *_table(
+            "Bảng E7 - khám phá d3/d4, thêm sau d1/d2, không chốt trước (`e7_matches.csv`)",
+            E7_MATCH_HEAD,
+            _e7_match_rows(m, e7.X_POINTS),
+        ),  # fmt: skip
+        *_table(
+            "Bảng E7 - tìm kiếm trong trận MCTS L10 vs AB (`e7_matches.csv`)",
+            [
+                "điểm",
+                "AB",
+                "s/nước MCTS",
+                "s/nước AB",
+                "iter/s MCTS (trung vị)",
+                "độ sâu cây MCTS TB",
+                "nút/nước MCTS",
+                "nút/nước AB",
+                "độ sâu AB đạt TB (min-max)",
+            ],
+            _e7_search_rows(m),
+        ),  # fmt: skip
+        *_table(
+            "Bảng E7 - độ phân nhánh và ngân sách MCTS L10 (`e7_branching.csv`)",
+            [
+                "điểm",
+                "ván",
+                "thế",
+                "nước hợp lệ TB / trung vị",
+                "nước search của L10",
+                "iteration/nước TB / trung vị",
+                "iteration / nước hợp lệ ở gốc TB / trung vị",
+            ],
+            _e7_branch_rows(b),
+        ),  # fmt: skip
+    ]
+
+
+def write_summary_xiangqi(table_dir: Path = TABLE_DIR) -> Path:
+    """`summary_xiangqi.md`: bảng E7 cho mục 5.7 báo cáo (neo `src-table`); mọi số đọc từ CSV."""
+    out = [
+        "# Tổng hợp kết quả cờ tướng (E7) - nguồn cho mục 5.7 báo cáo",
+        "",
+        "> **Sinh tự động** bởi `python -m gameai.experiments.plots` từ "
+        "`results/tables/e7_*.csv` - không sửa tay. Số kiểu VN (dấu phẩy thập phân).",
+        "",
+        "## E7 - cờ tướng: ordering, rollout, MCTS vs Alpha-Beta (mục 5.7)",
+        "",
+        *section_e7(table_dir),
+        "",
+        "Nguồn: `results/tables/e7_ordering.csv`, `results/tables/e7_matches.csv`, "
+        "`results/tables/e7_branching.csv`, `results/figures/e7_scores.png`",
+        "",
+    ]
+    path = table_dir / XQ_SUMMARY_NAME
+    with path.open("w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(out))
+    return path
+
+
 def check_outputs(
     new_dir: Path,
     fig_dir: Path,
@@ -745,9 +900,11 @@ def check_outputs(
 ) -> list[tuple[str, str]]:
     """`--check`: sinh `summary_kinrow.md` vào `new_dir` (từ bảng đã sinh ở đó) rồi so byte cả các
     bảng `names` lẫn summary với bản tham chiếu. Summary cũng phải giống byte vì `report/report.md`
-    lấy nó làm nguồn (`src: summary_kinrow.md#…`, `src-table`). Trả [(tên, lý do)]."""
+    lấy nó làm nguồn (`src: summary_kinrow.md#…`, `src-table`). E7: thêm `summary_xiangqi.md`
+    (D-39). Trả [(tên, lý do)]."""
     write_summary_md(new_dir, fig_dir)
-    return compare(new_dir, ref_dir, [*names, SUMMARY_NAME], ref=ref)
+    write_summary_xiangqi(new_dir)
+    return compare(new_dir, ref_dir, [*names, SUMMARY_NAME, XQ_SUMMARY_NAME], ref=ref)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -769,9 +926,10 @@ def main(argv: list[str] | None = None) -> int:
             tables, figs = regenerate(RAW_DIR, tdir, fdir)
             names = [p.name for p in tables]
             bad = check_outputs(tdir, fdir, names)
-            n_files = len(names) + 1  # + summary_kinrow.md
+            n_files = len(names) + 2  # + summary_kinrow.md, summary_xiangqi.md
             measured = ", ".join(n for n in MEASURED if n not in names)
-            print(f"[check] {len(tables)} bảng + {SUMMARY_NAME}, {len(figs)} hình sinh lại; "
+            print(f"[check] {len(tables)} bảng + {SUMMARY_NAME} + {XQ_SUMMARY_NAME}, "
+                  f"{len(figs)} hình sinh lại; "
                   f"bảng đo trực tiếp (không sinh lại): {measured}")  # fmt: skip
             for n, why in bad:
                 print(f"  ≠ {n}: {why}")
@@ -783,6 +941,7 @@ def main(argv: list[str] | None = None) -> int:
     for p in tables + figs:
         print(f"[plots] {p.relative_to(ROOT)}")
     print(f"[plots] {write_summary_md(TABLE_DIR, FIG_DIR).relative_to(ROOT)}")
+    print(f"[plots] {write_summary_xiangqi(TABLE_DIR).relative_to(ROOT)}")
     return 0
 
 

@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** ✅ full + d3/d4 khám phá xong (2026-11-26, kết quả D-25; kiểm nhãn kết thúc: `e7_term_check.md`)  ·  **Task:** P8.4 (D-25)  ·  **Cập nhật:** 2026-11-26
+**Trạng thái:** ✅ full + d3/d4 khám phá xong (2026-11-26, kết quả D-25; kiểm nhãn kết thúc: `e7_term_check.md`)  ·  **Task:** P8.4 (D-25)  ·  **Cập nhật:** 2026-11-26 (P8.5: bảng phân nhánh, nối plots)
 
 ## Mục đích
 Thí nghiệm E7 cờ tướng (thiết kế D-25): (a) AB depth 1/2 vs Random, (b) move ordering của AB (số nút, tất định),
@@ -17,7 +17,7 @@ python -m gameai.experiments.e7_xiangqi b                    # từng phần (ch
 python -m gameai.experiments.e7_xiangqi c                    # c1..c4 (1 worker) rồi in kết luận luật c4
 python -m gameai.experiments.e7_xiangqi d                    # cần c1 + c4 đủ ván; L0 mạnh hơn rõ → DỪNG (mã 3)
 python -m gameai.experiments.e7_xiangqi dx                   # d3, d4 khám phá (ngoài `all`); --quick in ước tính
-python -m gameai.experiments.e7_xiangqi summary              # dựng lại bảng + hình từ raw
+python -m gameai.experiments.e7_xiangqi summary              # dựng lại bảng + hình từ raw (= build_tables)
 ```
 Phần: `bench, b, c, c1..c4, d, d1, d2, dx, d3, d4, a, a1, a2, wcheck, summary, all`. Cờ: `--quick`, `--workers` (mặc định 1, D-25),
 `--pairs` (mặc định 25; quick 2), `--allow-code-change`, `--allow-battery` (full mặc định từ chối khi chạy pin, D-21),
@@ -65,6 +65,8 @@ summarize_point(point, rows, moves) -> 3 dòng (all, A=Đỏ, A=Đen) theo MATCH
 l_verdict(score, n) -> str; best_rollout(c1, c4) -> "L10" | "Lend" | "L0"
 run_ordering(quick, raw_dir, fens=None, depths=(2,3,4)) -> rows; ordering_table(rows) -> rows
 write_estimate(ctx)                   # quick: s/ván × 50 / ctx.workers (= --workers dự kiến cho full)
+build_tables(raw_dir, table_dir, fig_dir, quick=False) -> (dòng matches, bảng, hình)  # plots gọi (D-39)
+branching_stats(rows, moves) -> dict; branching_table(raw_dir, quick) -> rows        # độ phân nhánh
 ```
 
 ## File ra
@@ -75,6 +77,12 @@ write_estimate(ctx)                   # quick: s/ván × 50 / ctx.workers (= --w
   trung vị, mỗi bên `s_per_move_mean/max`, `iter_per_s_mean/median/cv`, `tree_depth_mean`, `rollout_plies_per_iter`,
   `nodes_per_move`, `depth_reached_mean/min/max`, workers, commit, `exploratory` (1 = d3/d4)); `e7_ordering.csv` (theo depth × cấu hình: tổng nút,
   giây, nút/s, tỉ lệ so với `none`, số thế khớp/lệch giá trị). Quick thêm `e7quick_workers.csv`, `e7quick_estimate.csv`.
+- `results/tables/e7_branching.csv` (D-39): chỉ ván giữa hai tác tử có tìm kiếm (`BRANCH_POINTS` = c1, c4, d1-d4; bỏ
+  ván có Random vì nước Random làm thế cờ lệch). Mỗi điểm + dòng `all` (gộp mọi thế): `n_games`, `n_positions`,
+  `legal_mean/median` (số nước hợp lệ ở mỗi thế có tác tử đi, replay từ raw, bỏ khai cuộc); chỉ nước của **MCTS L10**
+  có search (bỏ tactic 1/2, D-15): `l10_search_moves`, `iter_per_move_mean/median`, `iter_per_root_move_mean/median`
+  = iterations / số nước hợp lệ ở gốc (mức trung bình *nếu chia đều*; UCT không chia đều). Dòng `all` để trống cột
+  iteration (d2 dùng 2,5 s/nước).
 - Hình: `results/figures/e7_scores.png` — điểm A + Wilson 95 % mỗi điểm, đường 0,5; điểm khám phá chấm cam rỗng.
 
 ## Định nghĩa số đo
@@ -114,9 +122,9 @@ write_estimate(ctx)                   # quick: s/ván × 50 / ctx.workers (= --w
 `tests/test_e7_xiangqi.py`: lý do kết thúc (chiếu bí, bí nước, lặp thế, `max_plies`, lỗi, replay lệch winner → lỗi);
 `l_verdict` ba nhánh; `best_rollout`; spec theo D-23/D-25 (AB `tt_mode` exact, không `top_k`; MCTS tactics bật,
 `Lend` = `rollout_limit None`); `side_game_stats` (bỏ nước tactic / AB 0 iteration); spec d3/d4 (L10 vs AB như a1/a2, ngoài (d)); ordering 1 thế depth 2 cùng giá trị +
-chạy lại không thêm dòng; `run_point` + resume không chơi lại + cột `depth_reached` + `summarize_point`; `part_d` chưa có
+chạy lại không thêm dòng; `branching_stats` (ván dựng tay: đếm nước hợp lệ, chỉ L10 có search) + `build_tables` chạy lại giống byte; `run_point` + resume không chơi lại + cột `depth_reached` + `summarize_point`; `part_d` chưa có
 c → mã 2, L0 mạnh hơn → mã 3 không chạy (d), ngang → chạy d1, d2. Chạy: `python -m pytest tests/test_e7_xiangqi.py -q`.
 
 ## Hạn chế / TODO
-- Hình/bảng chưa nối vào `plots.py --check` (làm khi có số full, cùng đợt bổ sung báo cáo).
+- (Xong, D-39) bảng/hình E7 sinh lại trong `plots.regenerate` → kiểm bằng `plots --check`, kèm `summary_xiangqi.md`.
 - AB trong ván thật có TT + lặp thế (D-22) — chỉ ghi nhận.

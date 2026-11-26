@@ -174,3 +174,58 @@ def test_estimate_uses_cli_workers_not_stale_quick_file(tmp_path):
     e7.write_estimate(ctx)
     est = {r["part"]: r for r in read_rows(tmp_path / "e7quick_estimate.csv")}
     assert float(est["d3"]["full_min"]) == pytest.approx(24.0 * 2 * e7.N_PAIRS / 3 / 60, abs=1e-3)
+
+
+def test_branching_stats_hand_game():
+    """D-39: replay khai cuộc + nước; đếm nước hợp lệ mỗi thế có tác tử đi; iteration chỉ của MCTS
+    L10 có search (bỏ tactic 1/2), chia cho số nước hợp lệ ở gốc."""
+    g = Xiangqi()
+    opening = [iccs_to_move("h2e2")]
+    g.play(opening[0])
+    n1 = len(g.legal_moves())  # thế ply 0 sau khai cuộc (Đen đi)
+    m1 = iccs_to_move("h9g7")
+    g.play(m1)
+    n2 = len(g.legal_moves())
+    m2 = iccs_to_move("h0g2")
+    row = {
+        "game_id": "1-AX",
+        "game_spec": json.dumps({"kind": "xiangqi", "params": {"max_plies": 200}}),
+        "opening": str(opening[0]),
+        "label_a": "mcts_L10",
+        "label_b": "random",
+    }
+    moves = [  # cố tình đảo thứ tự: hàm phải sắp theo ply
+        {"game_id": "1-AX", "ply": "1", "side": "B", "move": str(m2), "tactic": "",
+         "iterations": "0"},
+        {"game_id": "1-AX", "ply": "0", "side": "A", "move": str(m1), "tactic": "0",
+         "iterations": "300"},
+    ]  # fmt: skip
+    st = e7.branching_stats([row], moves)
+    assert st["legal"] == [n1, n2]
+    assert st["iters"] == [300.0] and st["per_root"] == [300.0 / n1]
+    moves[1]["tactic"] = "1"  # nước đi thẳng nhờ tactics → không tính iteration
+    assert e7.branching_stats([row], moves)["iters"] == []
+    row["label_a"] = "mcts_L0"  # chỉ MCTS L10
+    assert e7.branching_stats([row], moves)["iters"] == []
+
+
+def test_build_tables_rerun_identical(tmp_path):
+    """`build_tables` tất định: chạy hai lần cho bảng giống byte (plots --check dựa vào đây)."""
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    src = e7.RAW_DIR
+    for p in ("d3",):
+        for suffix in ("", "_moves"):
+            f = src / f"e7_{p}{suffix}.csv"
+            if not f.exists():
+                pytest.skip("không có raw E7")
+            (raw / f.name).write_bytes(f.read_bytes())
+    t1, t2, fig = tmp_path / "t1", tmp_path / "t2", tmp_path / "fig"
+    for t in (t1, t2):
+        t.mkdir()
+        _, tables, _ = e7.build_tables(raw, t, fig)
+    assert {p.name for p in tables} == {"e7_matches.csv", "e7_branching.csv"}
+    for name in ("e7_matches.csv", "e7_branching.csv"):
+        assert (t1 / name).read_bytes() == (t2 / name).read_bytes()
+    br = read_rows(t1 / "e7_branching.csv")
+    assert [r["point"] for r in br] == ["d3", "all"] and br[1]["iter_per_move_mean"] == ""

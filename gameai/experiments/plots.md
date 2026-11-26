@@ -8,17 +8,21 @@
 ## Mục đích
 Sinh lại **mọi bảng/hình báo cáo k-in-row (E1-E6)** từ `results/raw` (không vẽ/gõ tay, không chạy search/ván nào)
 và sinh `results/tables/summary_kinrow.md` - số chính mỗi E + bản đồ hình/bảng → mục 5 báo cáo. Nguồn cho P7.2.
+Từ P8.5 (D-39) sinh lại cả bảng/hình **E7 cờ tướng** (`e7_xiangqi.build_tables`: `e7_matches`, `e7_ordering`,
+`e7_branching`, `e7_scores.png`) và `results/tables/summary_xiangqi.md` (bảng E7 cho mục 5.7, neo `src-table`).
 
 ## Cách chạy
 ```
 python -m gameai.experiments.plots           # ghi đè results/tables/*.csv, results/figures/*.png, summary_kinrow.md
 python -m gameai.experiments.plots --check   # sinh vào thư mục tạm, so byte từng CSV **và `summary_kinrow.md`** với bản ĐÃ COMMIT (git show HEAD:…)
 ```
-`--check` in `giống byte / khác / mới (chưa commit)`; exit 1 nếu có bảng hoặc summary khác. Summary được so vì `report/report.md` lấy nó làm nguồn (`src: summary_kinrow.md#…`, `src-table`); `check_outputs(new_dir, fig_dir, names, ref_dir, ref)` sinh summary vào `new_dir` rồi so cả bảng lẫn summary, dòng tổng đếm 25 bảng + 1 summary. CRLF/LF được chuẩn hóa trước khi so.
+`--check` in `giống byte / khác / mới (chưa commit)`; exit 1 nếu có bảng hoặc summary khác. Summary được so vì `report/report.md` lấy nó làm nguồn (`src: summary_kinrow.md#…`, `src-table`); `check_outputs(new_dir, fig_dir, names, ref_dir, ref)` sinh summary vào `new_dir` rồi so cả bảng lẫn summary, dòng tổng đếm bảng + 2 summary (`summary_kinrow.md`, `summary_xiangqi.md`). CRLF/LF được chuẩn hóa trước khi so.
 Thời gian ~1 phút (đọc raw E3/E5 lớn).
 
 ## Public API
-- `regenerate(raw_dir, table_dir, fig_dir) -> (bảng, hình)`: E2-E6 + cơ chế E6.
+- `regenerate(raw_dir, table_dir, fig_dir) -> (bảng, hình)`: E2-E6 + cơ chế E6 + E7 (`e7.build_tables`).
+- `write_summary_xiangqi(table_dir) -> Path`, `section_e7(td)`: `summary_xiangqi.md` (5 bảng `### Bảng E7 - …`:
+  ordering, các trận chốt trước, khám phá d3/d4, tìm kiếm MCTS vs AB, độ phân nhánh).
 - `e2_tables`, `e3_tables`, `e4_tables(raw_dir, table_dir)`: bảng từ raw, **cùng hàm tóm tắt** như script gốc
   (`common.summarize`, `e2.summarize_*`, `e3.write_table`, `e4.summarize_roots / example_rows / score_ci`).
   E5/E6 dùng thẳng `e5_rollout.build_tables`, `e6_tactics.build_tables`, `e6_mechanism.build_table`; hình dùng
@@ -66,15 +70,16 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
 | 5.4 N vs W/N | E4 | `e4_match` | `e4_roots_examples` (W, N, W/N ở gốc), `e4_roots_summary`, `e4_match` |
 | 5.5 Rollout | E5 | `e5_iter`, `e5_time` | `e5_paired`, `e5_h2h`, `e5_greedy`, `e5_mref`, `e5_ab2`, `e5_bench`, `e5_rates` |
 | 5.6 check_tactics | E6 | `e6_choice`, `e6_match`, `e6_mechanism` | `e6_choice`, `e6_match`, `e6_paired`, `e6_mechanism`, `e6_cost_check`, `e6_time`, `e6_tactic_rate` |
+| 5.7 Cờ tướng | E7 | `e7_scores` | `e7_ordering`, `e7_matches`, `e7_branching` (+ `summary_xiangqi.md`); `e7_term_check` đo trực tiếp |
 
 ## Kết quả kiểm (2026-11-18, sau commit `1fac6f7`)
 `--check`: 25 bảng + `summary_kinrow.md` sinh lại, **26 giống byte** với bản đã commit, 0 khác, 0 mới (9 hình sinh lại). Lịch sử: 2026-11-17 (sau `e98dc49`) là 25 bảng, 24 giống byte, 1 mới (`e6_mechanism.csv`), chưa so summary.
 
 ## Phụ thuộc
-`experiments/{common,e2_never_lose,e3_c_sweep,e4_final_move,e5_rollout,e6_tactics,e6_mechanism}.py`, matplotlib (Agg), `git`.
+`experiments/{common,e2_never_lose,e3_c_sweep,e4_final_move,e5_rollout,e6_tactics,e6_mechanism,e7_xiangqi}.py`, matplotlib (Agg), `git`.
 
 ## Test
-`tests/test_plots.py`: `test_tables_do_not_depend_on_head` (giả lập `git_diff_empty(target="HEAD")` → False, bảng E5/E6 vẫn giống byte); `vn`/`ci` (gồm luật làm tròn D-30, dấu "−"; tick hình: `tests/test_figfmt.py`); `_one` báo lỗi khi 0 hoặc ≥ 2 dòng; `compare` (giống sau chuẩn hóa CRLF / khác / mới); `check_outputs` (summary giống / lệch một chữ → báo đúng tên + dòng / mới);
+`tests/test_plots.py`: `test_tables_do_not_depend_on_head` (giả lập `git_diff_empty(target="HEAD")` → False, bảng E5/E6 vẫn giống byte); `vn`/`ci` (gồm luật làm tròn D-30, dấu "−"; tick hình: `tests/test_figfmt.py`); `_one` báo lỗi khi 0 hoặc ≥ 2 dòng; `compare` (giống sau chuẩn hóa CRLF / khác / mới); `check_outputs` (hai summary giống / lệch một chữ → báo đúng tên + dòng / mới); `summary_xiangqi.md` từ CSV (5 tiêu đề không trùng, d3/d4 chỉ ở bảng khám phá, W/D/L khớp, không gạch dài);
 lọc 10 cặp đầu + moves tương ứng; tóm tắt mistakes E2 từ chuỗi = từ int (gồm thứ tự); `summary_kinrow.md` sinh được từ
 bảng thật, chứa số lấy từ CSV (mẫu E1/E2/E6), mọi file được nhắc tới tồn tại. P7.2: tiêu đề `###` không trùng; W/D/L E3 khớp CSV, W + D + L = n; ví dụ E4 15×15 có cột tham chiếu. Chạy: `python -m pytest tests/test_plots.py -q`.
 
