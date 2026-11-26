@@ -1,0 +1,2 @@
+started,finished,wall_s,boards,quick,cpu,logical_cpus,power,battery_pct,power_plan,bench_speed_vs_e5,git_commit,git_dirty,animations,note
+2026-11-26T19:21:33,2026-11-26T19:25:03,209.7,15,0,12th Gen Intel(R) Core(TM) i9-12900H,20,AC,100,Balanced,1.031,af326697cc34485f41b6e474be667a4fb0bcf688,0,1,minh họa GUI — không dùng cho báo cáo thí nghiệm

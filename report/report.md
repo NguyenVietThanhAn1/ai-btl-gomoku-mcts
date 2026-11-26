@@ -767,13 +767,17 @@ gameai/
   core/game.py           giao diện Game chung (current_player, legal_moves, candidate_moves,
                          play, undo, is_terminal, winner, clone, key)
   games/kinrow.py        KInRow(n, k): 3×3 và 15×15, kiểm tra thắng quanh nước vừa đi
+  games/xiangqi.py       Xiangqi: luật cờ tướng, FEN, ICCS, Zobrist, lặp thế, max_plies
   heuristics/            kinrow_eval.py (lượng giá cửa sổ, delta_eval, move_score),
-                         kinrow_rollout.py (heavy rollout tăng dần)
+                         kinrow_rollout.py (heavy rollout tăng dần),
+                         xiangqi_eval.py (vật chất + PST, delta, MVV-LVA)
   agents/                random_agent, greedy, minimax, alphabeta, mcts, rollout, registry
   arena.py               chơi một ván / một match, seed, đổi lượt
   experiments/           common.py (chạy song song, CSV, resume), e1_nodes … e6_tactics,
+                         p81_perft, p82_ab_check, p83_mcts_check (kiểm luật, AB, MCTS cờ tướng),
+                         e7_xiangqi (E7), e7_term_check (kiểm nhãn chiếu bí / bí nước),
                          plots.py (sinh mọi bảng/hình), report_check.py (đối chiếu số trong báo cáo)
-  gui/                   giao diện pygame (Phụ lục B)
+  gui/                   giao diện pygame (Phụ lục B), xiangqi_view.py (bàn cờ tướng)
 tests/                   pytest cho mọi module, gồm test hồi quy "golden" k-in-row
 results/raw/             dữ liệu thô (chỉ script ghi);  results/tables/, results/figures/: sinh từ raw
 ```
@@ -785,15 +789,31 @@ python -m pytest -q                                   # toàn bộ test
 python -m gameai.experiments.e1_nodes                 # E1 (tương tự e2_never_lose, e3_c_sweep,
 python -m gameai.experiments.e3_c_sweep --quick       #   e4_final_move, e5_rollout, e6_tactics;
                                                       #   --quick = bản rút gọn để ước tính thời gian)
+python -m gameai.experiments.p81_perft                # perft cờ tướng (mục 3.4)
+python -m gameai.experiments.e7_xiangqi all --quick   # E7 rút gọn; bỏ --quick = chạy đủ (cắm sạc)
+python -m gameai.experiments.e7_xiangqi dx            # phần khám phá d3, d4
 python -m gameai.experiments.plots                    # sinh lại mọi bảng/hình mục 5 từ results/raw
-python -m gameai.experiments.plots --check            # kiểm bảng sinh lại giống byte bản đã lưu
+python -m gameai.experiments.plots --check            # kiểm bảng sinh lại (cả E7) giống byte bản đã lưu
 python -m gameai.experiments.report_check             # đối chiếu mọi số trong báo cáo với results/
 python -m gameai.gui.pygame_app                       # giao diện chơi (Phụ lục B)
 ```
 
 ## Phụ lục B - Giao diện chơi
 
-Giao diện (pygame) cho phép chơi người với máy, máy với máy và hai người trên bàn 3×3 và 15×15, với hai loại AI (MCTS, Alpha-Beta) ở ba mức Dễ / Vừa / Khó. Mỗi mức ánh xạ sang đúng một cấu hình tác tử; mức MCTS dùng lại cấu hình của thí nghiệm (D-29): 3×3 dùng MCTS của E2 (c = √2 ≈ 1,41) với 100 / 1000 / 5000 iteration, 15×15 dùng MCTS h300 của E3 với 250 / 1000 / 5000 iteration và c = 1,4. <!-- const: D-29 --> Alpha-Beta Khó dùng cấu hình của E1 (3×3: ordering + TT, tìm hết; 15×15: ordering, độ sâu 3). Chế độ "Demo" chạy máy với máy bằng cấu hình thí nghiệm và hiện nguồn cấu hình. Khi bật "Phân tích", giao diện hiện N và W/N của các nước ứng viên ở gốc cây MCTS - chính đại lượng được phân tích ở E4.
+Giao diện (pygame) cho phép chơi người với máy, máy với máy và hai người trên bàn 3×3, 15×15 và cờ tướng, với hai loại AI (MCTS, Alpha-Beta) ở ba mức Dễ / Vừa / Khó. Mỗi mức ánh xạ sang đúng một cấu hình tác tử (Bảng B.1). Mức nào trùng cấu hình thí nghiệm thì dùng lại đúng cấu hình đó; mức Khó của Alpha-Beta 15×15 là cấu hình riêng của chế độ chơi, có cắt tỉa xấp xỉ (`top_k`), nên không dùng trong thí nghiệm (D-36). Chế độ "Demo" chạy máy với máy bằng cấu hình thí nghiệm và hiện nguồn cấu hình. Khi bật "Phân tích", giao diện hiện N và W/N của các nước ứng viên ở gốc cây MCTS, chính đại lượng được phân tích ở E4; với cờ tướng, thẻ Phân tích hiện năm nước đầu dạng chữ.
+
+**Bảng B.1.** Cấu hình tác tử của từng mức độ khó.
+
+| Trò | AI | Dễ | Vừa | Khó |
+|---|---|---|---|---|
+| 3×3 | MCTS | rollout ngẫu nhiên, 100 iteration, c = √2 (E2) | 1000 iteration (E2) | 5000 iteration (E2) <!-- const: D-29 --> |
+| 3×3 | Alpha-Beta | độ sâu 1 | độ sâu 2 | tìm hết, ordering + TT (E1) <!-- const: D-29 --> |
+| 15×15 | MCTS | h300, 250 iteration, c = 1,4, `check_tactics` (E3) | 1000 iteration (E3) | 5000 iteration (E3) <!-- const: D-29 --> |
+| 15×15 | Alpha-Beta | độ sâu 1, ordering | độ sâu 3, ordering (E1) | iterative deepening 2,4 s/nước, `top_k` (16, 12, 8), TT, VCF độ sâu 8 <!-- const: D-36 --> |
+| cờ tướng | MCTS | L10, 0,3 s/nước | L10, 1 s/nước (cùng tham số MCTS E7) | L10, 2,5 s/nước (cùng tham số d2) <!-- const: D-37 --> |
+| cờ tướng | Alpha-Beta | độ sâu 1 (cùng tham số a1) | độ sâu 2 + TT | iterative deepening 2 s/nước, TT <!-- const: D-37 --> |
+
+MCTS cờ tướng ở mọi mức là cấu hình mục 3.4: cắt rollout sau 10 nước, σ(eval/2000), c = √2, bật `check_tactics`; Alpha-Beta cờ tướng dùng eval + delta + MVV-LVA, tất định. <!-- const: D-37 -->
 
 ![Hình B.1. Màn hình chính.](figures/gui/home.png)
 
@@ -811,7 +831,26 @@ Giao diện (pygame) cho phép chơi người với máy, máy với máy và ha
 
 ![Hình B.8. Màn hình hướng dẫn.](figures/gui/help.png)
 
-**Thời gian suy nghĩ.** Thời gian/nước được đo bằng script (giao diện chạy không cửa sổ, người chơi được mô phỏng bằng nước ngẫu nhiên có seed, cắm sạc); đây là số minh họa cho giao diện, không phải số liệu thí nghiệm. Với giao diện hoàn chỉnh (**bật** hiệu ứng chuyển động, `p63anim_gui_timing.csv`), MCTS Khó 15×15 mất trung bình 2,046 <!-- src: results/tables/p63anim_gui_timing.csv | board=15,kind=mcts,level=hard,opponent=random_human | mean_s --> s/nước, tối đa 3,909 <!-- src: results/tables/p63anim_gui_timing.csv | board=15,kind=mcts,level=hard,opponent=random_human | max_s --> s; Alpha-Beta Khó 15×15 trung bình 0,104 <!-- src: results/tables/p63anim_gui_timing.csv | board=15,kind=alphabeta,level=hard,opponent=random_human | mean_s --> s. Bàn 3×3 chỉ được đo ở lần đo đầu (`p63_gui_timing.csv`, **tắt** hiệu ứng - lúc đó giao diện chưa có hiệu ứng): MCTS Khó trung bình 0,052 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=mcts,level=hard,opponent=random_human | mean_s --> s/nước. Lần đo tắt hiệu ứng cho MCTS Khó 15×15 trung bình 1,847 <!-- src: results/tables/p63_gui_timing.csv | board=15,kind=mcts,level=hard,opponent=random_human | mean_s --> s/nước. Chênh lệch giữa hai lần đo **không quy được cho hiệu ứng**: benchmark tốc độ chạy kèm mỗi lần đo cho thấy máy ở lần đo bật hiệu ứng chậm hơn rõ (0,827 <!-- src: results/tables/p63anim_gui_runinfo.csv | - | bench_speed_vs_e5 -->× tốc độ benchmark của E5, so với 0,996 <!-- src: results/tables/p63_gui_runinfo.csv | - | bench_speed_vs_e5 -->× ở lần đo gốc; D-29).
+![Hình B.9. Cờ tướng, hai người: Đỏ đang bị chiếu (tướng có vòng đỏ, dòng trạng thái báo chiếu); quân được chọn có đĩa nền, ô đích dưới con trỏ hiện bóng quân, nước cuối có khung bốn góc.](figures/gui/xq_check.png)
+
+![Hình B.10. Cờ tướng, người cầm Đen với Alpha-Beta Dễ: bàn tự xoay để bên người chơi ở dưới.](figures/gui/xq_flipped.png)
+
+![Hình B.11. Cờ tướng, hộp thoại kết thúc ván: Đen thắng do chiếu bí.](figures/gui/xq_end.png)
+
+**Thời gian suy nghĩ.** Thời gian mỗi nước được đo bằng script: giao diện chạy không cửa sổ, người chơi được mô phỏng bằng nước ngẫu nhiên có seed, cắm sạc. Đây là số minh họa cho giao diện, không phải số liệu thí nghiệm. Bảng B.2 chỉ tính nước có tìm kiếm, khi đấu với người chơi ngẫu nhiên. Bàn 15×15 và cờ tướng được đo trên cùng một commit sạch, với giao diện hoàn chỉnh (bật hiệu ứng chuyển động); mọi mức 15×15 lấy từ cùng một lượt đo (D-39). Bàn 3×3 lấy từ lần đo đầu, khi giao diện chưa có hiệu ứng (D-29).
+
+**Bảng B.2.** Thời gian mỗi nước của AI, trung bình / tối đa (giây).
+
+| Trò | AI | Dễ | Vừa | Khó |
+|---|---|---|---|---|
+| 3×3 | MCTS | 0,002 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=mcts,level=easy,opponent=random_human | mean_s --> / 0,003 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=mcts,level=easy,opponent=random_human | max_s --> | 0,011 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=mcts,level=medium,opponent=random_human | mean_s --> / 0,017 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=mcts,level=medium,opponent=random_human | max_s --> | 0,052 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=mcts,level=hard,opponent=random_human | mean_s --> / 0,090 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=mcts,level=hard,opponent=random_human | max_s --> |
+| 3×3 | Alpha-Beta | 0,000 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=alphabeta,level=easy,opponent=random_human | mean_s --> / 0,000 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=alphabeta,level=easy,opponent=random_human | max_s --> | 0,000 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=alphabeta,level=medium,opponent=random_human | mean_s --> / 0,000 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=alphabeta,level=medium,opponent=random_human | max_s --> | 0,001 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=alphabeta,level=hard,opponent=random_human | mean_s --> / 0,005 <!-- src: results/tables/p63_gui_timing.csv | board=3,kind=alphabeta,level=hard,opponent=random_human | max_s --> |
+| 15×15 | MCTS | 0,146 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=mcts,level=easy,opponent=random_human | mean_s --> / 0,238 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=mcts,level=easy,opponent=random_human | max_s --> | 0,389 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=mcts,level=medium,opponent=random_human | mean_s --> / 0,827 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=mcts,level=medium,opponent=random_human | max_s --> | 1,894 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=mcts,level=hard,opponent=random_human | mean_s --> / 3,676 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=mcts,level=hard,opponent=random_human | max_s --> |
+| 15×15 | Alpha-Beta | 0,001 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=alphabeta,level=easy,opponent=random_human | mean_s --> / 0,002 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=alphabeta,level=easy,opponent=random_human | max_s --> | 0,110 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=alphabeta,level=medium,opponent=random_human | mean_s --> / 0,186 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=alphabeta,level=medium,opponent=random_human | max_s --> | 1,555 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=alphabeta,level=hard,opponent=random_human | mean_s --> / 2,405 <!-- src: results/tables/p64gui_gui_timing.csv | board=15,kind=alphabeta,level=hard,opponent=random_human | max_s --> |
+| cờ tướng | MCTS | 0,300 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=mcts,level=easy,opponent=random_human | mean_s --> / 0,301 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=mcts,level=easy,opponent=random_human | max_s --> | 1,000 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=mcts,level=medium,opponent=random_human | mean_s --> / 1,001 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=mcts,level=medium,opponent=random_human | max_s --> | 2,501 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=mcts,level=hard,opponent=random_human | mean_s --> / 2,503 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=mcts,level=hard,opponent=random_human | max_s --> |
+| cờ tướng | Alpha-Beta | 0,001 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=alphabeta,level=easy,opponent=random_human | mean_s --> / 0,002 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=alphabeta,level=easy,opponent=random_human | max_s --> | 0,005 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=alphabeta,level=medium,opponent=random_human | mean_s --> / 0,011 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=alphabeta,level=medium,opponent=random_human | max_s --> | 2,001 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=alphabeta,level=hard,opponent=random_human | mean_s --> / 2,003 <!-- src: results/tables/p62gui_gui_timing.csv | board=xiangqi,kind=alphabeta,level=hard,opponent=random_human | max_s --> |
+
+Benchmark ngắn chạy kèm mỗi lượt đo cho tốc độ máy bằng 0,996 <!-- src: results/tables/p63_gui_runinfo.csv | - | bench_speed_vs_e5 --> lần benchmark của E5 ở lượt 3×3, 1,031 <!-- src: results/tables/p64gui_gui_runinfo.csv | - | bench_speed_vs_e5 --> lần ở lượt 15×15 và 0,831 <!-- src: results/tables/p62gui_gui_runinfo.csv | - | bench_speed_vs_e5 --> lần ở lượt cờ tướng. Mức theo thời gian (MCTS cờ tướng, Alpha-Beta Khó) dừng đúng hạn bất kể tốc độ máy; mức theo số iteration hoặc độ sâu (k-in-a-row) chậm đi khi máy chậm.
 
 ## Tài liệu tham khảo
 
