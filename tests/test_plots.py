@@ -104,7 +104,7 @@ def test_summary_numbers_come_from_csv(tmp_path: Path):
     path = plots.write_summary_md(tmp_path, plots.FIG_DIR)
     text = path.read_text(encoding="utf-8")
     for e in ("E1", "E2", "E3", "E4", "E5", "E6"):
-        assert f"## {e} —" in text
+        assert f"## {e} - " in text
     s = read_rows(TABLES / "e1_summary.csv")
     mm = plots._one(s, board="3x3", variant="minimax")
     assert plots.vn(mm["nodes_sum"], 0) in text

@@ -1,4 +1,4 @@
-# plots — `gameai/experiments/plots.py`
+# plots - `gameai/experiments/plots.py`
 
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
@@ -6,8 +6,8 @@
 **Trạng thái:** ✅ ổn định  ·  **Task:** P7.1, P7.2  ·  **Cập nhật:** 2026-11-18
 
 ## Mục đích
-Sinh lại **mọi bảng/hình báo cáo k-in-row (E1–E6)** từ `results/raw` (không vẽ/gõ tay, không chạy search/ván nào)
-và sinh `results/tables/summary_kinrow.md` — số chính mỗi E + bản đồ hình/bảng → mục 5 báo cáo. Nguồn cho P7.2.
+Sinh lại **mọi bảng/hình báo cáo k-in-row (E1-E6)** từ `results/raw` (không vẽ/gõ tay, không chạy search/ván nào)
+và sinh `results/tables/summary_kinrow.md` - số chính mỗi E + bản đồ hình/bảng → mục 5 báo cáo. Nguồn cho P7.2.
 
 ## Cách chạy
 ```
@@ -18,7 +18,7 @@ python -m gameai.experiments.plots --check   # sinh vào thư mục tạm, so by
 Thời gian ~1 phút (đọc raw E3/E5 lớn).
 
 ## Public API
-- `regenerate(raw_dir, table_dir, fig_dir) -> (bảng, hình)`: E2–E6 + cơ chế E6.
+- `regenerate(raw_dir, table_dir, fig_dir) -> (bảng, hình)`: E2-E6 + cơ chế E6.
 - `e2_tables`, `e3_tables`, `e4_tables(raw_dir, table_dir)`: bảng từ raw, **cùng hàm tóm tắt** như script gốc
   (`common.summarize`, `e2.summarize_*`, `e3.write_table`, `e4.summarize_roots / example_rows / score_ci`).
   E5/E6 dùng thẳng `e5_rollout.build_tables`, `e6_tactics.build_tables`, `e6_mechanism.build_table`; hình dùng
@@ -36,9 +36,9 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
   cả hai biên (vd. `[0,004; 0,156]`, `[0,241; 0,499]`);
   `_one(rows, **kw)` = đúng 1 dòng khớp, không thì `KeyError` (không đoán).
 - **Số trong hình kiểu VN (P7.2):** `vn`, `vn_tick`, `vn_figure`, `ratio_axis` nằm ở [figfmt.py](figfmt.md); `plots` chỉ
-  import `vn`, `EPS` (re-export `plots.vn`). Mọi hàm vẽ E3–E6 gọi `vn_figure(fig)` ngay trước `tight_layout`/`savefig`
+  import `vn`, `EPS` (re-export `plots.vn`). Mọi hàm vẽ E3-E6 gọi `vn_figure(fig)` ngay trước `tight_layout`/`savefig`
   (tick cùng số chữ số trên một trục, trục log chỉ major có nhãn) và `ratio_axis(ax)` ở trục tỷ lệ (không tick > 1).
-- **Bảng cho báo cáo trong summary (P7.2, D-30):** mỗi bảng có tiêu đề `### Bảng E… — …` riêng, duy nhất (`_table`) —
+- **Bảng cho báo cáo trong summary (P7.2, D-30):** mỗi bảng có tiêu đề `### Bảng E… - …` riêng, duy nhất (`_table`) -
   đây là neo `<!-- src-table: summary_kinrow.md#<tiêu đề> -->` mà `report_check` so byte với bảng chép trong
   `report/report.md`. Gồm: E1 nút/thời gian; E2 W/D/L; E3 win rate vs Greedy + **W/D/L** (hàng iter × cột c, `_wdl_rows`)
   cho 3×3 vs Random, 3×3 vs Minimax, 15×15 vs Greedy, 15×15 vs AB2; E4 ví dụ gốc 3×3 (trace) + **ví dụ 15×15**
@@ -60,9 +60,9 @@ Thời gian ~1 phút (đọc raw E3/E5 lớn).
 ## Bản đồ hình/bảng → mục 5 báo cáo
 | Mục | E | Hình | Bảng chính |
 |---|---|---|---|
-| 5.1 Minimax vs AB | E1 | — | `e1_summary` (bảng nút), `e1_nodes`, `e1_positions` |
-| 5.2 MCTS 3×3 không thua | E2 | — | `e2_play` (W/D/L), `e2_exhaustive{,_by_role}` |
-| 5.3 Hằng số c | E3 | `e3_3x3`, `e3_greedy`, `e3_ab2` (iter–win rate, mỗi c một đường) | `e3_3x3_{random,minimax}`, `e3_greedy`, `e3_ab2{,_pilot}` (W/D/L 15×15) |
+| 5.1 Minimax vs AB | E1 | - | `e1_summary` (bảng nút), `e1_nodes`, `e1_positions` |
+| 5.2 MCTS 3×3 không thua | E2 | - | `e2_play` (W/D/L), `e2_exhaustive{,_by_role}` |
+| 5.3 Hằng số c | E3 | `e3_3x3`, `e3_greedy`, `e3_ab2` (iter-win rate, mỗi c một đường) | `e3_3x3_{random,minimax}`, `e3_greedy`, `e3_ab2{,_pilot}` (W/D/L 15×15) |
 | 5.4 N vs W/N | E4 | `e4_match` | `e4_roots_examples` (W, N, W/N ở gốc), `e4_roots_summary`, `e4_match` |
 | 5.5 Rollout | E5 | `e5_iter`, `e5_time` | `e5_paired`, `e5_h2h`, `e5_greedy`, `e5_mref`, `e5_ab2`, `e5_bench`, `e5_rates` |
 | 5.6 check_tactics | E6 | `e6_choice`, `e6_match`, `e6_mechanism` | `e6_choice`, `e6_match`, `e6_paired`, `e6_mechanism`, `e6_cost_check`, `e6_time`, `e6_tactic_rate` |
@@ -80,4 +80,4 @@ bảng thật, chứa số lấy từ CSV (mẫu E1/E2/E6), mọi file được 
 
 ## Hạn chế / TODO
 - E1 và các bảng đo trực tiếp không kiểm được bằng sinh lại (chỉ kiểm tồn tại).
-- `e5_time.png`: tiêu đề panel dưới-giữa từng tràn sang panel phải — đã sửa ở P7.2 (`e5_rollout.make_figures` dùng tên ngắn); chỉ PNG đổi, `--check` 25/25 CSV giống byte.
+- `e5_time.png`: tiêu đề panel dưới-giữa từng tràn sang panel phải - đã sửa ở P7.2 (`e5_rollout.make_figures` dùng tên ngắn); chỉ PNG đổi, `--check` 25/25 CSV giống byte.

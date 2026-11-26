@@ -475,3 +475,8 @@
 
 ### D-38 (2026-11-25) — An làm một mình từ P8.4
 - Từ 2026-11-25 An làm một mình: bỏ mọi bước báo/phối hợp Thành viên 2 và cột Owner (thay phần tương ứng của D-32 và AGENTS.md "Làm việc nhóm"); **giữ** đồng bộ fetch + rebase trước push (D-33), precheck EXIT=0, PR "Create a merge commit" khi lên master.
+
+### D-39 (2026-11-26) — P8.5: bổ sung báo cáo cờ tướng (An duyệt plan + 6 chỉnh)
+- **Task ID P8.5** = bổ sung cờ tướng vào `report/report.md` (Tóm tắt, 1-2, 3.4, 4, 5.7 E7, 6.7-6.9, Phụ lục A/B) trước P7.3/P7.4. Mỗi nhóm mục 1 commit, precheck EXIT=0; chưa push.
+- **Gạch ngang (An chốt văn phong):** báo cáo chỉ dùng gạch thường `-`, không dùng "—" / "–"; giữ dấu trừ toán học U+2212 "−". Commit riêng thay toàn bộ (report 87 "—" + 43 "–"; `plots.py` ghi `-` → `summary_kinrow.md` sinh lại, anchor `src-table` sửa hai phía). Kiểm: bản HEAD thay mọi "—"/"–" bằng "-" giống hệt bản mới (report + summary), số "−" không đổi (28 / 14), số liệu không đổi.
+- **`report_check`:** `norm()` hiểu gạch giữa hai chữ số là khoảng `a-b` (trừ ngày `yyyy-mm-dd`); gạch ngay sau `-->` trước chữ số = khoảng bị comment nguồn chen giữa. Số âm viết bằng "−". Test: `tests/test_report_check.py` (khoảng, số âm, ngày, `E1-E6`, `D-30`).
