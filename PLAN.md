@@ -228,10 +228,17 @@ hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp t
   (d) MCTS L10 vs AB ID 1 s / 2,5 s: 0/0/50 cả hai (AB `depth_reached` TB 4,5 / 5,1). (a) AB d1 / d2 vs Random 50/0/0.
   **Khám phá (không chốt trước, thêm sau d1/d2):** d3 L10 vs AB depth 1 0,90 [0,79; 0,96], d4 vs AB depth 2 0,05
   [0,02; 0,15]. Nhãn chiếu bí / bí nước kiểm độc lập 10/10 (`e7_term_check.py`). Bench 0,76–0,81× `e5_bench`.
+- **P8.5** Báo cáo cờ tướng (D-39; trước P7.3/P7.4): `report/report.md` Tóm tắt, 1.1 (RQ7, tách chốt trước / khám phá d3-d4),
+  1.2, 2.2 (cờ tướng: luật, độ phân nhánh đo được), 3.4 (perft, eval, AB, MCTS cắt rollout + σ(eval/scale)), 4.1-4.5, 5.7 E7
+  (Bảng 20-24, Hình 9), 6.7 RQ7, 6.8 hạn chế, 6.9 kết luận, Phụ lục A/B (mức độ khó mới D-36/D-37, thời gian GUI, ảnh `xq_*`).
+  Văn phong: chỉ gạch thường "-", giữ "−"; nêu kết quả trực tiếp kèm số, suy luận ghi rõ là suy luận.
+  Done khi: mọi số mới có `src:` về `results/` hoặc `const:` (report_check 0 lỗi, Tóm tắt ≤ 200 từ); số E1-E6 không đổi;
+  bảng/hình E7 trong `plots --check` (`summary_xiangqi.md`); bảng độ phân nhánh `e7_branching.csv`; thời gian GUI 15×15 /
+  cờ tướng đo lại trên cây sạch (`p64gui`, `p62gui`); precheck EXIT=0; spec-reviewer PASS; An duyệt văn; hỏi trước khi push.
 
 ## 4. Thứ tự & phân việc (khi nhóm có thêm người)
 
-`P0 → P1 → P2 → P3 → P4 → P5` (xong, tag `kinrow-final`) `→ P8.0 → P7.1 → P6.1 → P6.3 → P7.2` (xong, mốc Bài 1 trên master) `→ P6.4 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4` → bổ sung mục 3.4 / 5 báo cáo → `P7.3 → P7.4` (D-35: cờ tướng trước PDF/video)
+`P0 → P1 → P2 → P3 → P4 → P5` (xong, tag `kinrow-final`) `→ P8.0 → P7.1 → P6.1 → P6.3 → P7.2` (xong, mốc Bài 1 trên master) `→ P6.4 → P8.1 → P8.2 → P8.3 → P6.2 → P8.4` → P8.5 (bổ sung báo cáo cờ tướng) → `P7.3 → P7.4` (D-35: cờ tướng trước PDF/video)
 
 Chia việc gợi ý khi có thêm người: A = P2 + E1; B = P3 + E2–E5; C = P6 GUI + P8; báo cáo chia theo mục. Ranh giới giữa các phần là interface `Game`/`Agent` — không sửa interface khi chưa ghi vào DECISIONS.md.
 

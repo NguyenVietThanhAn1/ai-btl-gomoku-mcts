@@ -10,10 +10,10 @@
 
 ### An
 
-- **Task hiện tại:** cập nhật báo cáo cờ tướng — mục 3.4 (MCTS cờ tướng: cắt rollout + eval, D-24) và mục 5 (E7, D-25) + Phụ lục B. P8.4 ✅ (2026-11-26, E7 full + d3/d4 khám phá + kiểm nhãn kết thúc 10/10, D-25). P6.2 ✅ (D-37). P8.3 ✅ (`XQ_MCTS_L=10`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng).
-- **Việc đang dở:** chưa bắt đầu sửa báo cáo. Nguồn số E7: `results/tables/e7_matches.csv` (cột `exploratory` = d3/d4), `e7_ordering.csv`, `e7_term_check.csv`, hình `results/figures/e7_scores.png`; tóm tắt + hạn chế (Wilson, bench 0,76–0,81) ở D-25 và PLAN §P8.4. E7 chưa nối vào `plots --check` / `report_check` — làm cùng đợt sửa báo cáo.
-- **Bước tiếp theo:** báo cáo mục 3.4 (vì sao cắt rollout, σ(eval/scale), chọn L — `e7_xiangqi.md` mục "Giải thích cho báo cáo", D-24) → mục 5 E7 (bảng (b), (c), (d), d3/d4 ghi rõ khám phá, hình `e7_scores.png`) → Phụ lục B (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36; thêm mức cờ tướng D-37) → nếu spec E7 trùng `==` mức cờ tướng GUI thì đổi nguồn "riêng" → "E7" (`presets.md` TODO, D-37) → P7.3/P7.4 (D-34/D-35).
-- **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
+- **Task hiện tại:** P8.5 báo cáo cờ tướng (D-39) — viết xong Nhóm 0-7, spec-reviewer PASS (3 minor đã sửa: ngày + câu gạch trong `report_check.md`, câu 59,2 µs ở 6.7 thành giả thuyết); chờ An duyệt Phụ lục A/B và push. P8.4 ✅, P6.2 ✅, P8.3 ✅, P8.2 ✅, P8.1 ✅, P6.4 ✅. Thứ tự D-35: P8.5 → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng).
+- **Việc đang dở:** chưa push (commit P8.5 trên `develop` từ `c764638` tới commit đóng task). Ngoài P8.5, chưa làm: ảnh `report/figures/gui/setup.png`, `demo.png` chụp trước cờ tướng (nhãn lệch) → chụp lại ở P7.3/P7.4; TODO `presets.md` đổi nguồn mức cờ tướng "riêng" → "E7" cho MCTS Vừa/Khó, AB Dễ (cùng tham số, D-39).
+- **Bước tiếp theo:** An duyệt + push `develop` (fetch + rebase, precheck EXIT=0) → P7.3 xuất PDF (kiểm Bảng 1-24, Hình 1-9, B.1-B.11, công thức) → P7.4 video.
+- **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh. Báo cáo chỉ dùng gạch thường "-" (D-39); `report_check` hiểu `a-b` là khoảng.
 
 ### Thành viên 2
 
@@ -59,6 +59,7 @@
 | P8.2 | Xiangqi eval + AB | ✅ | An | 2026-11-21 | D-23; PST tự thiết kế; AB = Minimax d2 (14 thế × 4 chế độ); AB d2 vs Random/Greedy 10/0/0; `p82_ab_speed.csv`; chỉ sửa additive `registry.py` |
 | P8.3 | Xiangqi MCTS | ✅ | An | 2026-11-23 | D-24; scale 2000 (nhãn AB d2); tactics bật cho E7; L=10 (`lmatch` 50 ván, tactics tắt: L=0 23/5/22, 0,51 [0,38; 0,64] → ngang); spec-reviewer PASS sau sửa doc |
 | P8.4 | Xiangqi experiments | ✅ | An | 2026-11-26 | D-25: c4 0,55 [0,45; 0,64] → L10; d1/d2 MCTS 0/50 vs AB; c1 Lend 0/50 vs L10; khám phá d3 0,90 / d4 0,05; nhãn kết thúc 10/10 |
+| P8.5 | Báo cáo cờ tướng | 🔄 | An | 2026-11-26 | D-39; gạch "-" toàn báo cáo; E7 vào `plots --check` (`summary_xiangqi.md`, `e7_branching.csv`); 3.4, 5.7 (Bảng 20-24, Hình 9), 6.7-6.9, Phụ lục A/B (GUI `p64gui`/`p62gui`); precheck EXIT=0; spec-reviewer PASS (3 minor đã sửa); chờ An duyệt Phụ lục + push |
 | B2 | Bài 2 (Bonus) | ⬜ | | | chưa chốt phạm vi — chờ An xác nhận yêu cầu với giảng viên (PLAN §0) |
 
 ## Kết quả thí nghiệm đã có
@@ -80,6 +81,13 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-26 — P8.5 báo cáo cờ tướng (D-39)
+- An duyệt plan + 6 chỉnh (6.7 tách Kết quả/Cơ chế/Mức chắc chắn; cột `iter_per_root_move`; lý do TT là suy luận; 2.2 không so 15×15 thiếu số; Phụ lục B dùng lại số chỉ khi spec giống hệt; test ngày `2026-11-25`).
+- Commit: `c764638` (gạch dài → "-": report 87 "—" + 43 "–", summary 60 + 6; bản HEAD thay gạch = bản mới, "−" giữ 28/14; `report_check` hiểu `a-b`, ngày, gạch sau `-->`), `688c0e6` (`e7.build_tables` + `e7_branching.csv` + `summary_xiangqi.md`, E7 vào `plots --check`; bảng E7 cũ sinh lại giống byte), `2c59c94` (Tóm tắt 199 từ, 1.1 RQ7, 1.2, 2.2), `083f838` (3.4), `72a5bd7` (4.x, 5.7), `fe216b8` (6.7-6.9), `af32669` (review văn 5 chỗ: "kém hiệu quả hơn hẳn" thay "vô dụng", 107/150 qua const D-39, L0 ~8×, đối chiếu E5 đúng số 6.5, s/nước MCTS 0,92 < AB 1,001 do 7,92 % nước đi thẳng → cột mới `direct_pct`, `s_per_search_move_mean`), `4e382ed` (Phụ lục A/B, `p64gui`/`p62gui` full, ảnh `xq_*`).
+- Thời gian GUI: so `AgentSpec` → An chốt mọi mức 15×15 từ `p64gui` (bỏ `p63anim`: đo khi git_dirty=1), 3×3 giữ `p63_*`; bench 1,031 (15×15) / 0,831 (cờ tướng). Mọi mức đạt luật GUI.
+- spec-reviewer P8.5: PASS (report_check 0 lỗi, `plots --check` 30/30 giống byte, E1-E6 không đổi, 15 số đối chiếu tay khớp); 3 minor đã sửa.
+- precheck EXIT=0 sau mỗi commit. Chưa push.
 
 #### 2026-11-26 — P8.4 ✅ đóng: d3/d4, kiểm nhãn trong repo, sửa ước tính
 - An chạy full `dx` (d3/d4, commit `be61ac0`, AC, 1 worker, bench 0,805, ~43 phút) + `summary`. d3 MCTS L10 vs AB depth 1: 44/2/4 = 0,90 [0,79; 0,96]; d4 vs AB depth 2: 2/1/47 = 0,05 [0,02; 0,15] (khám phá, D-25).

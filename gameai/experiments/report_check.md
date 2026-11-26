@@ -1,6 +1,6 @@
 # report_check - `gameai/experiments/report_check.py`
 
-**Trạng thái:** ✅ ổn định · **Task:** P7.2 · **Cập nhật:** 2026-11-18
+**Trạng thái:** ✅ ổn định · **Task:** P7.2, P8.5 · **Cập nhật:** 2026-11-26 (D-39: gạch ngang, khoảng `a-b`)
 
 ## Mục đích
 Đối chiếu **mọi số** trong `report/report.md` với nguồn trong `results/` (CLAUDE.md: "không bịa số liệu"; D-30). Chạy trước
@@ -14,7 +14,7 @@ python -m gameai.experiments.report_check FILE.md
 In từng lỗi `L<dòng>: …` + dòng tổng `N số có nguồn, M bảng src-table, Tóm tắt W từ, K lỗi`; exit 1 nếu có lỗi.
 
 ## Gạch ngang (D-39)
-Report và summary chỉ dùng gạch thường `-` (không "-", "-"). `norm()` hiểu gạch **giữa hai chữ số** là khoảng `a-b`
+Report và summary chỉ dùng gạch thường `-` (không dùng gạch dài U+2014 hay gạch nối U+2013). `norm()` hiểu gạch **giữa hai chữ số** là khoảng `a-b`
 (trừ ngày `yyyy-mm-dd`), và gạch ngay sau `-->` trước chữ số là khoảng bị comment nguồn chen giữa (`0,423 <!-- … -->-0,467`).
 Số âm viết bằng dấu trừ U+2212 "−" (khớp với `-` trong CSV); không viết số âm bằng `-` ngay sau chữ số hoặc `-->`.
 
