@@ -735,13 +735,12 @@ ESTIMATE_COLUMNS = ["part", "quick_games", "game_s_mean", "full_games", "workers
 
 
 def write_estimate(ctx: Ctx) -> None:
-    """Ước tính full từ quick: s/ván (Σ thời gian nước hai bên) × 50 / worker; (b) theo giờ đo."""
+    """Ước tính full từ quick: s/ván (Σ thời gian nước hai bên) × 50 / worker; (b) theo giờ đo.
+
+    Số worker = `--workers` của lần gọi (= số worker dự kiến cho full, mặc định 1); không đọc
+    `e7quick_workers.csv` (khuyến nghị cũ trong file đó từng làm ước tính d3/d4 lệch 2×).
+    """
     w_full = ctx.workers
-    wfile = ctx.table_dir / f"{prefix(True)}workers.csv"
-    if wfile.exists():
-        rec = [r for r in read_rows(wfile) if r["workers"] == "drop"]
-        if rec and rec[0]["recommend"]:
-            w_full = int(rec[0]["recommend"])
     rows = []
     for p in (*C_POINTS, *D_POINTS, *X_POINTS, *A_POINTS):
         rs, _ = load_point(p, True, ctx.raw_dir)

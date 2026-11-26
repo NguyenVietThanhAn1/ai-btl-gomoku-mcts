@@ -155,3 +155,22 @@ def test_mcts_spec_runs_one_move():
     g = Xiangqi()
     spec = AgentSpec("mcts", {**e7.mcts(10).params, "time_limit": 0.05})
     assert make_agent(spec, 1).select_move(g) in g.legal_moves()
+
+
+def test_estimate_uses_cli_workers_not_stale_quick_file(tmp_path):
+    # file quick cũ khuyến nghị 2 worker → ước tính vẫn dùng --workers (ở đây 1)
+    (tmp_path / "e7quick_workers.csv").write_text(
+        "workers,median_iter_per_s,recommend\ndrop,0.25,2\n", encoding="utf-8"
+    )
+    cols = ["game_id", "a_time_sum", "b_time_sum"]
+    rows = [{"game_id": f"{i}-AX", "a_time_sum": 10.0, "b_time_sum": 14.0} for i in range(4)]
+    e7._write(e7.raw_path("d3", True, tmp_path), cols, rows)
+    ctx = ctx_for(tmp_path)
+    e7.write_estimate(ctx)
+    est = {r["part"]: r for r in read_rows(tmp_path / "e7quick_estimate.csv")}
+    assert est["d3"]["workers"] == "1"
+    assert float(est["d3"]["full_min"]) == pytest.approx(24.0 * 2 * e7.N_PAIRS / 60, abs=1e-3)
+    ctx.workers = 3
+    e7.write_estimate(ctx)
+    est = {r["part"]: r for r in read_rows(tmp_path / "e7quick_estimate.csv")}
+    assert float(est["d3"]["full_min"]) == pytest.approx(24.0 * 2 * e7.N_PAIRS / 3 / 60, abs=1e-3)

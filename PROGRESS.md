@@ -10,9 +10,9 @@
 
 ### An
 
-- **Task hiện tại:** P8.4 (thí nghiệm cờ tướng E7, D-25) — plan duyệt 2026-11-25 (+5 chỉnh), code + test xong (commit `a52bf76`), quick duyệt; **full xong** (2026-11-26, commit `814a612`, 1 worker, AC; c4 100 ván) — luật c4 ngang → giữ L=10. P6.2 ✅ (2026-11-25, GUI cờ tướng, D-37). P8.3 ✅ (`XQ_MCTS_L=10`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: `P8.4` → bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng).
-- **Việc đang dở:** E7 full xong, kết quả + kiểm bí nước (10/10 khớp) ghi D-25. d3/d4 khám phá (MCTS L10 vs AB d1/d2) code xong, quick ước ~45 phút — **An chạy full tối 2026-11-26:** `python -m gameai.experiments.e7_xiangqi dx` rồi `summary`. Sau đó: ghi kết quả d3/d4 vào D-25, đưa E7 vào báo cáo (nối `plots --check`).
-- **Bước tiếp theo:** P8.4 (E7, D-25; kiểm lại L bằng E7(c) với tactics bật, D-24) → nếu spec E7 trùng `==` mức cờ tướng GUI thì đổi nguồn "riêng" → "E7" (`presets.md` TODO, D-37) → bổ sung báo cáo cờ tướng → P7.3/P7.4 (D-34/D-35). **Còn nợ:** `report/report.md` Phụ lục B cần sửa sau P8 (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36). Nguồn số liệu báo cáo: `results/tables/summary_kinrow.md`; ảnh GUI: `report/figures/gui/`.
+- **Task hiện tại:** cập nhật báo cáo cờ tướng — mục 3.4 (MCTS cờ tướng: cắt rollout + eval, D-24) và mục 5 (E7, D-25) + Phụ lục B. P8.4 ✅ (2026-11-26, E7 full + d3/d4 khám phá + kiểm nhãn kết thúc 10/10, D-25). P6.2 ✅ (D-37). P8.3 ✅ (`XQ_MCTS_L=10`, D-24). P8.2 ✅. P8.1 ✅. P6.4 ✅ (D-36). Thứ tự D-35: bổ sung báo cáo cờ tướng → P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng).
+- **Việc đang dở:** chưa bắt đầu sửa báo cáo. Nguồn số E7: `results/tables/e7_matches.csv` (cột `exploratory` = d3/d4), `e7_ordering.csv`, `e7_term_check.csv`, hình `results/figures/e7_scores.png`; tóm tắt + hạn chế (Wilson, bench 0,76–0,81) ở D-25 và PLAN §P8.4. E7 chưa nối vào `plots --check` / `report_check` — làm cùng đợt sửa báo cáo.
+- **Bước tiếp theo:** báo cáo mục 3.4 (vì sao cắt rollout, σ(eval/scale), chọn L — `e7_xiangqi.md` mục "Giải thích cho báo cáo", D-24) → mục 5 E7 (bảng (b), (c), (d), d3/d4 ghi rõ khám phá, hình `e7_scores.png`) → Phụ lục B (mapping mức AB 15×15 + bảng thời gian/nước GUI, D-36; thêm mức cờ tướng D-37) → nếu spec E7 trùng `==` mức cờ tướng GUI thì đổi nguồn "riêng" → "E7" (`presets.md` TODO, D-37) → P7.3/P7.4 (D-34/D-35).
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh.
 
 ### Thành viên 2
@@ -58,7 +58,7 @@
 | P8.1 | Xiangqi rules + perft | ✅ | An | 2026-11-21 | spec-reviewer PASS; perft D1–4 khớp 11 thế (44/44); `p81_perft.csv`; `xiangqi.md` |
 | P8.2 | Xiangqi eval + AB | ✅ | An | 2026-11-21 | D-23; PST tự thiết kế; AB = Minimax d2 (14 thế × 4 chế độ); AB d2 vs Random/Greedy 10/0/0; `p82_ab_speed.csv`; chỉ sửa additive `registry.py` |
 | P8.3 | Xiangqi MCTS | ✅ | An | 2026-11-23 | D-24; scale 2000 (nhãn AB d2); tactics bật cho E7; L=10 (`lmatch` 50 ván, tactics tắt: L=0 23/5/22, 0,51 [0,38; 0,64] → ngang); spec-reviewer PASS sau sửa doc |
-| P8.4 | Xiangqi experiments | 🟡 | An | | full xong (D-25): c4 0,55 [0,45; 0,64] → L10; d1/d2 MCTS 0/50 vs AB; c1 Lend 0/50 vs L10 |
+| P8.4 | Xiangqi experiments | ✅ | An | 2026-11-26 | D-25: c4 0,55 [0,45; 0,64] → L10; d1/d2 MCTS 0/50 vs AB; c1 Lend 0/50 vs L10; khám phá d3 0,90 / d4 0,05; nhãn kết thúc 10/10 |
 | B2 | Bài 2 (Bonus) | ⬜ | | | chưa chốt phạm vi — chờ An xác nhận yêu cầu với giảng viên (PLAN §0) |
 
 ## Kết quả thí nghiệm đã có
@@ -71,7 +71,7 @@
 - **E2:** (b) vét cạn 0 nhánh thua trên 10 seed × 2 vai ở 5000 iter (5674 nhánh); 1000 iter 7/5713 thua; 100 iter 279/6247. (a) 5000 iter 0 thua/100 ván vs Minimax, Random, MCTS. `results/tables/e2_*.csv`.
 - **E6:** tắt tactics, chặn four đúng (trọng số pool) rand 0,03 → 0,38, h300 0,50 → 0,14 → 0,48 (100 → 1000 → 5000 iter); bật 1,00. Win rate tắt → bật vs Greedy +0,38 (1000), +0,62 (5000); vs mref +0,04 (CI chứa 0). Cơ chế chữ U (chạy lại cây, khớp raw 100 %): 100 iter một phần, 1000 khớp cơ chế (W/N nước sai 0,90, không phải ~0,6), 5000 khớp (ô thắng đối thủ đã mở 0,20 → 0,97). `results/tables/e6_*.csv`, `figures/e6_{choice,match,mechanism}.png`.
 - **Tổng hợp cho báo cáo:** `results/tables/summary_kinrow.md` (sinh tự động, bản đồ hình/bảng → mục 5).
-- **E7 (cờ tướng, D-25):** (b) mvv_lva giảm nút còn 0,327 / 0,234 / 0,104 (depth 2/3/4), +TT 0,096 ở depth 4, giá trị gốc khớp 33/33. (c) Lend vs L10 0/0/50; Lend / L10 vs Random 0,99 / 1,00; L0 vs L10 (100 ván) 52/6/42 = 0,55 [0,45; 0,64] → ngang, giữ L=10. (d) MCTS L10 vs AB ID 1 s / 2,5 s: 0/0/50 cả hai (AB `depth_reached` TB 4,5 / 5,1). (a) AB d1/d2 vs Random 50/0/0. `results/tables/e7_{matches,ordering}.csv`, `figures/e7_scores.png`.
+- **E7 (cờ tướng, D-25):** (b) mvv_lva giảm nút còn 0,327 / 0,234 / 0,104 (depth 2/3/4), +TT 0,096 ở depth 4, giá trị gốc khớp 33/33. (c) Lend vs L10 0/0/50; Lend / L10 vs Random 0,99 / 1,00; L0 vs L10 (100 ván) 52/6/42 = 0,55 [0,45; 0,64] → ngang, giữ L=10. (d) MCTS L10 vs AB ID 1 s / 2,5 s: 0/0/50 cả hai (AB `depth_reached` TB 4,5 / 5,1). (a) AB d1/d2 vs Random 50/0/0. Khám phá (không chốt trước): MCTS L10 vs AB depth 1 0,90 [0,79; 0,96], vs AB depth 2 0,05 [0,02; 0,15]. Nhãn kết thúc kiểm độc lập 10/10. `results/tables/e7_{matches,ordering,term_check}.csv`, `figures/e7_scores.png`.
 <!-- Mỗi thí nghiệm chạy xong: 1–3 dòng số liệu chính + đường dẫn file CSV/hình. -->
 - **P3.3 (sơ bộ — không phải số liệu E5):** 7 cấu hình × {Greedy, AB2, mrand} × 20 ván, 0,5 s/nước, tactics bật. Thắng vs mrand: h100 / h300 / h100c10 / h1000c10 19/20, h1000 / h300c10 16/20, rand 9/20 (Wilson [0,258; 0,658], hợp lệ). Vs Greedy cao nhất 8/20 (h300, h100c10), vs AB2 ≤ 2/20. Chọn **h300** theo luật D-14. `results/tables/p33_sweep_prelim.csv`, `p33_choice_prelim.csv`, `p33_scale_prelim.csv`.
 
@@ -80,6 +80,12 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-26 — P8.4 ✅ đóng: d3/d4, kiểm nhãn trong repo, sửa ước tính
+- An chạy full `dx` (d3/d4, commit `be61ac0`, AC, 1 worker, bench 0,805, ~43 phút) + `summary`. d3 MCTS L10 vs AB depth 1: 44/2/4 = 0,90 [0,79; 0,96]; d4 vs AB depth 2: 2/1/47 = 0,05 [0,02; 0,15] (khám phá, D-25).
+- `experiments/e7_term_check.py` + `.md` (từ script tạm): `python -m gameai.experiments.e7_term_check` → perft 44/1 920, khớp 10/10, `results/tables/e7_term_check.csv`; `tests/test_e7_term_check.py`.
+- `write_estimate` dùng `--workers` thay khuyến nghị trong `e7quick_workers.csv` (file cũ làm ước tính d3/d4 lệch 2×) + test.
+- D-25: kết quả d3/d4, bench từng khúc (0,76 / 0,789 / 0,805, thấp hơn các lần đo trước; so giữa điểm vẫn hợp lệ). PLAN §P8.4 ✅ + tóm tắt.
 
 #### 2026-11-26 — P8.4 E7: kết quả full
 - An chạy full (2 khúc: `c4 --pairs 50` 22:57–01:00, bench 0,76×; `all` 01:00–04:40, bench 0,789×; commit `814a612` sạch, AC, 1 worker). c4 100 ván chốt trước full (D-25).

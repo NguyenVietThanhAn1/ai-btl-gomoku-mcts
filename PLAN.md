@@ -213,7 +213,7 @@ hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp t
   trong `results/`.
   **Kết quả (D-24):** nhãn depth 1 bị loại (54 % hòa, LL ≈ −ln 2) → dùng AB depth 2, `scale = 2000`; tactics bật cho E7; `L = 10` chọn bằng `lmatch` (50 ván, L=0 điểm 0,51 [0,38; 0,64] → ngang → L=10).
 - **P6.2** GUI cờ tướng — xem mục P6 (làm sau P8.3).
-- **P8.4** E7 `experiments/e7_xiangqi.py` + `.md` (thiết kế chi tiết D-25):
+- **P8.4** ✅ (2026-11-26) E7 `experiments/e7_xiangqi.py` + `.md` (thiết kế chi tiết D-25):
   - ✂ (a) AB depth 1/2 cố định vs Random.
   - (b) AB ordering: số nút, depth cố định (tất định): không ordering / MVV-LVA / + TT, depth 2–4, thế khởi đầu + ~10 thế
     giữa ván; kiểm giá trị gốc giống nhau.
@@ -222,6 +222,12 @@ hành vi cũ + test hồi quy `tests/test_regression_kinrow.py` (golden chụp t
   - Phần theo thời gian: `random_opening` vài nước; cắm sạc, máy rảnh, ghi power + bench như D-21. Mục tiêu **50 ván/điểm**
     cho (c), (d) như đề; quick cho thấy quá đắt → ≥ 20 ván, ghi lý do vào D-25 + báo cáo. `--quick` trước, báo thời gian ước
     tính, hỏi trước khi chạy full.
+  **Kết quả (D-25; full commit `814a612`, AC, 1 worker, 50 ván/điểm, c4 100 ván chốt trước):** (b) giá trị gốc khớp 33/33,
+  MVV-LVA còn 0,327 / 0,234 / 0,104 số nút (depth 2 / 3 / 4), + TT 0,096 ở depth 4. (c) Lend vs L10 0/0/50; Lend / L10 vs
+  Random 0,99 / 1,00; L0 vs L10 52/6/42 = 0,55 [0,45; 0,64] → ngang → giữ `XQ_MCTS_L = 10`, tốt nhất ở (c) = L10.
+  (d) MCTS L10 vs AB ID 1 s / 2,5 s: 0/0/50 cả hai (AB `depth_reached` TB 4,5 / 5,1). (a) AB d1 / d2 vs Random 50/0/0.
+  **Khám phá (không chốt trước, thêm sau d1/d2):** d3 L10 vs AB depth 1 0,90 [0,79; 0,96], d4 vs AB depth 2 0,05
+  [0,02; 0,15]. Nhãn chiếu bí / bí nước kiểm độc lập 10/10 (`e7_term_check.py`). Bench 0,76–0,81× `e5_bench`.
 
 ## 4. Thứ tự & phân việc (khi nhóm có thêm người)
 

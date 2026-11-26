@@ -146,3 +146,24 @@
 [summary] d2: mcts_L10_t2.5 vs ab_t2.5 0/0/50 điểm 0.0 [0.0; 0.07]
 [summary] a1: ab_d1 vs random 50/0/0 điểm 1.0 [0.93; 1.0]
 [summary] a2: ab_d2 vs random 50/0/0 điểm 1.0 [0.93; 1.0]
+
+===== 2026-11-26T14:48:03 e7_xiangqi dx | power AC 97% | git be61ac003ebd435ac8df2d6bc521d3c2ed2cfd04/False
+[d3] mcts_L10 vs ab_d1: 50 ván, 1 worker → C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\raw\e7_d3.csv
+[d3] điểm A 0.900 [0.79; 0.96] (50 ván), 1168 s
+[bench] rand: trung vị 2748 iter/s
+[bench] h300: trung vị 1962 iter/s
+[bench] rand/h300 = 1.40
+[d4] mcts_L10 vs ab_d2: 50 ván, 1 worker → C:\Users\PREC 5570\Documents\self learning\tri tue nhan tao\btl\results\raw\e7_d4.csv
+[d4] điểm A 0.050 [0.02; 0.15] (50 ván), 1407 s
+
+===== 2026-11-26T15:31:07 e7_xiangqi summary | power AC 100% | git be61ac003ebd435ac8df2d6bc521d3c2ed2cfd04/False
+[summary] c1: mcts_Lend vs mcts_L10 0/0/50 điểm 0.0 [0.0; 0.07]
+[summary] c2: mcts_Lend vs random 49/1/0 điểm 0.99 [0.91; 1.0]
+[summary] c3: mcts_L10 vs random 50/0/0 điểm 1.0 [0.93; 1.0]
+[summary] c4: mcts_L0 vs mcts_L10 52/6/42 điểm 0.55 [0.45; 0.64]
+[summary] d1: mcts_L10 vs ab_t1 0/0/50 điểm 0.0 [0.0; 0.07]
+[summary] d2: mcts_L10_t2.5 vs ab_t2.5 0/0/50 điểm 0.0 [0.0; 0.07]
+[summary] d3: mcts_L10 vs ab_d1 44/2/4 điểm 0.9 [0.79; 0.96]
+[summary] d4: mcts_L10 vs ab_d2 2/1/47 điểm 0.05 [0.02; 0.15]
+[summary] a1: ab_d1 vs random 50/0/0 điểm 1.0 [0.93; 1.0]
+[summary] a2: ab_d2 vs random 50/0/0 điểm 1.0 [0.93; 1.0]

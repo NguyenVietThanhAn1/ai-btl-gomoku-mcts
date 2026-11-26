@@ -3,7 +3,7 @@
 > Mục tiêu của file này: agent/thành viên khác dùng được module **mà không cần đọc code**.
 > Cập nhật cùng lúc với code.
 
-**Trạng thái:** 🟡 full xong (2026-11-26, kết quả D-25); d3/d4 khám phá chờ full  ·  **Task:** P8.4 (D-25)  ·  **Cập nhật:** 2026-11-26
+**Trạng thái:** ✅ full + d3/d4 khám phá xong (2026-11-26, kết quả D-25; kiểm nhãn kết thúc: `e7_term_check.md`)  ·  **Task:** P8.4 (D-25)  ·  **Cập nhật:** 2026-11-26
 
 ## Mục đích
 Thí nghiệm E7 cờ tướng (thiết kế D-25): (a) AB depth 1/2 vs Random, (b) move ordering của AB (số nút, tất định),
@@ -52,8 +52,8 @@ Phần: `bench, b, c, c1..c4, d, d1, d2, dx, d3, d4, a, a1, a2, wcheck, summary,
   cận trên < 0,5 → `L10_stronger`; còn lại `tie` (giữ L = 10).
 - `best_rollout(c1, c4)`: mặc định `L10`; `Lend` (c1) / `L0` (c4) thay nếu thắng L10 với Wilson cận dưới > 0,5; cả hai → điểm cao hơn.
 - `wcheck`: iter/s trung vị của MCTS ở c3 với 1 worker vs `WCHECK_WORKERS` = 3 (file riêng `c3_w1`, `c3_w3`); giảm > 15 %
-  (`WORKER_DROP_LIMIT`) → khuyến nghị full **1 worker**, ngược lại 3 (`e7quick_workers.csv`, cột `recommend`; ước tính
-  dùng số này). Quick 2026-11-25: giảm 25 % → **full chạy 1 worker** (2 worker chưa đo, không dùng), ~5,6 h qua đêm.
+  (`WORKER_DROP_LIMIT`) → khuyến nghị full **1 worker**, ngược lại 3 (`e7quick_workers.csv`, cột `recommend`, chỉ để
+  đọc). Quick 2026-11-25: giảm 25 % → **full chạy 1 worker** (2 worker chưa đo, không dùng), ~5,6 h qua đêm.
 
 ## Public API (dùng trong test / script khác)
 ```python
@@ -64,6 +64,7 @@ side_game_stats(moves, side) -> dict  # 1 ván, 1 bên: iter/s (nước có sear
 summarize_point(point, rows, moves) -> 3 dòng (all, A=Đỏ, A=Đen) theo MATCH_COLUMNS
 l_verdict(score, n) -> str; best_rollout(c1, c4) -> "L10" | "Lend" | "L0"
 run_ordering(quick, raw_dir, fens=None, depths=(2,3,4)) -> rows; ordering_table(rows) -> rows
+write_estimate(ctx)                   # quick: s/ván × 50 / ctx.workers (= --workers dự kiến cho full)
 ```
 
 ## File ra
