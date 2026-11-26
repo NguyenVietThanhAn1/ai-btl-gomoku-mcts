@@ -29,7 +29,7 @@ class PlayScene(Scene):  name = "play"
     info_lines(side) -> list[str]                  # tooltip ⓘ: spec, nguồn, seed, độ trễ
     info / tips: dict[side, IconButton / Tooltip]
     side(p) -> str; result_text() -> str           # tên bên theo view: 15×15 "Đen"/"Trắng", 3×3 "X"/"O", cờ tướng "Đỏ"/"Đen"
-                                                   # result_text thêm view.end_reason: "Đen thắng — Chiếu bí", "Hòa — lặp thế 3 lần"
+                                                   # result_text thêm view.end_reason: "Đen thắng - Chiếu bí", "Hòa - lặp thế 3 lần"
     status_line() -> (chữ, màu)                    # dòng trạng thái; view.status_text ("Đỏ đang bị chiếu") thay "Lượt Đỏ", màu t.lose
     last_move_text(last) -> str                    # "Nước cuối: …" card Phân tích; "· N iter" chỉ khi N > 0 (AB báo 0)
     card_layout() -> [(bên, Rect)]                 # (O/Đen trên, X/Đỏ dưới); đảo khi view.flipped

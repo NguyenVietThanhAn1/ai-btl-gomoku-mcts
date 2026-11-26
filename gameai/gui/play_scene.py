@@ -60,6 +60,7 @@ HISTORY_COLUMNS = (0, 48, 84, 160, 260)  # số nước, bên, nước, thời g
 DELAY_STEP = 0.25
 TOP_K = 5  # dòng trong card Phân tích (bàn hiện top-8)
 EXPERIMENT_LABEL = "cấu hình thí nghiệm"
+SOURCE_SEP = " · "  # tách "cấu hình agent · nguồn" (tooltip ⓘ tách lại theo đúng chuỗi này)
 
 
 def fmt_s(seconds: float) -> str:
@@ -252,7 +253,7 @@ class PlayScene(Scene):
             title, color = f"{self.side(c.resigned)} đầu hàng", t.ink
         else:
             title, color = f"{self.side(out)} thắng", t.win
-        if res.startswith(f"{title} — "):  # "Đen thắng — Chiếu bí" dưới tiêu đề "Đen thắng"
+        if res.startswith(f"{title} - "):  # "Đen thắng - Chiếu bí" dưới tiêu đề "Đen thắng"
             res = res[len(title) + 3 :]
             res = res[:1].upper() + res[1:]
         detail = ([res] if res and res != title else []) + [moves]
@@ -268,14 +269,14 @@ class PlayScene(Scene):
         if c.error is not None:
             return c.error
         if c.resigned is not None:
-            return f"{self.side(c.resigned)} đầu hàng — {self.side(-c.resigned)} thắng"
+            return f"{self.side(c.resigned)} đầu hàng - {self.side(-c.resigned)} thắng"
         w = c.game.winner()
         if w is None:
             return ""
-        reason = self.view.end_reason(c.game)  # cờ tướng: "Chiếu bí", "Hòa — lặp thế 3 lần"…
+        reason = self.view.end_reason(c.game)  # cờ tướng: "Chiếu bí", "Hòa - lặp thế 3 lần"…
         if w == DRAW:
             return reason or "Hòa"
-        return f"{self.side(w)} thắng" + (f" — {reason}" if reason else "")
+        return f"{self.side(w)} thắng" + (f" - {reason}" if reason else "")
 
     def symbol_sprite(self, player: int) -> pygame.Surface:
         """Chấm Đen/Trắng trong lịch sử 15×15 (sprite cache theo theme); cờ tướng: đĩa Đỏ/Đen."""
@@ -493,17 +494,17 @@ class PlayScene(Scene):
             source = f"cấu hình {exp_source}"
             if self.state.experiment:
                 source = EXPERIMENT_LABEL + f" ({exp_source})"
-            return name, f"{detail} — {source}"
+            return name, f"{detail}{SOURCE_SEP}{source}"
         if found is not None:
             level, lv = found
             name = f"{AI_NAMES.get(spec.kind, spec.kind)} · {LEVEL_NAMES[level]}"
             source = lv.source_text
             if self.state.experiment and lv.source is not None:
                 source = EXPERIMENT_LABEL + f" ({lv.source})"
-            return name, f"{detail} — {source}"
+            return name, f"{detail}{SOURCE_SEP}{source}"
         name = AI_NAMES.get(spec.kind, spec.name)
         if self.state.experiment and self.state.iterations is None:
-            return name, f"{detail} — {EXPERIMENT_LABEL}"
+            return name, f"{detail}{SOURCE_SEP}{EXPERIMENT_LABEL}"
         return name, detail
 
     def subtitle(self, side: int) -> tuple[str, bool]:
@@ -524,7 +525,7 @@ class PlayScene(Scene):
         if self.ctrl.specs[side] is None:
             return []
         detail = self.player_name(side)[1]
-        spec_text, _, source = detail.partition(" — ")
+        spec_text, _, source = detail.partition(SOURCE_SEP)
         lines = [spec_text]
         if source:
             lines.append(source[:1].upper() + source[1:])
@@ -703,7 +704,7 @@ class PlayScene(Scene):
                       max_width=r.w - space(4))  # fmt: skip
         y += 22
         if not self.has_mcts:
-            draw_text(surf, "Ván này không có AI MCTS — không có thống kê gốc (N, W/N).", (x, y),
+            draw_text(surf, "Ván này không có AI MCTS - không có thống kê gốc (N, W/N).", (x, y),
                       CAPTION, t.faint)  # fmt: skip
             return
         if not self.state.overlay.show:

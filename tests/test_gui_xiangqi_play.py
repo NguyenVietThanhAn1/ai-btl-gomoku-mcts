@@ -126,8 +126,8 @@ def test_end_modal_shows_reason():
     title, lines, _ = app.play.result_view()
     winner = app.play.side(app.ctrl.outcome)
     assert title == f"{winner} thắng" and lines[0] == "Chiếu bí"
-    assert app.play.result_text() == f"{winner} thắng — Chiếu bí"
-    assert app.play.status_line()[0] == f"{winner} thắng — Chiếu bí"
+    assert app.play.result_text() == f"{winner} thắng - Chiếu bí"
+    assert app.play.status_line()[0] == f"{winner} thắng - Chiếu bí"
 
 
 def test_draw_reason_repetition():

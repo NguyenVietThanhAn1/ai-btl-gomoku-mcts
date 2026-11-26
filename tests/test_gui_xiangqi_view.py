@@ -217,12 +217,12 @@ def test_end_reason_draws_and_none():
     g = Xiangqi(max_plies=2)
     for s in ("h0g2", "h9g7"):
         g.play(iccs_to_move(s))
-    assert end_reason(g) == "Hòa — đạt giới hạn 2 nước"
+    assert end_reason(g) == "Hòa - đạt giới hạn 2 nước"
     g = Xiangqi()
     for _ in range(2):
         for s in ("h0g2", "h9g7", "g2h0", "g7h9"):
             g.play(iccs_to_move(s))
-    assert g.is_terminal() and end_reason(g) == "Hòa — lặp thế 3 lần"
+    assert g.is_terminal() and end_reason(g) == "Hòa - lặp thế 3 lần"
 
 
 def test_status_text_check():

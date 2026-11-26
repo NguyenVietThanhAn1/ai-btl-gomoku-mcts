@@ -114,7 +114,7 @@ def test_setup_xiangqi_playable_red_black_names():  # P6.2: không còn "Sắp c
     assert s.cfg == GameConfig("xiangqi", "human_ai", "O", AIChoice("alphabeta", "easy"))
     labels = dict(s.controls["side"].options)
     assert labels["X"] == "Đỏ · đi trước" and labels["O"] == "Đen · đi sau"
-    assert s.ai_lines() and OWN_CONFIG in s.ai_lines()[0]
+    assert s.ai_lines() and "cấu hình E7" in s.ai_lines()[0]  # AB Dễ = cùng tham số a1
     click(app, s.controls["mode"].rect_of("ai_ai").center)
     assert s.ai_lines()[0].startswith("Đỏ: ") and s.ai_lines()[1].startswith("Đen: ")
     click(app, s.controls["mode"].rect_of("human_ai").center)
@@ -124,7 +124,7 @@ def test_setup_xiangqi_playable_red_black_names():  # P6.2: không còn "Sắp c
     assert app.ctrl.preset == build_preset(s.cfg)
     assert app.view.flipped  # người duy nhất cầm Đen → bàn xoay
     name, detail = app.play.player_name(P1)
-    assert name == "Alpha-Beta · Dễ" and OWN_CONFIG in detail
+    assert name == "Alpha-Beta · Dễ" and "cấu hình E7" in detail
 
 
 def test_setup_choices_to_agent_spec_and_start():

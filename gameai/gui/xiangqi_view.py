@@ -56,8 +56,8 @@ def piece_char(piece: int) -> str:
 
 
 def end_reason(game: Xiangqi) -> str | None:
-    """Lý do kết thúc: "Chiếu bí" / "Bí nước" (bên tới lượt hết nước → thua), "Hòa — lặp thế 3 lần",
-    "Hòa — đạt giới hạn N nước" (`max_plies`); None khi ván chưa hết.
+    """Lý do kết thúc: "Chiếu bí" / "Bí nước" (bên tới lượt hết nước → thua), "Hòa - lặp thế 3 lần",
+    "Hòa - đạt giới hạn N nước" (`max_plies`); None khi ván chưa hết.
 
     Chỉ dùng API công khai: hòa mà `ply < max_plies` ⇒ do lặp thế (D-22: lặp lần 3 ưu tiên hơn
     `max_plies`; khi cả hai cùng xảy ra ở đúng ply giới hạn thì ghi là giới hạn nước)."""
@@ -66,8 +66,8 @@ def end_reason(game: Xiangqi) -> str | None:
         return None
     if w == DRAW:
         if game.ply >= game.max_plies:
-            return f"Hòa — đạt giới hạn {game.max_plies} nước"
-        return "Hòa — lặp thế 3 lần"
+            return f"Hòa - đạt giới hạn {game.max_plies} nước"
+        return "Hòa - lặp thế 3 lần"
     return "Chiếu bí" if game.in_check() else "Bí nước"
 
 

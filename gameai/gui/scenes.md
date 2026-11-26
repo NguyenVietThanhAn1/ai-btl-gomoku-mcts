@@ -18,7 +18,7 @@ class SetupScene(Scene):  name = "setup"
     controls: dict[str, Widget]     # "game", "mode", "side", "ai_kind", "ai_level", "ai_o_kind", "ai_o_level", "delay", "seed"
     back, start: Button
     def set(self, **changes)        # đổi cfg + dựng lại control
-    def ai_lines(self) -> list[str] # "AI: Khó = MCTS h300 5000 iter, c=1.4, tactics — cấu hình E3"
+    def ai_lines(self) -> list[str] # "AI: Khó = MCTS h300 5000 iter, c=1.4, tactics · cấu hình E3"
     def on_start(self)              # → play với AppState(base=build_preset(cfg), config=cfg, Phân tích tắt)
 class DemoScene(Scene):   name = "demo";  buttons: {preset_key: Button}   # → play với AppState(preset_key)
     sources(key) -> str     # "E2" / "E3" / "E3 · E3/E5": tra ngược từ spec các bên AI (find_level), không gõ tay
