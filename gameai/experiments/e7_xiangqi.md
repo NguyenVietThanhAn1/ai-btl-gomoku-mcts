@@ -74,7 +74,7 @@ branching_stats(rows, moves) -> dict; branching_table(raw_dir, quick) -> rows   
   (thế, depth, cấu hình) một dòng: nút, giây, giá trị gốc, nước, `value_match` so với `none`), `e7_runinfo.csv` (mỗi
   phần: workers, power, pin %, bench/`e5_bench`, giờ, commit, dirty). Quick: tiền tố `e7quick_` (gitignore).
 - Bảng: `results/tables/e7_matches.csv` (`MATCH_COLUMNS`: W/D/L, điểm + Wilson 95 %, `distinct_games`, `term_*`, ply TB/
-  trung vị, mỗi bên `s_per_move_mean/max`, `iter_per_s_mean/median/cv`, `tree_depth_mean`, `rollout_plies_per_iter`,
+  trung vị, mỗi bên `s_per_move_mean/max`, `direct_pct` (% nước đi thẳng nhờ tactics 1/2), `s_per_search_move_mean` (s/nước chỉ nước có search; D-39), `iter_per_s_mean/median/cv`, `tree_depth_mean`, `rollout_plies_per_iter`,
   `nodes_per_move`, `depth_reached_mean/min/max`, workers, commit, `exploratory` (1 = d3/d4)); `e7_ordering.csv` (theo depth × cấu hình: tổng nút,
   giây, nút/s, tỉ lệ so với `none`, số thế khớp/lệch giá trị). Quick thêm `e7quick_workers.csv`, `e7quick_estimate.csv`.
 - `results/tables/e7_branching.csv` (D-39): chỉ ván giữa hai tác tử có tìm kiếm (`BRANCH_POINTS` = c1, c4, d1-d4; bỏ

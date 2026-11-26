@@ -170,7 +170,12 @@ def side_game_stats(moves: list[dict[str, str]], side: str) -> dict[str, float |
     td = [float(m["max_depth"]) for m in search if m["max_depth"] != ""]
     nodes = [float(m["nodes"]) for m in ms if m["nodes"] != ""]
     dr = [int(m["depth_reached"]) for m in ms if m.get("depth_reached", "") != ""]
+    direct = [m for m in ms if m["tactic"] in DIRECT_TACTICS]
+    st = [float(m["time"]) for m in ms if m["time"] != "" and m["tactic"] not in DIRECT_TACTICS]
     return {
+        "direct_n": len(direct),
+        "search_time_sum": sum(st),
+        "search_time_n": len(st),
         "time_sum": sum(times),
         "time_n": len(times),
         "time_max": max(times) if times else None,
@@ -192,6 +197,8 @@ def _cv(xs: list[float]) -> float | None:
 SIDE_COLS = (
     "s_per_move_mean",
     "s_per_move_max",
+    "direct_pct",
+    "s_per_search_move_mean",
     "iter_per_s_mean",
     "iter_per_s_median",
     "iter_per_s_cv",
@@ -277,6 +284,13 @@ def summarize_point(
             row |= {
                 f"{p}_s_per_move_mean": sum(s["time_sum"] for s in st) / tn if tn else None,  # type: ignore[misc]
                 f"{p}_s_per_move_max": max(tmax) if tmax else None,
+                # nước đi thẳng nhờ tactics (tactic 1/2, không search) và s/nước có search (D-39)
+                f"{p}_direct_pct": 100 * sum(s["direct_n"] for s in st) / tn if tn else None,  # type: ignore[misc]
+                f"{p}_s_per_search_move_mean": (
+                    sum(s["search_time_sum"] for s in st) / sn  # type: ignore[misc]
+                    if (sn := sum(s["search_time_n"] for s in st))  # type: ignore[misc]
+                    else None
+                ),
                 f"{p}_iter_per_s_mean": statistics.fmean(ips) if ips else None,
                 f"{p}_iter_per_s_median": statistics.median(ips) if ips else None,
                 f"{p}_iter_per_s_cv": _cv(ips),  # type: ignore[arg-type]
