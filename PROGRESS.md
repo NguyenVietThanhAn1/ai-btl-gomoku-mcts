@@ -10,12 +10,12 @@
 
 ### An
 
-- **Task hiện tại:** P8.5 ✅ (2026-11-26, D-39; push `develop` `611aeac..0ca0fb1`). Tiếp theo P7.3 (PDF) → P7.4 (video, có cảnh cờ tướng), thứ tự D-35.
-- **Việc đang dở (làm ở P7.3, trước khi xuất PDF):**
-  1. **Chuỗi GUI còn gạch dài "—"** (An, 2026-11-26): đổi sang "-" hoặc "·" cho thống nhất với báo cáo (D-39). Ví dụ: modal/dòng trạng thái "Đen thắng — Chiếu bí", "X đầu hàng — O thắng", "Hòa — lặp thế 3 lần", "Hòa — đạt giới hạn N nước" (`xiangqi_view.py`, `play_scene.py`, `controller.py`), thẻ Phân tích "Ván này không có AI MCTS — …", nguồn cấu hình "… — E3" (`scenes.py`, `play_scene.py`). **Chú ý:** `play_scene.py` còn tách chuỗi theo `" — "` (dòng ~255 bỏ dòng phụ lặp tiêu đề modal, ~527 tách spec/nguồn) → đổi dấu phân cách ở nơi tạo và nơi tách cùng lúc; test GUI kiểm chuỗi có "—" (vd. `tests/test_gui_controller.py`, `test_gui_xiangqi_*.py`) sửa theo. Grep: `grep -rn "—" gameai/gui/*.py` (chuỗi hiển thị, bỏ qua docstring/comment).
-  2. **Chụp lại toàn bộ ảnh `report/figures/gui`** sau bước 1 (gộp việc cũ: `setup.png`, `demo.png` chụp trước cờ tướng, nhãn lệch): `python -m gameai.gui.screenshots --out report/figures/gui` (ảnh k-in-row) và `python -m gameai.gui.screenshots --only xq_check xq_flipped xq_end --out report/figures/gui`; xem lại từng ảnh, kiểm chú thích Hình B.1-B.11 còn đúng.
-  3. TODO ngoài lề: `presets.md` đổi nguồn mức cờ tướng "riêng" → "E7" cho MCTS Vừa/Khó, AB Dễ (cùng tham số, D-39).
-- **Bước tiếp theo:** P7.3: bước 1-2 ở trên → xuất `report.pdf` từ `report/report.md` (kiểm Bảng 1-24, Bảng B.1-B.2, Hình 1-9, B.1-B.11, công thức) → P7.4 video.
+- **Task hiện tại:** P7.3 🔄 (2026-11-26, D-40): GUI hết "—" + chụp lại ảnh (`ea6d77e`); `report/report.pdf` build bằng `python -m gameai.tools.build_pdf`. **Chờ An duyệt PDF**; chưa push.
+- **Việc đang dở (An quyết):**
+  1. Chú thích Hình B.7 và câu về Demo ở Phụ lục B (`report/report.md`) ghi "máy với máy", nhưng ảnh/preset 1-2 là người với máy → đề xuất sửa, chưa sửa (vùng nhạy cảm). Sửa xong build lại PDF.
+  2. Trang bìa PDF chưa có tên / MSSV / lớp (report.md không có).
+  3. Tiêu đề bên trong hình thí nghiệm (PNG do `plots.py`) còn "—".
+- **Bước tiếp theo:** An duyệt → spec-review P7.3 → ✅ → hỏi push → P7.4 video.
 - **Cảnh báo / blocker:** số liệu k-in-row khóa ở tag `kinrow-final`; mọi sửa agent phải giữ `tests/test_regression_kinrow.py` xanh. Báo cáo chỉ dùng gạch thường "-" (D-39); `report_check` hiểu `a-b` là khoảng.
 
 ### Thành viên 2
@@ -55,7 +55,7 @@
 | P6.2 | GUI: view cờ tướng | ✅ | An | 2026-11-25 | D-37; spec-reviewer PASS; An chơi thử + duyệt; Khó MCTS 2,50/2,50 s, AB 2,00/2,00 s (GUI, minh họa) |
 | P7.1 | Plots/tables | ✅ | An | 2026-11-17 | D-26; `plots --check` 24/24 bảng giống byte; cơ chế E6 kiểm chứng (D-21) |
 | P7.2 | report.md | ✅ | An | 2026-11-18 | D-30; spec-reviewer PASS; report_check 0 lỗi; `plots --check` 26/26 |
-| P7.3 | Xuất report.pdf (D-34; thay docx) | ⬜ | An | | sau P8.5 (D-35); trước khi xuất: sửa chuỗi GUI còn "—" rồi chụp lại **toàn bộ** `report/figures/gui` (xem "Việc đang dở") |
+| P7.3 | Xuất report.pdf (D-34; thay docx) | 🔄 | An | 2026-11-26 | D-40; chuỗi GUI + ảnh xong; `report/report.pdf` 40 trang (`gameai/tools/build_pdf.py`); chờ An duyệt PDF + chú thích Hình B.7; chưa spec-review, chưa push |
 | P7.4 | Video demo (script + quay) | ⬜ | An | | sau P7.3 (D-35); có cảnh cờ tướng |
 | P8.0 | Xiangqi design D-22 + golden k-in-row | ✅ | An | 2026-11-17 | tag `kinrow-final`, branch `xiangqi`; golden 12 ván / 123 nước |
 | P8.1 | Xiangqi rules + perft | ✅ | An | 2026-11-21 | spec-reviewer PASS; perft D1–4 khớp 11 thế (44/44); `p81_perft.csv`; `xiangqi.md` |
@@ -84,6 +84,10 @@
 > Mỗi người ghi log trong khối của mình, log mới nhất ở đầu khối; không sửa khối người khác (D-32).
 
 ### An
+
+#### 2026-11-26 — P7.3 (PDF), D-40
+- GUI: mọi chuỗi hiển thị đổi "—" → "-" / " · " (tách cấu hình · nguồn bằng `SOURCE_SEP`); nguồn "E7" cho 3 mức cờ tướng trùng tham số E7 (`XQ_SOURCES`); chụp lại `report/figures/gui` (trừ `style/`, ảnh so theme cũ); commit `ea6d77e`, precheck EXIT=0.
+- PDF: `gameai/tools/build_pdf.py` (+ `.md`, test) → `report/report.pdf` 40 trang A4. Xem ảnh render mọi trang. Chưa push.
 
 #### 2026-11-26 — P8.5 ✅ báo cáo cờ tướng (D-39)
 - An duyệt plan + 6 chỉnh (6.7 tách Kết quả/Cơ chế/Mức chắc chắn; cột `iter_per_root_move`; lý do TT là suy luận; 2.2 không so 15×15 thiếu số; Phụ lục B dùng lại số chỉ khi spec giống hệt; test ngày `2026-11-25`).
