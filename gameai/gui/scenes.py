@@ -53,9 +53,9 @@ BACK_RECT = (60, 640, 180, 50)
 
 
 def level_line(cfg: GameConfig, choice: AIChoice) -> str:
-    """'Khó = MCTS h300 5000 iter, c=1.4, tactics — cấu hình E3'."""
+    """'Khó = MCTS h300 5000 iter, c=1.4, tactics · cấu hình E3'."""
     lv = cfg.level(choice)
-    return f"{LEVEL_NAMES[choice.level]} = {side_label(lv.spec)} — {lv.source_text}"
+    return f"{LEVEL_NAMES[choice.level]} = {side_label(lv.spec)} · {lv.source_text}"
 
 
 class HomeScene(Scene):
@@ -429,7 +429,7 @@ class DemoScene(Scene):
         draw_text(surf, "Demo thí nghiệm", (80, 36), DISPLAY, t.ink, weight="bold")
         draw_text(
             surf,
-            "Cấu hình giống hệt thí nghiệm trong báo cáo (E2, E3) — dùng để quay video.",
+            "Cấu hình giống hệt thí nghiệm trong báo cáo (E2, E3) - dùng để quay video.",
             (80, 78),
             BODY,
             t.muted,

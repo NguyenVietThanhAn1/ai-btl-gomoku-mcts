@@ -100,6 +100,9 @@ XQ_AB = {
     "hard": xq_ab_spec(12, use_tt=True, time_limit=2.0),  # iterative deepening ≤ 12
 }
 
+# Mức cờ tướng trùng tham số E7 (D-39): MCTS L10 1 s / 2,5 s (d1, d2), AB độ sâu 1 (a1).
+XQ_SOURCES = {("mcts", "medium"): "E7", ("mcts", "hard"): "E7", ("alphabeta", "easy"): "E7"}
+
 DIFFICULTY: dict[tuple[BoardKey, str, str], Level] = {
     (3, "mcts", "easy"): Level(e2_mcts_spec(100), "E2"),
     (3, "mcts", "medium"): Level(e2_mcts_spec(1000), "E2"),
@@ -113,9 +116,11 @@ DIFFICULTY: dict[tuple[BoardKey, str, str], Level] = {
     (15, "alphabeta", "easy"): Level(AB15_D1, None),
     (15, "alphabeta", "medium"): Level(variants_15(3)["ab_order"], "E1"),  # Khó cũ (D-29), D-36
     (15, "alphabeta", "hard"): Level(AB15_HARD, None),
-    **{("xiangqi", "mcts", lv): Level(xq_mcts_spec(time_limit=tl, tactics=True), None)
+    **{("xiangqi", "mcts", lv): Level(xq_mcts_spec(time_limit=tl, tactics=True),
+                                      XQ_SOURCES.get(("mcts", lv)))
        for lv, tl in XQ_MCTS_TIMES.items()},
-    **{("xiangqi", "alphabeta", lv): Level(spec, None) for lv, spec in XQ_AB.items()},
+    **{("xiangqi", "alphabeta", lv): Level(spec, XQ_SOURCES.get(("alphabeta", lv)))
+       for lv, spec in XQ_AB.items()},
 }  # fmt: skip
 
 # Spec thí nghiệm không còn là mức độ khó nhưng vẫn dùng ở Demo (D-36): (bàn, spec, nguồn).

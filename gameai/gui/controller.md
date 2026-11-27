@@ -30,7 +30,7 @@ class GameController:
     def is_human_turn(self) -> bool;  def is_ai_turn(self) -> bool
     def submit_human_move(self, move) -> bool
     def update(self, now: float | None = None) -> None    # gọi mỗi frame
-    def result_text(self) -> str | None                   # "X thắng" / "O thắng" / "Hòa" / "X đầu hàng — O thắng" / lỗi; None khi chưa hết
+    def result_text(self) -> str | None                   # "X thắng" / "O thắng" / "Hòa" / "X đầu hàng - O thắng" / lỗi; None khi chưa hết
     can_undo: bool;  def undo(self) -> bool                # P6.3, xem dưới
     can_resign: bool;  def resign_side(self) -> int | None;  def resign(self, player=None) -> bool
     def side_time(self, player) -> float                  # tổng giây một bên đã dùng

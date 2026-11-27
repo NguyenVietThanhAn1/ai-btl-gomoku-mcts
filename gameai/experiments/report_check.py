@@ -118,8 +118,29 @@ def csv_value(path: Path, filt: str, col: str) -> str:
     return "/".join(hit[0][c] for c in cols)
 
 
+# gạch nối giữa hai chữ số = khoảng `a-b` (D-39); ngày `2026-11-25` không phải khoảng
+RANGE_HYPHEN = re.compile(r"(?<=\d)-(?=\d)")
+DATE = re.compile(r"(?<![\d-])\d{4}-\d{2}-\d{2}(?![\d-])")
+RANGE = "–"  # dấu khoảng nội bộ sau `norm`; report/summary không dùng ký tự này (D-39)
+
+
+# khoảng bị comment nguồn chen giữa: `0,423 <!-- src: … -->-0,467` (gạch ngay sau `-->`)
+COMMENT_RANGE = re.compile(r"(?<=-->)-(?=\d)")
+
+
+def _ranges(s: str) -> str:
+    """`a-b` → `a{RANGE}b`, trừ ngày `yyyy-mm-dd`; giữ độ dài chuỗi."""
+    out, last = [], 0
+    for m in DATE.finditer(s):
+        out += [RANGE_HYPHEN.sub(RANGE, s[last : m.start()]), m.group(0)]
+        last = m.end()
+    out.append(RANGE_HYPHEN.sub(RANGE, s[last:]))
+    return "".join(out)
+
+
 def norm(s: str) -> str:
-    return s.replace("−", "-").replace(" ", " ")
+    """Chuẩn hóa để so: khoảng `a-b` (trước khi đổi dấu trừ U+2212 → `-`), NBSP → space."""
+    return _ranges(s).replace("−", "-").replace(" ", " ")
 
 
 def last_number(before: str) -> re.Match[str]:
@@ -152,8 +173,8 @@ def expected_text(raw: str, before: str, transforms: list[str]) -> str:
 
 
 _N = r"-?(?:\d{1,3}(?: \d{3})+|\d+)(?:,\d+)?"
-# đoạn được một comment neo summary phủ: `x [lo; hi]` hoặc khoảng giá trị `a–b`
-CI_TAIL = re.compile(rf"({_N} \[[^\[\]]*\]|{_N}–{_N})$")
+# đoạn được một comment neo summary phủ: `x [lo; hi]` hoặc khoảng giá trị `a-b` (sau `norm`)
+CI_TAIL = re.compile(rf"({_N} \[[^\[\]]*\]|{_N}{RANGE}{_N})$")
 
 
 def _value_digits(before: str) -> int:
@@ -322,6 +343,7 @@ def check_text(
         issues.append(Issue(n, f"ký tự điều khiển {m.group(0)!r} (escape hỏng? vd. \\tfrac)"))
     for i, line in enumerate(lines):
         n = i + 1
+        line = COMMENT_RANGE.sub(RANGE, line)  # giữ độ dài dòng
         if line.lstrip().startswith("```"):
             fence = not fence
             continue

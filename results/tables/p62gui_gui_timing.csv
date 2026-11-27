@@ -1,0 +1,7 @@
+board,kind,level,source,config,opponent,games,ai_moves,search_moves,mean_s,median_s,max_s,fps_think,fps_worst,power,animations,note
+xiangqi,mcts,easy,riêng,"MCTS cắt 10 + eval, 0.3 s/nước, c=1.41, tactics",random_human,2,59,57,0.3,0.3,0.301,26.5,23.8,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+xiangqi,mcts,medium,riêng,"MCTS cắt 10 + eval, 1 s/nước, c=1.41, tactics",random_human,2,51,49,1.0,1.0,1.001,25.9,22.7,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+xiangqi,mcts,hard,riêng,"MCTS cắt 10 + eval, 2.5 s/nước, c=1.41, tactics",random_human,2,48,46,2.501,2.5,2.503,25.7,16.7,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+xiangqi,alphabeta,easy,riêng,"Alpha-Beta depth 1, ordering",random_human,2,57,57,0.001,0.001,0.002,29.7,28.6,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+xiangqi,alphabeta,medium,riêng,"Alpha-Beta depth 2, ordering, TT",random_human,2,60,60,0.005,0.005,0.011,29.8,28.6,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm
+xiangqi,alphabeta,hard,riêng,"Alpha-Beta ID ≤12, 2 s/nước, ordering, TT",random_human,2,39,39,2.001,2.0,2.003,25.7,15.6,AC,1,minh họa GUI — không dùng cho báo cáo thí nghiệm

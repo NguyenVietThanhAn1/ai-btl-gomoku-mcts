@@ -150,7 +150,7 @@ def run(state: AppState | None, autoplay: bool = False, max_frames: int | None =
 
 
 def main(argv: list[str] | None = None) -> None:
-    ap = argparse.ArgumentParser(description=f"{brand.APP_NAME} — GUI caro (pygame).")
+    ap = argparse.ArgumentParser(description=f"{brand.APP_NAME} - GUI caro (pygame).")
     ap.add_argument("--preset", choices=PRESET_ORDER, default=None,
                     help="vào thẳng ván với preset thí nghiệm (bỏ qua menu)")  # fmt: skip
     ap.add_argument("--seed", type=int, default=0)

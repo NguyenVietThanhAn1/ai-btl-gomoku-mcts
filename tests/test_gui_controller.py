@@ -381,7 +381,7 @@ def test_resign_human_vs_ai_drops_late_result():
     assert ctrl.thinking and ctrl.resign_side() == P1
     assert ctrl.resign()
     assert ctrl.over and ctrl.outcome == P2 and ctrl.winner is None
-    assert ctrl.result_text() == "X đầu hàng — O thắng"
+    assert ctrl.result_text() == "X đầu hàng - O thắng"
     gate.set()
     time.sleep(0.05)
     ctrl.update()

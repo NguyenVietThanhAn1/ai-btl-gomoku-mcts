@@ -6,7 +6,14 @@ import pytest
 
 from gameai.agents.registry import AgentSpec, make_agent
 from gameai.core.game import P1, P2
-from gameai.experiments import e1_nodes, e2_never_lose, e3_c_sweep, p82_ab_check, p83_mcts_check
+from gameai.experiments import (
+    e1_nodes,
+    e2_never_lose,
+    e3_c_sweep,
+    e7_xiangqi,
+    p82_ab_check,
+    p83_mcts_check,
+)
 from gameai.gui.game_config import AIChoice, GameConfig, build_preset
 from gameai.gui.presets import (
     DIFFICULTY,
@@ -39,7 +46,9 @@ EXPECTED_OWN = {
                                 "time_limit": 2.4, "top_k": [16, 12, 8], "vcf_depth": 8,
                                 "vcf_time": 0.3},  # D-36 (top_k tạm, B5)
 }  # fmt: skip
-# Cờ tướng (D-37): spec sinh bằng hàm thí nghiệm P8.2/P8.3, nguồn = cấu hình riêng.
+# Cờ tướng (D-37): spec từ hàm thí nghiệm P8.2/P8.3; mức trùng tham số E7 ghi nguồn "E7" (D-39).
+EXPECTED_XQ_E7 = {("xiangqi", "mcts", "medium"), ("xiangqi", "mcts", "hard"),
+                  ("xiangqi", "alphabeta", "easy")}  # fmt: skip
 EXPECTED_XQ = {
     ("xiangqi", "mcts", "easy"): p83_mcts_check.xq_mcts_spec(time_limit=0.3, tactics=True),
     ("xiangqi", "mcts", "medium"): p83_mcts_check.xq_mcts_spec(time_limit=1.0, tactics=True),
@@ -64,7 +73,14 @@ def test_difficulty_table_complete_and_matches_experiments():
         assert lv.source is None and lv.source_text == OWN_CONFIG
     for key, spec in EXPECTED_XQ.items():
         lv = level_for(*key)
-        assert lv.spec == spec and lv.source is None and lv.source_text == OWN_CONFIG
+        assert lv.spec == spec and lv.source == ("E7" if key in EXPECTED_XQ_E7 else None)
+    # "cùng tham số E7": so params với spec thí nghiệm (label khác nhau).
+    for key, e7_spec in {
+        ("xiangqi", "mcts", "medium"): e7_xiangqi.mcts(10, 1.0),
+        ("xiangqi", "mcts", "hard"): e7_xiangqi.mcts(10, 2.5),
+        ("xiangqi", "alphabeta", "easy"): p82_ab_check.ab_spec(1),
+    }.items():
+        assert level_for(*key).spec.params == e7_spec.params
     for lv in DIFFICULTY.values():
         make_agent(lv.spec, 0)
 

@@ -252,11 +252,11 @@ class GameController:
 
     # ------------------------------------------------------------ tiện ích
     def result_text(self) -> str | None:
-        """'X thắng' / 'O thắng' / 'Hòa' / 'X đầu hàng — O thắng' / lỗi; None nếu chưa kết thúc."""
+        """'X thắng' / 'O thắng' / 'Hòa' / 'X đầu hàng - O thắng' / lỗi; None nếu chưa kết thúc."""
         if self.error is not None:
             return self.error
         if self.resigned is not None:
-            return f"{SIDE_TAG[self.resigned]} đầu hàng — {SIDE_TAG[-self.resigned]} thắng"
+            return f"{SIDE_TAG[self.resigned]} đầu hàng - {SIDE_TAG[-self.resigned]} thắng"
         w = self.game.winner()
         if w is None:
             return None

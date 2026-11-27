@@ -29,7 +29,7 @@ def side_label(spec) -> str                 # "Người", "MCTS h300 5000 iter, 
 
 # Độ khó (P6.3, D-29)
 LEVELS = ("easy", "medium", "hard"); LEVEL_NAMES = {...: "Dễ"/"Vừa"/"Khó"}; AI_KINDS = ("mcts", "alphabeta")
-@dataclass(frozen=True) class Level: spec: AgentSpec; source: str | None   # "E1"/"E2"/"E3"/"E3/E5"; None = cấu hình riêng
+@dataclass(frozen=True) class Level: spec: AgentSpec; source: str | None   # "E1"/"E2"/"E3"/"E3/E5"/"E7"; None = cấu hình riêng
     source_text: str   # "cấu hình E3" / OWN_CONFIG ("cấu hình riêng của chế độ chơi, không có trong thí nghiệm")
 XIANGQI = GameSpec("xiangqi", {})            # P6.2; max_plies mặc định 300 (D-22)
 BoardKey = int | str                         # khóa trò: 3, 15 (cạnh bàn k-in-row) hoặc "xiangqi"
@@ -54,14 +54,15 @@ def experiment_source(spec, board) -> str | None   # 'E3/E5' cho AB2 trên 15×1
 | 3×3 | AB | depth 1 + `evaluate` — riêng | depth 2 + `evaluate` — riêng | `e1.VARIANTS_3["ab_order_tt"]` — E1 |
 | 15×15 | MCTS | `e3.mcts_spec(15, 1.4, 250)` — E3 | `e3.mcts_spec(15, 1.4, 1000)` — E3 | `e3.mcts_spec(15, 1.4, 5000)` — E3 |
 | 15×15 | AB | depth 1 + eval + delta + ordering — riêng | `e1.variants_15(3)["ab_order"]` — E1 (**Khó cũ**) | `AB15_HARD` — riêng (D-36) |
-| Cờ tướng | MCTS | `xq_mcts_spec(time_limit=0.3, tactics=True)` — riêng | `xq_mcts_spec(time_limit=1.0, tactics=True)` — riêng | `xq_mcts_spec(time_limit=2.5, tactics=True)` — riêng |
-| Cờ tướng | AB | `ab_spec(1)` — riêng | `ab_spec(2, use_tt=True)` — riêng (= nguồn nhãn D-24) | `ab_spec(12, use_tt=True, time_limit=2.0)` — riêng |
+| Cờ tướng | MCTS | `xq_mcts_spec(time_limit=0.3, tactics=True)` — riêng | `xq_mcts_spec(time_limit=1.0, tactics=True)` — E7 | `xq_mcts_spec(time_limit=2.5, tactics=True)` — E7 |
+| Cờ tướng | AB | `ab_spec(1)` — E7 | `ab_spec(2, use_tt=True)` — riêng (= nguồn nhãn D-24) | `ab_spec(12, use_tt=True, time_limit=2.0)` — riêng |
 
 **Cờ tướng (P6.2, D-37):** `xq_mcts_spec` (`experiments/p83_mcts_check.py`): rollout cắt `XQ_MCTS_L` = 10 ply rồi
 σ(`xq_evaluate`/2000), c = √2, tactics **bật**, ngân sách theo thời gian (`iterations` = None). `ab_spec`
 (`experiments/p82_ab_check.py`): `xq_evaluate` + `xq_delta` + order `xq_mvv_lva`, `seeded: false`, TT "exact", **không**
-`top_k`/`tt_mode="deep"` (D-23: chưa đo trên cờ tướng). Spec gọi hàm thí nghiệm, không gõ tay; nguồn = cấu hình riêng
-(P8.4 đổi sang "E7" nếu spec E7 trùng `==`). Nhãn: "MCTS cắt 10 + eval, 1 s/nước, c=1.41, tactics",
+`top_k`/`tt_mode="deep"` (D-23: chưa đo trên cờ tướng). Spec gọi hàm thí nghiệm, không gõ tay. Nguồn
+(`XQ_SOURCES`, D-39): "E7" cho mức trùng tham số E7 (MCTS Vừa = d1 1 s, MCTS Khó = d2 2,5 s, AB Dễ = a1), còn lại
+= cấu hình riêng. Nhãn: "MCTS cắt 10 + eval, 1 s/nước, c=1.41, tactics",
 "Alpha-Beta ID ≤12, 2 s/nước, ordering, TT".
 
 **D-36 (2026-11-18):** bảng trên thay phần bảng độ khó của D-29 ở dòng AB 15×15 (D-29 giữ nguyên làm lịch sử): Vừa = Khó cũ (E1), Khó = `AB15_HARD` =

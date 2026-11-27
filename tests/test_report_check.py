@@ -167,6 +167,38 @@ def test_range_span_anchor(src: Path):
     assert run("thắng 0,915–0,990 <!-- src: summary_kinrow.md#E3 -->", src) != []
 
 
+def test_hyphen_range_anchor(src: Path):
+    """D-39: khoảng viết bằng gạch thường `a-b` được phủ cả chuỗi như `a–b`."""
+    (src / "results" / "tables" / "summary_kinrow.md").write_text(
+        "## E3 - x\n\n- thắng 0,915-0,980.\n", encoding="utf-8"
+    )
+    assert run("thắng 0,915-0,980 <!-- src: summary_kinrow.md#E3 -->", src) == []
+    assert run("thắng 0,915-0,990 <!-- src: summary_kinrow.md#E3 -->", src) != []
+
+
+def test_norm_hyphen_minus_date():
+    """Gạch giữa hai chữ số → khoảng; dấu trừ U+2212 → `-` (số âm); ngày, `E1-E6`, `D-30` giữ."""
+    assert rc.norm("0,10-0,26") == f"0,10{rc.RANGE}0,26"
+    assert rc.norm("[−0,10; 0,18]") == "[-0,10; 0,18]"
+    assert rc.norm("2026-11-25") == "2026-11-25"
+    assert rc.norm("chạy 2026-11-25, 1-43") == f"chạy 2026-11-25, 1{rc.RANGE}43"
+    assert rc.norm("E1-E6, D-30") == "E1-E6, D-30"
+    assert rc.last_number("trong 0,10-0,26").group(0) == "0,26"
+    assert rc.last_number("hiệu −0,10").group(0) == "-0,10"
+    assert len(rc.norm("2026-11-25 0-8 −1")) == len("2026-11-25 0-8 −1")
+
+
+def test_hyphen_range_csv_value(src: Path):
+    """Số sau gạch khoảng `a-b` vẫn đối chiếu được với CSV."""
+    assert run(f"từ 46-0,92 <!-- src: {T} | c=1.4 | win_rate -->", src) == []
+    # khoảng bị comment nguồn chen giữa: gạch sau `-->` là dấu khoảng, không phải số âm
+    split = (
+        f"từ 0,92 <!-- src: {T} | c=1.4 | win_rate -->-0,96 <!-- src: {T} | c=2.0 | win_rate -->"
+    )
+    assert run(split, src) == []
+    assert run(f"từ 0,92 <!-- src: {T} | c=1.4 | win_rate -->-0,96", src) != []
+
+
 def test_control_characters(src: Path):
     r"""TAB / BEL (escape hỏng: "\tfrac" → TAB, "\approx" → BEL) → lỗi đúng dòng; CRLF không báo."""
     bad = run("dòng 1\r\nso với $\\ln \tfrac12 \x07pprox$\n", src)

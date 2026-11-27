@@ -49,8 +49,8 @@ class XiangqiView(GameView):
     def piece_sprite(piece) -> Surface           # sprite cache, đường kính cell − 6
 def piece_char(piece) -> str            # 帥仕相傌俥炮兵 (Đỏ, piece > 0) / 將士象馬車砲卒 (Đen)
 def end_reason(game: Xiangqi) -> str | None
-    # "Chiếu bí" | "Bí nước" (bên tới lượt hết nước = thua) | "Hòa — lặp thế 3 lần"
-    # | "Hòa — đạt giới hạn N nước" (N = game.max_plies) | None khi chưa hết ván
+    # "Chiếu bí" | "Bí nước" (bên tới lượt hết nước = thua) | "Hòa - lặp thế 3 lần"
+    # | "Hòa - đạt giới hạn N nước" (N = game.max_plies) | None khi chưa hết ván
 ALL_CHARS: str                          # 14 chữ quân + 楚河漢界 (font đóng gói phải có đủ)
 ```
 - Đăng ký `VIEWS["xiangqi"]` khi import (`make_view` import sẵn module này). Factory mặc định `flipped=False`.

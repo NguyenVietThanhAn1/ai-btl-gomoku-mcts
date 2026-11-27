@@ -1,6 +1,6 @@
-"""P7.1: sinh lại mọi bảng/hình báo cáo k-in-row (E1–E6) từ `results/raw` + `summary_kinrow.md`.
+"""P7.1: sinh lại mọi bảng/hình báo cáo k-in-row (E1-E6) từ `results/raw` + `summary_kinrow.md`.
 
-Không chạy search/ván nào — chỉ đọc raw và gọi lại đúng hàm tóm tắt/vẽ của từng thí nghiệm.
+Không chạy search/ván nào - chỉ đọc raw và gọi lại đúng hàm tóm tắt/vẽ của từng thí nghiệm.
 
     python -m gameai.experiments.plots           # ghi đè results/tables + results/figures
     python -m gameai.experiments.plots --check   # sinh vào thư mục tạm, so byte từng CSV
@@ -24,6 +24,7 @@ from gameai.experiments import e4_final_move as e4
 from gameai.experiments import e5_rollout as e5
 from gameai.experiments import e6_mechanism as e6m
 from gameai.experiments import e6_tactics as e6
+from gameai.experiments import e7_xiangqi as e7
 from gameai.experiments.common import (
     moves_path_for,
     read_rows,
@@ -167,7 +168,7 @@ def pinned_reuse(*args: Any, **kwargs: Any) -> tuple[bool, str]:
 
 
 def regenerate(raw_dir: Path, table_dir: Path, fig_dir: Path) -> tuple[list[Path], list[Path]]:
-    """Sinh bảng + hình E2–E6 vào `table_dir`/`fig_dir`. Trả (bảng, hình)."""
+    """Sinh bảng + hình E2-E7 vào `table_dir`/`fig_dir`. Trả (bảng, hình)."""
     table_dir.mkdir(parents=True, exist_ok=True)
     fig_dir.mkdir(parents=True, exist_ok=True)
     tables = e2_tables(raw_dir, table_dir) + e3_tables(raw_dir, table_dir)
@@ -185,7 +186,8 @@ def regenerate(raw_dir: Path, table_dir: Path, fig_dir: Path) -> tuple[list[Path
     m = e6m.make_figure(table_dir, fig_dir)
     if m:
         figs.append(m)
-    return sorted(set(tables)), figs
+    _, t7, f7 = e7.build_tables(raw_dir, table_dir, fig_dir)  # E7 cờ tướng (D-39)
+    return sorted(set(tables + t7)), figs + f7
 
 
 def committed_bytes(path: Path) -> bytes | None:
@@ -229,7 +231,7 @@ REPORT_MAP = [
      ["e1_summary.csv", "e1_nodes.csv", "e1_positions.csv"]),
     ("5.2", "MCTS 3×3 không thua: W/D/L + vét cạn nhánh đối thủ", "E2", [],
      ["e2_play.csv", "e2_exhaustive.csv", "e2_exhaustive_by_role.csv"]),
-    ("5.3", "Hằng số c: iter – tỷ lệ thắng, mỗi c một đường; W/D/L 15×15", "E3",
+    ("5.3", "Hằng số c: iter - tỷ lệ thắng, mỗi c một đường; W/D/L 15×15", "E3",
      ["e3_3x3.png", "e3_greedy.png", "e3_ab2.png"],
      ["e3_3x3_random.csv", "e3_3x3_minimax.csv", "e3_greedy.csv", "e3_ab2_pilot.csv",
       "e3_ab2.csv"]),
@@ -286,7 +288,7 @@ def _table(title: str, head: list[str], rows: list[list[str]]) -> list[str]:
 
 
 def _pct(r: dict[str, str], k: str = "nodes_saving_vs_minimax_pooled_pct") -> str:
-    return vn(r[k]) + " %" if r[k] else "—"
+    return vn(r[k]) + " %" if r[k] else "-"
 
 
 def section_e1(td: Path) -> list[str]:
@@ -309,8 +311,8 @@ def section_e1(td: Path) -> list[str]:
     ]
     rows = [[r["board"].replace("x", "×"), r["depth"], r["variant"], vn(r["nodes_sum"], 0),
              vn(r["time_sum"], 3),
-             _pct(r), r["values_same_as_minimax"] or "—"] for r in s]  # fmt: skip
-    return lines + _table("Bảng E1 — số nút và thời gian (tổng trên các thế, `e1_summary.csv`)",
+             _pct(r), r["values_same_as_minimax"] or "-"] for r in s]  # fmt: skip
+    return lines + _table("Bảng E1 - số nút và thời gian (tổng trên các thế, `e1_summary.csv`)",
                           ["bàn", "depth", "biến thể", "nút", "giây", "giảm nút vs Minimax",
                            "giá trị = Minimax"], rows)  # fmt: skip
 
@@ -337,7 +339,7 @@ def section_e2(td: Path) -> list[str]:
              vn(r["nonloss_rate"]) + " " + ci(r["nonloss_lo"], r["nonloss_hi"])]
             for r in play]  # fmt: skip
     lines += _table(
-        "Bảng E2 — W/D/L của MCTS 3×3 (`e2_play.csv`)",
+        "Bảng E2 - W/D/L của MCTS 3×3 (`e2_play.csv`)",
         ["MCTS", "đối thủ", "W/D/L", "không thua [Wilson 95 %]"],
         rows,
     )
@@ -350,7 +352,7 @@ def section_e2(td: Path) -> list[str]:
     rows = [[r["iterations"], r["n_runs"], vn(r["branches"], 0), r["losses"], r["runs_with_loss"],
              zero(r["iterations"], "1"), zero(r["iterations"], "-1")] for r in exh]  # fmt: skip
     return lines + _table(
-        "Bảng E2 — vét cạn mọi chuỗi nước đáp của đối thủ (`e2_exhaustive.csv`, "
+        "Bảng E2 - vét cạn mọi chuỗi nước đáp của đối thủ (`e2_exhaustive.csv`, "
         "`e2_exhaustive_by_role.csv`)",
         ["iter", "run (seed × vai)", "nhánh (lá)", "nhánh thua", "run có thua",
          "seed không thua, MCTS = X", "seed không thua, MCTS = O"],
@@ -373,9 +375,9 @@ def section_e3(td: Path) -> list[str]:
     cs = sorted({r["c"] for r in gr}, key=float)
     g = [r for r in gr if int(r["iterations"]) in (1000, 5000)]
     lines = [
-        f"- 3×3 vs Random: thắng {vn(min(wr), 3)}–{vn(max(wr), 3)}; vs Minimax không thua "
-        f"{vn(min(nl_lo))}–{vn(max(nl_lo))} ở {lo_it} iter → "
-        + "–".join(dict.fromkeys(vn(x) for x in (nl_hi[0], nl_hi[-1])))
+        f"- 3×3 vs Random: thắng {vn(min(wr), 3)}-{vn(max(wr), 3)}; vs Minimax không thua "
+        f"{vn(min(nl_lo))}-{vn(max(nl_lo))} ở {lo_it} iter → "
+        + "-".join(dict.fromkeys(vn(x) for x in (nl_hi[0], nl_hi[-1])))
         + " từ 2500 iter (mọi c).",
         "- 15×15 vs Greedy (h300 + tactics): "
         + "; ".join(
@@ -389,7 +391,7 @@ def section_e3(td: Path) -> list[str]:
         f"{ci(best_ab['win_lo'], best_ab['win_hi'])}.",
     ]
     rows = [[str(it)] + [vn(_one(gr, c=c, iterations=it)["win_rate"]) for c in cs] for it in its]
-    lines += _table("Bảng E3 — tỷ lệ thắng vs Greedy 15×15 (`e3_greedy.csv`)",
+    lines += _table("Bảng E3 - tỷ lệ thắng vs Greedy 15×15 (`e3_greedy.csv`)",
                     ["iter"] + [f"c = {vn(c, 1)}" for c in cs], rows)  # fmt: skip
     for name, rs, what in (
         ("e3_3x3_random.csv", rnd, "3×3 vs Random"),
@@ -397,7 +399,7 @@ def section_e3(td: Path) -> list[str]:
         ("e3_greedy.csv", gr, "15×15 vs Greedy"),
         ("e3_ab2.csv", ab, "15×15 vs AB depth 2"),
     ):
-        lines += _table(f"Bảng E3 — W/D/L của MCTS, {what}, {rs[0]['n']} ván/điểm (`{name}`)",
+        lines += _table(f"Bảng E3 - W/D/L của MCTS, {what}, {rs[0]['n']} ván/điểm (`{name}`)",
                         ["iter"] + [f"c = {vn(c, 1)}" for c in cs], _wdl_rows(rs, cs))  # fmt: skip
     return lines
 
@@ -423,7 +425,7 @@ def section_e4(td: Path) -> list[str]:
     tr = [r for r in _t(td, "e4_roots_examples.csv") if r["example"] == "trace"]
     dr = [float(r["differ_rate"]) * 100 for r in s3]
     lines = [
-        f"- 3×3: max_n ≠ max_wn ở {vn(min(dr), 1)}–{vn(max(dr), 1)} % thế; khi khác, tỷ lệ giữ "
+        f"- 3×3: max_n ≠ max_wn ở {vn(min(dr), 1)}-{vn(max(dr), 1)} % thế; khi khác, tỷ lệ giữ "
         "giá trị trò chơi (max_n / max_wn) "
         + ", ".join(
             f"{r['iterations']} iter {vn(r['differ_opt_max_n'], 3)} / "
@@ -448,21 +450,21 @@ def section_e4(td: Path) -> list[str]:
     rows = [[r["move"], vn(r["W"], 1), r["N"], vn(r["wn"], 3),
              "✓" if r["is_max_n"] == "1" else "", "✓" if r["is_max_wn"] == "1" else "",
              vn(r["value"], 0)] for r in tr]  # fmt: skip
-    lines += _table(f"Bảng E4 — ví dụ gốc 3×3, {tr[0]['iterations']} iter, c = {vn(tr[0]['c'], 1)} "
+    lines += _table(f"Bảng E4 - ví dụ gốc 3×3, {tr[0]['iterations']} iter, c = {vn(tr[0]['c'], 1)} "
                     "(`e4_roots_examples.csv`, giá trị trò chơi theo góc người đi ở gốc)",
                     ["ô", "W", "N", "W/N", "max N", "max W/N", "giá trị"], rows)  # fmt: skip
     rows = [[r["iterations"], vn(r["n_positions"], 0), vn(float(r["differ_rate"]) * 100, 1) + " %",
              vn(r["differ_opt_max_n"], 3), vn(r["differ_opt_max_wn"], 3)] for r in s3]  # fmt: skip
     lines += _table(
-        f"Bảng E4 — 3×3, mọi thế ≥ 2 nước, c = {vn(s3[0]['c'], 1)}: khi nào max_n ≠ max_wn "
+        f"Bảng E4 - 3×3, mọi thế ≥ 2 nước, c = {vn(s3[0]['c'], 1)}: khi nào max_n ≠ max_wn "
         "(`e4_roots_summary.csv`)",
-        ["iter", "số thế", "max_n ≠ max_wn", "giữ giá trị — max_n", "giữ giá trị — max_wn"],
+        ["iter", "số thế", "max_n ≠ max_wn", "giữ giá trị - max_n", "giữ giá trị - max_wn"],
         rows,
     )
     rows = [[vn(r["c"], 1), r["iterations"], f"{r['n_differ']}/{r['n_positions']}",
              vn(r["max_wn_is_1_rate"]), vn(r["max_n_N_tie_rate"])] for r in s15]  # fmt: skip
     lines += _table(
-        "Bảng E4 — 15×15 (h300 + tactics): số search có max_n ≠ max_wn (`e4_roots_summary.csv`)",
+        "Bảng E4 - 15×15 (h300 + tactics): số search có max_n ≠ max_wn (`e4_roots_summary.csv`)",
         ["c", "iter", "max_n ≠ max_wn", "con max_wn có W/N = 1", "max_n hòa N với con khác"],
         rows,
     )
@@ -472,7 +474,7 @@ def section_e4(td: Path) -> list[str]:
              vn(sp[(r["iterations"], "A=X")]["score"], 3),
              vn(sp[(r["iterations"], "A=O")]["score"], 3)] for r in m]  # fmt: skip
     lines += _table(
-        f"Bảng E4 — đối đầu 3×3 max_n (A) vs max_wn (B), {m[0]['n']} ván/điểm (`e4_match.csv`)",
+        f"Bảng E4 - đối đầu 3×3 max_n (A) vs max_wn (B), {m[0]['n']} ván/điểm (`e4_match.csv`)",
         ["iter", "W/D/L của max_n", "score max_n [95 %]", "score khi max_n đi trước",
          "score khi max_n đi sau"],
         rows,
@@ -486,7 +488,7 @@ def section_e4(td: Path) -> list[str]:
                  "✓" if r["is_max_n"] == "1" else "", "✓" if r["is_max_wn"] == "1" else "",
                  vn(r["ref_W"], 1), r["ref_N"], vn(r["ref_wn"], 3)] for r in ex]  # fmt: skip
         lines += _table(
-            f"Bảng E4 — ví dụ gốc 15×15, thế {pos} ({r0['plies']} ply), {r0['iterations']} iter, "
+            f"Bảng E4 - ví dụ gốc 15×15, thế {pos} ({r0['plies']} ply), {r0['iterations']} iter, "
             f"c = {vn(r0['c'], 1)}, so với tham chiếu {vn(r0['ref_iterations'], 0)} iter "
             "(`e4_roots_examples.csv`)",
             ["ô", "W", "N", "W/N", "max N", "max W/N", "W tham chiếu", "N tham chiếu",
@@ -524,13 +526,13 @@ def section_e5(td: Path) -> list[str]:
         f"{'có' if val['contains_half'] == '1' else 'không'}).",
     ]
     lines += _table(
-        "Bảng E5 — cùng thời gian/nước (so sánh công bằng; 2 worker)",
+        "Bảng E5 - cùng thời gian/nước (so sánh công bằng; 2 worker)",
         ["đối thủ", "thời gian/nước", "rand: thắng [Wilson 95 %]", "h300: thắng [Wilson 95 %]",
          "iteration thực tế/nước rand / h300", "hiệu cặp h300 − rand [95 %]"],
         _e5_rows(td, "time"),
     )  # fmt: skip
     lines += _table(
-        "Bảng E5 — cùng số iteration (thiên vị h300; 4 worker)",
+        "Bảng E5 - cùng số iteration (thiên vị h300; 4 worker)",
         ["đối thủ", "iter/nước", "rand: thắng [Wilson 95 %]", "h300: thắng [Wilson 95 %]",
          "ván rand / h300", "hiệu cặp h300 − rand [95 %]"],
         _e5_rows(td, "iter"),
@@ -539,7 +541,7 @@ def section_e5(td: Path) -> list[str]:
 
 
 def _e5_win(r: dict[str, str] | None) -> str:
-    return "—" if r is None else f"{vn(r['win_rate'])} {ci(r['win_lo'], r['win_hi'])}"
+    return "-" if r is None else f"{vn(r['win_rate'])} {ci(r['win_lo'], r['win_hi'])}"
 
 
 def _e5_rows(td: Path, bt: str) -> list[list[str]]:
@@ -557,19 +559,19 @@ def _e5_rows(td: Path, bt: str) -> list[list[str]]:
                 r = ro["h300"]
                 its = (f"{vn(r['b_search_iterations_per_move'], 0)} / "
                        f"{vn(r['a_search_iterations_per_move'], 0)}")  # fmt: skip
-                mid = its if bt == "time" else f"— / {r['n']}"
-                out.append([names[part], bud, "—", _e5_win(r), mid, "—"])
+                mid = its if bt == "time" else f"- / {r['n']}"
+                out.append([names[part], bud, "-", _e5_win(r), mid, "-"])
                 continue
             pd = [x for x in pr if x["part"] == part and x["budget_type"] == bt
                   and float(x["budget"]) == b]  # fmt: skip
             diff = (f"{vn(pd[0]['diff'])} {ci(pd[0]['paired_lo'], pd[0]['paired_hi'])}"
-                    if pd else "—")  # fmt: skip
+                    if pd else "-")  # fmt: skip
             if bt == "time":
                 mid = " / ".join(
                     vn(ro[k]["a_search_iterations_per_move"], 0) for k in ("rand", "h300")
                 )
             else:
-                mid = " / ".join(ro[k]["n"] if k in ro else "—" for k in ("rand", "h300"))
+                mid = " / ".join(ro[k]["n"] if k in ro else "-" for k in ("rand", "h300"))
             out.append(
                 [names[part], bud, _e5_win(ro.get("rand")), _e5_win(ro.get("h300")), mid, diff]
             )
@@ -635,16 +637,16 @@ def _e6_tables(td: Path, ch: list[dict[str, str]], pr: list[dict[str, str]]) -> 
     r0 = _one(ch, type="block", rollout="rand", iter=its[0])
     seeds = int(r0["n_runs"]) // int(r0["n_pos"])
     out = _table(
-        f"Bảng E6 — tỷ lệ chọn đúng khi TẮT check_tactics ({r0['n_pos']} thế/loại × {seeds} seed; "
+        f"Bảng E6 - tỷ lệ chọn đúng khi TẮT check_tactics ({r0['n_pos']} thế/loại × {seeds} seed; "
         "trọng số pool, bootstrap 95 %; `e6_choice.csv`)",
-        ["iter", "chặn four — rand", "chặn four — h300", "thắng ngay — rand", "thắng ngay — h300"],
+        ["iter", "chặn four - rand", "chặn four - h300", "thắng ngay - rand", "thắng ngay - h300"],
         rows,
     )  # fmt: skip
     names = {"greedy": "h300 vs Greedy", "mref": "rand vs mref"}
     rows = [[names[r["part"]], r["iters"], r["n"], vn(r["mean_off"]), vn(r["mean_on"]),
              f"{vn(r['diff'])} {ci(r['paired_lo'], r['paired_hi'])}"] for r in pr]  # fmt: skip
     out += _table(
-        "Bảng E6 — tỷ lệ thắng tắt → bật check_tactics, so cặp (`e6_paired.csv`)",
+        "Bảng E6 - tỷ lệ thắng tắt → bật check_tactics, so cặp (`e6_paired.csv`)",
         ["cấu hình", "iter", "ván", "tắt", "bật", "hiệu bật − tắt [95 %]"],
         rows,
     )  # fmt: skip
@@ -657,13 +659,13 @@ def _e6_tables(td: Path, ch: list[dict[str, str]], pr: list[dict[str, str]]) -> 
         ovr = [float(r["overhead_rand"]) * 100 for r in rs if r["overhead_rand"]]
         ovh = [float(r["overhead_h300"]) * 100 for r in rs if r["overhead_h300"]]
         rows.append([name, str(len(rs)), vn(statistics.median(ms)), vn(max(ms)),
-                     vn(statistics.median(ovr), 1) + " %" if ovr else "—",
-                     vn(statistics.median(ovh), 1) + " %" if ovh else "—"])  # fmt: skip
+                     vn(statistics.median(ovr), 1) + " %" if ovr else "-",
+                     vn(statistics.median(ovh), 1) + " %" if ovh else "-"])  # fmt: skip
     out += _table(
-        "Bảng E6 — chi phí một lần check_tactics, đơn luồng (`e6_cost_check.csv`; overhead so với "
+        "Bảng E6 - chi phí một lần check_tactics, đơn luồng (`e6_cost_check.csv`; overhead so với "
         "MCTS 1000 iter tắt tactics trên cùng thế)",
-        ["loại thế", "số thế", "ms trung vị", "ms tối đa", "overhead trung vị — rand",
-         "overhead trung vị — h300"],
+        ["loại thế", "số thế", "ms trung vị", "ms tối đa", "overhead trung vị - rand",
+         "overhead trung vị - h300"],
         rows,
     )  # fmt: skip
     tr = [r for r in _t(td, "e6_tactic_rate.csv") if r["tactics"] == "on"]
@@ -676,10 +678,10 @@ def _e6_tables(td: Path, ch: list[dict[str, str]], pr: list[dict[str, str]]) -> 
         pct = vn(float(r["pct_direct"]) * 100, 1) + " %"
         vs = {"mref": "mref", "self": "h300 tắt (đối đầu)", "greedy": "Greedy"}[r["part"]]
         rows.append([r["label"], vs, r["n_moves"], pct,
-                     vn(off[0]["mean_agent_time"]) if off else "—",
+                     vn(off[0]["mean_agent_time"]) if off else "-",
                      vn(onr["mean_agent_time"]), onr["source"].upper()])  # fmt: skip
     out += _table(
-        "Bảng E6 — nước đi thẳng nhờ check_tactics và thời gian/nước trong ván "
+        "Bảng E6 - nước đi thẳng nhờ check_tactics và thời gian/nước trong ván "
         "(`e6_tactic_rate.csv`, "
         "`e6_time.csv`)",
         ["cấu hình (bật)", "ván với", "nước", "đi thẳng (không search)", "s/nước tắt",
@@ -701,9 +703,9 @@ SUMMARY_NAME = "summary_kinrow.md"
 def write_summary_md(table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_DIR) -> Path:
     """`summary_kinrow.md`: bản đồ hình/bảng → mục 5 báo cáo + số chính mỗi E; mọi số đọc từ CSV."""
     out = [
-        "# Tổng hợp kết quả k-in-row (E1–E6) — nguồn cho mục 5 báo cáo",
+        "# Tổng hợp kết quả k-in-row (E1-E6) - nguồn cho mục 5 báo cáo",
         "",
-        "> **Sinh tự động** bởi `python -m gameai.experiments.plots` từ `results/tables/*.csv` — "
+        "> **Sinh tự động** bởi `python -m gameai.experiments.plots` từ `results/tables/*.csv` - "
         "không sửa tay. Số kiểu VN (dấu phẩy thập phân). Khoảng [ ] là 95 %: Wilson cho tỷ lệ một "
         "điểm, khoảng cặp cho hiệu, xấp xỉ chuẩn cho score E4, bootstrap cụm thế cho E6.",
         "",
@@ -716,7 +718,7 @@ def write_summary_md(table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_DIR) -> Pa
                     sec,
                     what,
                     e,
-                    ", ".join(f"`{f}`" for f in figs) or "—",
+                    ", ".join(f"`{f}`" for f in figs) or "-",
                     ", ".join(f"`{t}`" for t in tabs),
                 ]
                 for sec, what, e, figs, tabs in REPORT_MAP
@@ -725,12 +727,165 @@ def write_summary_md(table_dir: Path = TABLE_DIR, fig_dir: Path = FIG_DIR) -> Pa
         "",
     ]
     for sec, what, e, figs, tabs in REPORT_MAP:
-        out += [f"## {e} — {what} (mục {sec})", ""]
+        out += [f"## {e} - {what} (mục {sec})", ""]
         out += SECTIONS[e](table_dir)
         files = [f"`results/figures/{f}`" for f in figs if (fig_dir / f).exists()]
         files += [f"`results/tables/{t}`" for t in tabs if (table_dir / t).exists()]
         out += ["", "Nguồn: " + ", ".join(files), ""]
     path = table_dir / SUMMARY_NAME
+    with path.open("w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(out))
+    return path
+
+
+# ---------------------------------------------------------------- summary_xiangqi.md (E7, D-39)
+
+XQ_SUMMARY_NAME = "summary_xiangqi.md"
+E7_AGENT = {
+    "mcts_Lend": "MCTS Lend",
+    "mcts_L10": "MCTS L10",
+    "mcts_L0": "MCTS L0",
+    "mcts_L10_t2.5": "MCTS L10",
+    "ab_t1": "AB ID",
+    "ab_t2.5": "AB ID",
+    "ab_d1": "AB độ sâu 1",
+    "ab_d2": "AB độ sâu 2",
+    "random": "Random",
+}
+E7_ORDER_NAME = {"none": "không ordering", "mvv_lva": "MVV-LVA", "mvv_lva+tt": "MVV-LVA + TT"}
+E7_CONFIRMED = ("c1", "c2", "c3", "c4", "d1", "d2", "a1", "a2")
+E7_SECONDS = {"d2": "2,5", "a1": "-", "a2": "-"}  # còn lại 1 s/nước (D-25)
+E7_MATCH_HEAD = ["điểm", "A", "B", "s/nước", "ván", "W/D/L của A", "điểm A [Wilson 95 %]",
+                 "điểm A khi cầm Đỏ / Đen", "chiếu bí / bí nước / lặp thế / max_plies",
+                 "ply TB"]  # fmt: skip
+
+
+def _e7_match_rows(m: list[dict[str, str]], points: tuple[str, ...]) -> list[list[str]]:
+    out = []
+    for p in points:
+        a, red, black = (_one(m, point=p, split=s) for s in ("all", "A=Đỏ", "A=Đen"))
+        out.append([
+            p, E7_AGENT[a["label_a"]], E7_AGENT[a["label_b"]], E7_SECONDS.get(p, "1"), a["n"],
+            f"{a['wins']}/{a['draws']}/{a['losses']}",
+            f"{vn(a['score'])} {ci(a['score_lo'], a['score_hi'])}",
+            f"{vn(red['score'])} / {vn(black['score'])}",
+            " / ".join(a[f"term_{t}"] for t in ("mate", "stalemate", "repetition", "max_plies")),
+            vn(a["ply_mean"], 1),
+        ])  # fmt: skip
+    return out
+
+
+def _e7_search_rows(m: list[dict[str, str]]) -> list[list[str]]:
+    out = []
+    for p in ("d1", "d2", "d3", "d4"):
+        a = _one(m, point=p, split="all")
+        dr = "cố định"
+        if a["b_depth_reached_mean"]:
+            lo, hi = a["b_depth_reached_min"], a["b_depth_reached_max"]
+            dr = f"{vn(a['b_depth_reached_mean'])} ({lo}-{hi})"
+        out.append([
+            p, E7_AGENT[a["label_b"]], vn(a["a_s_per_move_mean"]), vn(a["b_s_per_move_mean"], 3),
+            vn(a["a_iter_per_s_median"], 0), vn(a["a_tree_depth_mean"]),
+            vn(a["a_nodes_per_move"], 0), vn(a["b_nodes_per_move"], 0), dr,
+        ])  # fmt: skip
+    return out
+
+
+def _e7_branch_rows(b: list[dict[str, str]]) -> list[list[str]]:
+    def pair(r: dict[str, str], k: str, d: int) -> str:
+        return f"{vn(r[k + '_mean'], d)} / {vn(r[k + '_median'], d)}" if r[k + "_mean"] else "-"
+
+    return [
+        [r["point"], r["n_games"], vn(r["n_positions"], 0), pair(r, "legal", 1),
+         r["l10_search_moves"] or "-", pair(r, "iter_per_move", 0),
+         pair(r, "iter_per_root_move", 1)]
+        for r in b
+    ]  # fmt: skip
+
+
+def section_e7(td: Path) -> list[str]:
+    o, m, b = (_t(td, f"e7_{n}.csv") for n in ("ordering", "matches", "branching"))
+    order_rows = [
+        [r["depth"], E7_ORDER_NAME[r["config"]], r["n_pos"], vn(r["nodes_sum"], 0),
+         vn(r["seconds_sum"], 3), vn(r["nodes_vs_none"], 3), vn(r["seconds_vs_none"], 3),
+         f"{r['value_match']}/{r['n_pos']}"]
+        for r in o
+    ]  # fmt: skip
+    return [
+        "Ván: 25 khai cuộc ngẫu nhiên 4 ply × 2 ván đổi bên (c4: 50 × 2), `max_plies` 200; điểm = "
+        "(W + D/2)/n theo góc nhìn A; Wilson 95 % trên điểm (D-25).",
+        *_table(
+            "Bảng E7 - ordering của Alpha-Beta (11 thế, độ sâu cố định, `e7_ordering.csv`)",
+            [
+                "độ sâu",
+                "cấu hình",
+                "thế",
+                "nút",
+                "giây",
+                "nút so với không ordering",
+                "giây so với không ordering",
+                "giá trị gốc khớp",
+            ],
+            order_rows,
+        ),  # fmt: skip
+        *_table(
+            "Bảng E7 - các trận chốt trước (`e7_matches.csv`)",
+            E7_MATCH_HEAD,
+            _e7_match_rows(m, E7_CONFIRMED),
+        ),  # fmt: skip
+        *_table(
+            "Bảng E7 - khám phá d3/d4, thêm sau d1/d2, không chốt trước (`e7_matches.csv`)",
+            E7_MATCH_HEAD,
+            _e7_match_rows(m, e7.X_POINTS),
+        ),  # fmt: skip
+        *_table(
+            "Bảng E7 - tìm kiếm trong trận MCTS L10 vs AB (`e7_matches.csv`)",
+            [
+                "điểm",
+                "AB",
+                "s/nước MCTS",
+                "s/nước AB",
+                "iter/s MCTS (trung vị)",
+                "độ sâu cây MCTS TB",
+                "nút/nước MCTS",
+                "nút/nước AB",
+                "độ sâu AB đạt TB (min-max)",
+            ],
+            _e7_search_rows(m),
+        ),  # fmt: skip
+        *_table(
+            "Bảng E7 - độ phân nhánh và ngân sách MCTS L10 (`e7_branching.csv`)",
+            [
+                "điểm",
+                "ván",
+                "thế",
+                "nước hợp lệ TB / trung vị",
+                "nước search của L10",
+                "iteration/nước TB / trung vị",
+                "iteration / nước hợp lệ ở gốc TB / trung vị",
+            ],
+            _e7_branch_rows(b),
+        ),  # fmt: skip
+    ]
+
+
+def write_summary_xiangqi(table_dir: Path = TABLE_DIR) -> Path:
+    """`summary_xiangqi.md`: bảng E7 cho mục 5.7 báo cáo (neo `src-table`); mọi số đọc từ CSV."""
+    out = [
+        "# Tổng hợp kết quả cờ tướng (E7) - nguồn cho mục 5.7 báo cáo",
+        "",
+        "> **Sinh tự động** bởi `python -m gameai.experiments.plots` từ "
+        "`results/tables/e7_*.csv` - không sửa tay. Số kiểu VN (dấu phẩy thập phân).",
+        "",
+        "## E7 - cờ tướng: ordering, rollout, MCTS vs Alpha-Beta (mục 5.7)",
+        "",
+        *section_e7(table_dir),
+        "",
+        "Nguồn: `results/tables/e7_ordering.csv`, `results/tables/e7_matches.csv`, "
+        "`results/tables/e7_branching.csv`, `results/figures/e7_scores.png`",
+        "",
+    ]
+    path = table_dir / XQ_SUMMARY_NAME
     with path.open("w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(out))
     return path
@@ -745,9 +900,11 @@ def check_outputs(
 ) -> list[tuple[str, str]]:
     """`--check`: sinh `summary_kinrow.md` vào `new_dir` (từ bảng đã sinh ở đó) rồi so byte cả các
     bảng `names` lẫn summary với bản tham chiếu. Summary cũng phải giống byte vì `report/report.md`
-    lấy nó làm nguồn (`src: summary_kinrow.md#…`, `src-table`). Trả [(tên, lý do)]."""
+    lấy nó làm nguồn (`src: summary_kinrow.md#…`, `src-table`). E7: thêm `summary_xiangqi.md`
+    (D-39). Trả [(tên, lý do)]."""
     write_summary_md(new_dir, fig_dir)
-    return compare(new_dir, ref_dir, [*names, SUMMARY_NAME], ref=ref)
+    write_summary_xiangqi(new_dir)
+    return compare(new_dir, ref_dir, [*names, SUMMARY_NAME, XQ_SUMMARY_NAME], ref=ref)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -769,9 +926,10 @@ def main(argv: list[str] | None = None) -> int:
             tables, figs = regenerate(RAW_DIR, tdir, fdir)
             names = [p.name for p in tables]
             bad = check_outputs(tdir, fdir, names)
-            n_files = len(names) + 1  # + summary_kinrow.md
+            n_files = len(names) + 2  # + summary_kinrow.md, summary_xiangqi.md
             measured = ", ".join(n for n in MEASURED if n not in names)
-            print(f"[check] {len(tables)} bảng + {SUMMARY_NAME}, {len(figs)} hình sinh lại; "
+            print(f"[check] {len(tables)} bảng + {SUMMARY_NAME} + {XQ_SUMMARY_NAME}, "
+                  f"{len(figs)} hình sinh lại; "
                   f"bảng đo trực tiếp (không sinh lại): {measured}")  # fmt: skip
             for n, why in bad:
                 print(f"  ≠ {n}: {why}")
@@ -783,6 +941,7 @@ def main(argv: list[str] | None = None) -> int:
     for p in tables + figs:
         print(f"[plots] {p.relative_to(ROOT)}")
     print(f"[plots] {write_summary_md(TABLE_DIR, FIG_DIR).relative_to(ROOT)}")
+    print(f"[plots] {write_summary_xiangqi(TABLE_DIR).relative_to(ROOT)}")
     return 0
 
 

@@ -203,15 +203,17 @@ def game_row(mg: MatchGame, meta: dict[str, Any]) -> dict[str, str]:
     return {c: _fmt(row.get(c)) for c in GAME_COLUMNS}
 
 
-def move_rows(mg: MatchGame) -> list[dict[str, str]]:
+def move_rows(mg: MatchGame, extra_stats: Sequence[str] = ()) -> list[dict[str, str]]:
+    """Mỗi nước một dòng `MOVE_COLUMNS` (+ cột `extra_stats` lấy từ `stats` nếu có)."""
+    columns = MOVE_COLUMNS + list(extra_stats)
     rows = []
     for m in mg.record.moves:
         r: dict[str, Any] = {"game_id": mg.game_id, "ply": m.ply, "side": m.side,
                              "player": m.player, "move": m.move, "time": m.time,
                              "agent_time": m.stats.get("time")}  # fmt: skip
-        for k in _MOVE_STATS:
+        for k in (*_MOVE_STATS, *extra_stats):
             r[k] = m.stats.get(k)
-        rows.append({c: _fmt(r.get(c)) for c in MOVE_COLUMNS})
+        rows.append({c: _fmt(r.get(c)) for c in columns})
     return rows
 
 
@@ -266,6 +268,7 @@ def run_match(
     random_opening: int = 0,
     record_moves: bool = True,
     allow_code_change: bool = False,
+    extra_move_stats: Sequence[str] = (),
 ) -> list[dict[str, str]]:
     """Chơi `2 * n_pairs` ván A vs B (seed `base_seed + i`, mỗi seed 2 ván đổi lượt), ghi từng ván
     vào `out_path` ngay khi xong (+ `<stem>_moves.csv` nếu `record_moves`). Chạy lại cùng file →
@@ -273,7 +276,10 @@ def run_match(
 
     Lỗi dựng agent/game → ném ra trước khi chơi. File có sẵn khác header / config / commit →
     `ResumeError` (commit: trừ khi `allow_code_change`).
+    `extra_move_stats`: khóa `stats` ghi thêm thành cột cuối file moves (mặc định không có = như cũ;
+    vd. E7 ghi `depth_reached` của AB).
     """
+    move_columns = MOVE_COLUMNS + list(extra_move_stats)
     out_path = Path(out_path)
     if workers < 1:
         raise ValueError("workers phải ≥ 1")
@@ -305,13 +311,13 @@ def run_match(
 
     mpath = moves_path_for(out_path)
     if record_moves:
-        old_moves = _load_existing(mpath, MOVE_COLUMNS)
+        old_moves = _load_existing(mpath, move_columns)
         if old_moves is not None:
             kept = [r for r in old_moves if r["game_id"] in done]
             if len(kept) != len(old_moves):  # bỏ moves mồ côi của ván chưa ghi xong
                 tmp = mpath.with_suffix(mpath.suffix + ".tmp")
                 with open(tmp, "w", newline="", encoding="utf-8") as f:
-                    w = csv.DictWriter(f, MOVE_COLUMNS)
+                    w = csv.DictWriter(f, move_columns)
                     w.writeheader()
                     w.writerows(kept)
                     _fsync(f)
@@ -330,7 +336,7 @@ def run_match(
     mf = open(mpath, "a", newline="", encoding="utf-8") if record_moves else None
     try:
         gw = csv.DictWriter(gf, GAME_COLUMNS)
-        mw = csv.DictWriter(mf, MOVE_COLUMNS) if mf else None
+        mw = csv.DictWriter(mf, move_columns) if mf else None
         if new_games:
             gw.writeheader()
             _fsync(gf)
@@ -340,7 +346,7 @@ def run_match(
 
         def write(mg: MatchGame) -> None:
             if mw is not None:  # moves trước, dòng ván sau: dòng ván là dấu "đã xong"
-                mw.writerows(move_rows(mg))
+                mw.writerows(move_rows(mg, extra_move_stats))
                 _fsync(mf)
             gw.writerow(game_row(mg, meta))
             _fsync(gf)
